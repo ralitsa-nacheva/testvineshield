@@ -6,7 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rncoding.testvineshield.core.domain.error.AuthError
-import com.rncoding.testvineshield.core.domain.error.AuthState
+import com.rncoding.testvineshield.core.domain.auth.AuthState
 import com.rncoding.testvineshield.core.domain.repository.SecuritySettingsRepository
 import com.rncoding.testvineshield.core.domain.repository.SessionRepository
 import com.rncoding.testvineshield.core.domain.repository.UserRepository

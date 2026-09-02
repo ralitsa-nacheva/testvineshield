@@ -3,7 +3,7 @@ package com.rncoding.testvineshield.core.presentation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import com.rncoding.testvineshield.core.domain.error.AuthState
+import com.rncoding.testvineshield.core.domain.auth.AuthState
 import com.rncoding.testvineshield.core.presentation.user_auth.AuthViewModel
 
 @Composable

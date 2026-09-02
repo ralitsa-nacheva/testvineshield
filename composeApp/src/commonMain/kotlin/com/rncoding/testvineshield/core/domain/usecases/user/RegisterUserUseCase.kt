@@ -9,29 +9,38 @@ import com.rncoding.testvineshield.core.domain.error.ValidationError
 import com.rncoding.testvineshield.core.domain.security.ValidateEmail
 import com.rncoding.testvineshield.core.domain.security.ValidatePassword
 
-class RegisterUserUseCase( // check to see if i need to implement more validation rules here or in the view model/screen
+class RegisterUserUseCase(
     private val userRepository: UserRepository,
     private val validateEmail: ValidateEmail,
     private val validatePassword: ValidatePassword
 ) {
+
     suspend operator fun invoke(
         email: String,
         password: String
     ): Result<UserDomainModel, AppError> {
 
-        if (email.isBlank()) {
-            return Result.Error(ValidationError.FieldEmpty(email)) // implement validation rules
-        }
-        if (password.isBlank()) {
-            return Result.Error(ValidationError.FieldEmpty(password)) // implement validation rules
-        }
-        if (!validateEmail(email)) {
-            return Result.Error(AuthError.InvalidEmail)
-        }
-        if (!validatePassword(password)) {
-            return Result.Error(AuthError.WeakPassword(AuthError.WeakPassword.Reason.TOO_SHORT))
+        when (val result = validateEmail(email)) {
+
+            is Result.Error ->
+                return Result.Error(result.error)
+
+            is Result.Success ->
+                Unit
         }
 
-        return userRepository.register(email, password) // should there be auto login after register with saveSession?
+        when (val result = validatePassword(password)) {
+
+            is Result.Error ->
+                return Result.Error(result.error)
+
+            is Result.Success ->
+                Unit
+        }
+
+        return userRepository.register(
+            email = email.trim(),
+            password = password
+        )
     }
 }

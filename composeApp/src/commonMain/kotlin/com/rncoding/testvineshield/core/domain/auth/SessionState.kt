@@ -1,4 +1,4 @@
-package com.rncoding.testvineshield.core.domain.error
+package com.rncoding.testvineshield.core.domain.auth
 
 sealed interface SessionState {
     object Active : SessionState

@@ -1,7 +1,7 @@
 package com.rncoding.testvineshield.core.presentation
 
 import androidx.compose.runtime.Composable
-import com.rncoding.testvineshield.core.domain.error.AuthState
+import com.rncoding.testvineshield.core.domain.auth.AuthState
 
 @Composable
 fun AppRoot(viewModel: AppViewModel) {

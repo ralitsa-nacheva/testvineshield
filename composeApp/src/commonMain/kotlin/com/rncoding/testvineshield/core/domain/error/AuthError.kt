@@ -1,27 +1,6 @@
 package com.rncoding.testvineshield.core.domain.error
 
 sealed interface AuthError : AppError {
-    data object InvalidEmail : AuthError {
-        override val userMessage = "Invalid email format"
-        override val debugMessage = "Email validation failed" //implement the validation rules
-        override val cause: Throwable? = null
-    }
-
-    data class WeakPassword (val reason: Reason) : AuthError {
-        enum class Reason {
-            TOO_SHORT,
-            NO_UPPERCASE,
-            NO_DIGIT
-        }
-        override val userMessage = when (reason) {
-            Reason.TOO_SHORT -> "Password must be at least 8 characters."
-            Reason.NO_UPPERCASE -> "Password must contain uppercase letter"
-            Reason.NO_DIGIT -> "Password must contain a digit"
-        }
-        override val debugMessage = "Password does not meet criteria"
-        override val cause: Throwable? = null
-    }
-
     data object UserAlreadyExists : AuthError {
         override val userMessage = "User already exists"
         override val debugMessage = "Attempt to register existing email"

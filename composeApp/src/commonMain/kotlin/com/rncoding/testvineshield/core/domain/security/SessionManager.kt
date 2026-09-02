@@ -5,7 +5,7 @@ import com.rncoding.testvineshield.core.domain.error.AppError
 import com.rncoding.testvineshield.core.domain.error.AuthError
 import com.rncoding.testvineshield.core.domain.repository.SessionRepository
 import com.rncoding.testvineshield.core.domain.error.Result
-import com.rncoding.testvineshield.core.domain.error.SessionState
+import com.rncoding.testvineshield.core.domain.auth.SessionState
 import com.rncoding.testvineshield.core.domain.time.SystemClock
 
 class SessionManager(

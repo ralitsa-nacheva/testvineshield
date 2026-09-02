@@ -1,6 +1,6 @@
 package com.rncoding.testvineshield.core.domain.usecases.user
 
-import com.rncoding.testvineshield.core.domain.error.AuthState
+import com.rncoding.testvineshield.core.domain.auth.AuthState
 import com.rncoding.testvineshield.core.domain.repository.SessionRepository
 import kotlinx.coroutines.flow.Flow
 

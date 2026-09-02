@@ -2,6 +2,7 @@ package com.rncoding.testvineshield.core.domain.usecases.user
 
 import com.rncoding.testvineshield.core.domain.datamodels.SessionDomainModel
 import com.rncoding.testvineshield.core.domain.datamodels.UserDomainModel
+import com.rncoding.testvineshield.core.domain.error.AppError
 import com.rncoding.testvineshield.core.domain.time.SystemClock
 import com.rncoding.testvineshield.core.domain.repository.UserRepository
 import com.rncoding.testvineshield.core.domain.error.AuthError
@@ -22,53 +23,59 @@ class LoginUserUseCase(
     suspend operator fun invoke(
         email: String,
         password: String
-    ): Result<UserDomainModel, AuthError> {
+    ): Result<UserDomainModel, AppError> {
 
-        if (!validateEmail(email)) {
-            return Result.Error(AuthError.InvalidEmail)
+        when (val validation = validateEmail(email)) {
+
+            is Result.Error ->
+                return Result.Error(validation.error)
+
+            is Result.Success -> Unit
         }
 
-        if (!validatePassword(password)) {
-            return Result.Error(
-                AuthError.WeakPassword(
-                    AuthError.WeakPassword.Reason.TOO_SHORT // implement the other validation rules
-                )
-            )
+        when (val validation = validatePassword(password)) {
+
+            is Result.Error ->
+                return Result.Error(validation.error)
+
+            is Result.Success -> Unit
         }
 
         return when (
-            val result = userRepository.login(
-                email = email,
-                password = password
-            )
+            val loginResult =
+                userRepository.login(
+                    email = email.trim(),
+                    password = password
+                )
         ) {
 
-            is Result.Error -> result
+            is Result.Error ->
+                Result.Error(loginResult.error)
 
             is Result.Success -> {
 
                 val now = clock.now()
 
-                val session = SessionDomainModel(
-                    userId = result.data.userId,
-                    createdAt = now,
-                    lastActiveAt = now,
-                    expiresAt =
-                        now + SessionPolicy.MAX_SESSION_DURATION
-                )
+                val session =
+                    SessionDomainModel(
+                        userId = loginResult.data.userId,
+                        createdAt = now,
+                        lastActiveAt = now,
+                        expiresAt =
+                            now +
+                                    SessionPolicy.MAX_SESSION_DURATION
+                    )
 
                 when (
                     val saveResult =
                         sessionRepository.saveSession(session)
                 ) {
 
-                    is Result.Success ->
-                        Result.Success(result.data)
-
                     is Result.Error ->
-                        Result.Error(
-                            AuthError.UnlockFailed
-                        )
+                        Result.Error(saveResult.error)
+
+                    is Result.Success ->
+                        Result.Success(loginResult.data)
                 }
             }
         }

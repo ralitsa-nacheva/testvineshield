@@ -3,7 +3,7 @@ package com.rncoding.testvineshield.core.presentation
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.rncoding.testvineshield.core.domain.error.AuthState
+import com.rncoding.testvineshield.core.domain.auth.AuthState
 import com.rncoding.testvineshield.core.domain.usecases.user.ObserveAuthStateUseCase
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.onStart
@@ -24,7 +24,7 @@ class AppViewModel(
                     authState = AuthState.Loading
                 }
                 .catch { e ->
-                    authState = AuthState.Error(e.message ?: "Unknown error")
+                    authState = AuthState.Error(e.userMessage ?: "Unknown error")
                 }
                 .collect { state ->
                     authState = state

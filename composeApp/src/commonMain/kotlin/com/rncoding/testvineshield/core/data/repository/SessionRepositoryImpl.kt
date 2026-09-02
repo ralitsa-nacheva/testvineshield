@@ -4,7 +4,7 @@ import com.rncoding.testvineshield.core.data.local.database.daos.SessionDao
 import com.rncoding.testvineshield.core.data.local.database.entities.SessionEntity
 import com.rncoding.testvineshield.core.domain.datamodels.SessionDomainModel
 import com.rncoding.testvineshield.core.domain.error.AppError
-import com.rncoding.testvineshield.core.domain.error.AuthState
+import com.rncoding.testvineshield.core.domain.auth.AuthState
 import com.rncoding.testvineshield.core.domain.error.DatabaseError
 import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.error.StorageError
@@ -32,18 +32,37 @@ class SessionRepositoryImpl(
 
         val serialized: String?
 
+        /*
+         * Step 1:
+         * Read the serialized session from secure storage.
+         */
         try {
-            serialized = secureStorage.get(SESSION_KEY)
+
+            serialized =
+                secureStorage.get(SESSION_KEY)
+
         } catch (e: Exception) {
+
             return Result.Error(
-                StorageError.ReadError(e)
+                StorageError.ReadError(
+                    cause = e
+                )
             )
         }
 
+        /*
+         * No stored session means the user is not logged in.
+         *
+         * This is NOT an error.
+         */
         if (serialized == null) {
             return Result.Success(null)
         }
 
+        /*
+         * Step 2:
+         * Deserialize the stored session.
+         */
         return try {
 
             val session =
@@ -55,14 +74,25 @@ class SessionRepositoryImpl(
 
         } catch (e: SerializationException) {
 
+            /*
+             * The storage operation succeeded,
+             * but the stored data is invalid.
+             */
             Result.Error(
-                StorageError.CorruptedData(e)
+                StorageError.CorruptedData(
+                    cause = e
+                )
             )
 
         } catch (e: Exception) {
 
+            /*
+             * Unexpected storage/serialization failure.
+             */
             Result.Error(
-                StorageError.ReadError(e)
+                StorageError.ReadError(
+                    cause = e
+                )
             )
         }
     }
@@ -71,6 +101,10 @@ class SessionRepositoryImpl(
         session: SessionDomainModel
     ): Result<Unit, AppError> {
 
+        /*
+         * Step 1:
+         * Serialize the domain model.
+         */
         val serialized: String
 
         try {
@@ -81,10 +115,16 @@ class SessionRepositoryImpl(
         } catch (e: Exception) {
 
             return Result.Error(
-                StorageError.WriteError(e)
+                StorageError.WriteError(
+                    cause = e
+                )
             )
         }
 
+        /*
+         * Step 2:
+         * Persist serialized session securely.
+         */
         return try {
 
             secureStorage.save(
@@ -97,7 +137,9 @@ class SessionRepositoryImpl(
         } catch (e: Exception) {
 
             Result.Error(
-                StorageError.WriteError(e)
+                StorageError.WriteError(
+                    cause = e
+                )
             )
         }
     }
@@ -116,7 +158,9 @@ class SessionRepositoryImpl(
         } catch (e: Exception) {
 
             Result.Error(
-                StorageError.DeleteError(e)
+                StorageError.DeleteError(
+                    cause = e
+                )
             )
         }
     }

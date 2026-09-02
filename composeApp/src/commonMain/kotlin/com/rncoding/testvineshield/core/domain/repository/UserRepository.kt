@@ -8,9 +8,9 @@ import kotlinx.coroutines.flow.Flow
 
 interface UserRepository {
 
-    suspend fun register(email: String, password: String): Result<UserDomainModel, AuthError> // does it have to return anything
+    suspend fun register(email: String, password: String): Result<UserDomainModel, AppError> // does it have to return anything
 
-    suspend fun login(email: String, password: String): Result<UserDomainModel, AuthError>
+    suspend fun login(email: String, password: String): Result<UserDomainModel, AppError>
 
     suspend fun logout()
 

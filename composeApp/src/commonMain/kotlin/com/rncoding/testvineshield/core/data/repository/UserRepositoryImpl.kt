@@ -20,7 +20,7 @@ class UserRepositoryImpl(
     private val sessionRepository: SessionRepositoryImpl
 ): UserRepository {
 
-    override suspend fun register(email: String, password: String): Result<UserDomainModel, AuthError> {
+    override suspend fun register(email: String, password: String): Result<UserDomainModel, AppError> {
         val existing = userDao.getUserByEmail(email)
         if (existing != null) {
             return Result.Error(AuthError.UserAlreadyExists)
@@ -43,7 +43,7 @@ class UserRepositoryImpl(
     }
 
     // should i add safe call?
-    override suspend fun login(email: String, password: String): Result<UserDomainModel, AuthError> {
+    override suspend fun login(email: String, password: String): Result<UserDomainModel, AppError> {
         val user = userDao.getUserByEmail(email)
             ?: return Result.Error(AuthError.InvalidCredentials)
 

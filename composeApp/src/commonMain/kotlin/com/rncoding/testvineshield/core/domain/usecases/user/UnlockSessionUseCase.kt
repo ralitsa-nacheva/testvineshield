@@ -4,6 +4,8 @@ import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.datamodels.UserDomainModel
 import com.rncoding.testvineshield.core.domain.error.AppError
 import com.rncoding.testvineshield.core.domain.repository.UserRepository
+import com.rncoding.testvineshield.core.domain.security.LocalAuthenticator
+import com.rncoding.testvineshield.core.domain.security.SessionManager
 
 class UnlockSessionUseCase(
     private val sessionManager: SessionManager,
@@ -28,7 +30,7 @@ class UnlockSessionUseCase(
 
                 when (
                     val session =
-                        sessionManager.unlock()
+                        sessionManager.refreshSession()
                 ) {
 
                     is Result.Error ->

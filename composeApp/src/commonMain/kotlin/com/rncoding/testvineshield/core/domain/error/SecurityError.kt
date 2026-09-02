@@ -74,7 +74,7 @@ sealed interface SecurityError : AppError {
             "Biometric authentication is temporarily unavailable because the device requires a security update."
 
         override val debugMessage =
-            "Android reported BIOMETRIC_ERROR_SECURITY_UPDATE_REQUIRED."
+            "Biometric authentication entered temporary lockout.\"."
 
         override val cause: Throwable? = null
     }
@@ -100,18 +100,6 @@ sealed interface SecurityError : AppError {
 
         override val cause: Throwable? = null
     }
-
-    data object UserFallback : SecurityError {
-
-        override val userMessage =
-            "Biometric authentication fallback was selected."
-
-        override val debugMessage =
-            "The user selected the biometric fallback option."
-
-        override val cause: Throwable? = null
-    }
-
 
     data class Unknown(
         override val cause: Throwable? = null

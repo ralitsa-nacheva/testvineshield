@@ -1,6 +1,7 @@
-package com.rncoding.testvineshield.core.domain.error
+package com.rncoding.testvineshield.core.domain.auth
 
 import com.rncoding.testvineshield.core.domain.datamodels.UserDomainModel
+import com.rncoding.testvineshield.core.domain.error.AppError
 
 /**
  * Global authentication/session state of the application.
