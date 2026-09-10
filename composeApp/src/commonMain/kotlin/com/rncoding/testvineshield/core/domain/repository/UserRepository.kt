@@ -14,9 +14,9 @@ interface UserRepository {
 
     suspend fun logout()
 
-    suspend fun observeUser(userId: Long): Flow<UserDomainModel?>
+   // suspend fun observeUser(userId: Long): Flow<UserDomainModel?>
 
-    suspend fun getUserById(userId: Long): Flow<UserDomainModel?>
+    suspend fun getUserById(userId: Long): Result<UserDomainModel?, AppError>
 
     suspend fun upsertUser(domainUser: UserDomainModel) // do i need this as i already have register function
 

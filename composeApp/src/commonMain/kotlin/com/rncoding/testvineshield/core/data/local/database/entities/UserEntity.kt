@@ -17,7 +17,7 @@ data class UserEntity(
     val passHash: String,
     @ColumnInfo(name = "pass_salt")
     val passSalt: String,
-    @ColumnInfo(name = "created_at")
-    val createdAt: Long
+   // @ColumnInfo(name = "created_at")
+    //val createdAt: Long
 
     )

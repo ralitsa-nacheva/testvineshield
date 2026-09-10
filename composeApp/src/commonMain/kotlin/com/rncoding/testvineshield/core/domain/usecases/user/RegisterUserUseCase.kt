@@ -20,7 +20,9 @@ class RegisterUserUseCase(
         password: String
     ): Result<UserDomainModel, AppError> {
 
-        when (val result = validateEmail(email)) {
+        val normalizedEmail = email.trim()
+
+        when (val result = validateEmail(normalizedEmail)) {
 
             is Result.Error ->
                 return Result.Error(result.error)
@@ -39,7 +41,7 @@ class RegisterUserUseCase(
         }
 
         return userRepository.register(
-            email = email.trim(),
+            email = normalizedEmail,
             password = password
         )
     }

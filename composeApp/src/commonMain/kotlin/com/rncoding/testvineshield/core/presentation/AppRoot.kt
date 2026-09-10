@@ -2,6 +2,7 @@ package com.rncoding.testvineshield.core.presentation
 
 import androidx.compose.runtime.Composable
 import com.rncoding.testvineshield.core.domain.auth.AuthState
+import com.rncoding.testvineshield.core.presentation.loading.LoadingScreen
 
 @Composable
 fun AppRoot(viewModel: AppViewModel) {

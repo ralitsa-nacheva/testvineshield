@@ -20,7 +20,9 @@ class ValidateEmail {
 
         if (!EMAIL_REGEX.matches(normalized)) {
             return Result.Error(
-                ValidationError.InvalidEmail
+                ValidationError.InvalidFormat(
+                    ValidationError.Field.EMAIL
+                )
             )
         }
 
@@ -29,12 +31,6 @@ class ValidateEmail {
 
     private companion object {
 
-        /**
-         * Deliberately conservative application-level email validation.
-         *
-         * Email validation should not attempt to implement the
-         * complete RFC specification.
-         */
         val EMAIL_REGEX =
             Regex(
                 pattern = "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"

@@ -79,7 +79,7 @@ sealed interface SecurityError : AppError {
         override val cause: Throwable? = null
     }
 
-    data object NoDeviceCredential : SecurityError {
+    data object DeviceCredentialNotAvailable : SecurityError {
 
         override val userMessage =
             "No device PIN, pattern, or password is configured."
@@ -97,6 +97,17 @@ sealed interface SecurityError : AppError {
 
         override val debugMessage =
             "The device does not have a passcode configured."
+
+        override val cause: Throwable? = null
+    }
+
+    data object UserFallback : SecurityError {
+
+        override val userMessage =
+            "Please use another authentication method."
+
+        override val debugMessage =
+            "The user selected an alternative authentication method."
 
         override val cause: Throwable? = null
     }

@@ -1,63 +1,59 @@
 package com.rncoding.testvineshield.core.presentation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import com.rncoding.testvineshield.core.domain.auth.AuthState
-import com.rncoding.testvineshield.core.presentation.user_auth.AuthViewModel
+import com.rncoding.testvineshield.core.presentation.auth.AuthScreen
+import com.rncoding.testvineshield.core.presentation.dashboard.DashboardScreen
+import com.rncoding.testvineshield.core.presentation.error.ErrorScreen
+import com.rncoding.testvineshield.core.presentation.loading.LoadingScreen
 
+/**
+ * Root navigation/state dispatcher for the application.
+ *
+ * AppRoot does not perform authentication itself.
+ *
+ * It simply renders the UI appropriate for AuthState.
+ */
 @Composable
 fun AppRoot(
-    authViewModel: AuthViewModel
+    viewModel: AppViewModel
 ) {
-    val authState by
-    authViewModel.authState
-        .collectAsState()
 
-    when (val state = authState) {
-
-        AuthState.Idle -> {
-            android.window.SplashScreen()
-        }
+    when (val state = viewModel.authState) {
 
         AuthState.Loading -> {
+
             LoadingScreen()
         }
 
         is AuthState.Unauthenticated -> {
-            LoginScreen(
-                onLogin = authViewModel::login,
-                onRegister = authViewModel::register
+
+            AuthScreen()
+        }
+
+        is AuthState.Authenticated -> {
+
+            DashboardScreen(
+                userId = state.user.userId
             )
         }
 
         is AuthState.Locked -> {
-            UnlockScreen(
-                reason = state.reason,
-                onBiometric = {
-                    authViewModel
-                        .unlockWithBiometric()
-                },
-                onPin = { pin ->
-                    authViewModel
-                        .unlockWithPin(pin)
-                }
-            )
-        }
 
-        is AuthState.Authenticated -> {
-            VineyardApp(
-                user = state.user,
-                onLogout = authViewModel::logout
+            /*
+             * The Locked screen should launch local
+             * authentication and call UnlockSessionUseCase
+             * through the appropriate ViewModel.
+             */
+            LockedScreen(
+                reason = state.reason
             )
         }
 
         is AuthState.Error -> {
-            AuthErrorScreen(
-                error = state.error,
-                onRetry = {
-                    authViewModel.initialize()
-                }
+
+            ErrorScreen(
+                error = state.error
             )
         }
     }

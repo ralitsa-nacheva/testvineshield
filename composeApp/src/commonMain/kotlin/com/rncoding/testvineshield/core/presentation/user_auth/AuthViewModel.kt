@@ -1,53 +1,48 @@
 package com.rncoding.testvineshield.core.presentation.user_auth
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.rncoding.testvineshield.core.domain.error.AuthError
+import com.rncoding.testvineshield.core.domain.auth.AuthSessionCoordinator
 import com.rncoding.testvineshield.core.domain.auth.AuthState
-import com.rncoding.testvineshield.core.domain.repository.SecuritySettingsRepository
-import com.rncoding.testvineshield.core.domain.repository.SessionRepository
-import com.rncoding.testvineshield.core.domain.repository.UserRepository
-import com.rncoding.testvineshield.core.domain.security.BiometricAuthenticator
-import com.rncoding.testvineshield.core.domain.security.PinCredentialRepository
+import com.rncoding.testvineshield.core.domain.auth.ObserveAuthStateUseCase
+import com.rncoding.testvineshield.core.domain.error.AppError
 import com.rncoding.testvineshield.core.domain.usecases.user.LoginUserUseCase
 import com.rncoding.testvineshield.core.domain.usecases.user.RegisterUserUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import com.rncoding.testvineshield.core.domain.error.Result
-import com.rncoding.testvineshield.core.domain.usecases.user.CreateSessionUseCase
-import com.rncoding.testvineshield.core.domain.usecases.user.LogoutUseCase
+import com.rncoding.testvineshield.core.domain.usecases.user.LogoutUserUseCase
 import com.rncoding.testvineshield.core.domain.usecases.user.RestoreSessionUseCase
 import com.rncoding.testvineshield.core.domain.usecases.user.UnlockSessionUseCase
 import kotlinx.coroutines.launch
 
 class AuthViewModel(
-    private val loginUseCase: LoginUserUseCase,
-    private val registerUseCase: RegisterUserUseCase,
-    private val restoreSessionUseCase: RestoreSessionUseCase,
-    private val logoutUseCase: LogoutUseCase,
-    private val unlockSessionUseCase: UnlockSessionUseCase
+    private val authSessionCoordinator: AuthSessionCoordinator,
+    private val observeAuthStateUseCase: ObserveAuthStateUseCase
 ) : ViewModel() {
 
-    private val _authState =
-        MutableStateFlow<AuthState>(
-            AuthState.Loading
-        )
+    // ----------------------------------------------------
+    // Global authentication state
+    // ----------------------------------------------------
 
     val authState: StateFlow<AuthState> =
-        _authState.asStateFlow()
+        observeAuthStateUseCase()
+
+    // ----------------------------------------------------
+    // Authentication screen UI state
+    // ----------------------------------------------------
 
     private val _uiState =
-        MutableStateFlow(
-            AuthUiState()
-        )
+        MutableStateFlow(AuthUiState())
 
     val uiState: StateFlow<AuthUiState> =
         _uiState.asStateFlow()
+
+    // ----------------------------------------------------
+    // Initialization
+    // ----------------------------------------------------
 
     init {
         restoreSession()
@@ -79,42 +74,22 @@ class AuthViewModel(
 
     // ----------------------------------------------------
     // Restore existing session
-    // --------------------------------------------------------------------------------------------------------
+    // ----------------------------------------------------
 
     private fun restoreSession() {
 
         viewModelScope.launch {
-
-            _authState.value =
-                AuthState.Loading
-
-            when (
-                val result =
-                    restoreSessionUseCase()
-            ) {
-
-                is Result.Success -> {
-                    _authState.value =
-                        result.data
-                }
-
-                is Result.Error -> {
-                    _authState.value =
-                        AuthState.Error(
-                            result.error
-                        )
-                }
-            }
+            authSessionCoordinator.restoreSession()
         }
     }
+
     // ----------------------------------------------------
     // Login
     // ----------------------------------------------------
 
     fun login() {
 
-        val current =
-            _uiState.value
+        val current = _uiState.value
 
         if (current.isSubmitting) {
             return
@@ -125,12 +100,14 @@ class AuthViewModel(
             _uiState.value =
                 current.copy(
                     isSubmitting = true,
-                    error = null
+                    error = null,
+                    emailError = null,
+                    passwordError = null
                 )
 
             when (
                 val result =
-                    loginUseCase(
+                    authSessionCoordinator.login(
                         email = current.email,
                         password = current.password
                     )
@@ -140,41 +117,14 @@ class AuthViewModel(
 
                     _uiState.value =
                         _uiState.value.copy(
-                            isSubmitting = false
-                        )
-
-                    _authState.value =
-                        AuthState.Authenticated(
-                            user = result.data
+                            isSubmitting = false,
+                            error = null,
+                            password = ""
                         )
                 }
 
                 is Result.Error -> {
-
-                    _uiState.value =
-                        _uiState.value.copy(
-                            isSubmitting = false,
-                            error = result.error
-                        )
-
-                    /*
-                     * Login failure does not necessarily mean
-                     * that the global authentication state has
-                     * failed.
-                     *
-                     * If the user was already authenticated,
-                     * don't destroy that state because of a
-                     * failed login form attempt.
-                     */
-                    if (
-                        _authState.value
-                                is AuthState.Unauthenticated
-                    ) {
-                        _authState.value =
-                            AuthState.Error(
-                                error = result.error
-                            )
-                    }
+                    handleOperationError(result.error)
                 }
             }
         }
@@ -186,8 +136,60 @@ class AuthViewModel(
 
     fun register() {
 
-        val current =
-            _uiState.value
+        val current = _uiState.value
+
+        if (current.isSubmitting) {
+            return
+        }
+
+        viewModelScope.launch {
+
+            _uiState.value =
+                current.copy(
+                    isSubmitting = true,
+                    error = null,
+                    emailError = null,
+                    passwordError = null
+                )
+
+            when (
+                val result =
+                    authSessionCoordinator.register(
+                        email = current.email,
+                        password = current.password
+                    )
+            ) {
+
+                is Result.Success -> {
+
+                    /*
+                     * Registration does not create a session.
+                     *
+                     * The user must subsequently log in.
+                     */
+
+                    _uiState.value =
+                        _uiState.value.copy(
+                            isSubmitting = false,
+                            error = null,
+                            password = ""
+                        )
+                }
+
+                is Result.Error -> {
+                    handleOperationError(result.error)
+                }
+            }
+        }
+    }
+
+    // ----------------------------------------------------
+    // Unlock
+    // ----------------------------------------------------
+
+    fun unlock() {
+
+        val current = _uiState.value
 
         if (current.isSubmitting) {
             return
@@ -203,32 +205,28 @@ class AuthViewModel(
 
             when (
                 val result =
-                    registerUseCase(
-                        email = current.email,
-                        password = current.password
-                    )
+                    authSessionCoordinator.unlock()
             ) {
 
                 is Result.Success -> {
 
-                    _uiState.value =
-                        _uiState.value.copy(
-                            isSubmitting = false
-                        )
-
-                    _authState.value =
-                        AuthState.Authenticated(
-                            user = result.data
-                        )
-                }
-
-                is Result.Error -> {
+                    /*
+                     * result.data is already AuthState.
+                     *
+                     * The coordinator has updated its
+                     * StateFlow, so the ViewModel does not
+                     * construct AuthState.Authenticated here.
+                     */
 
                     _uiState.value =
                         _uiState.value.copy(
                             isSubmitting = false,
-                            error = result.error
+                            error = null
                         )
+                }
+
+                is Result.Error -> {
+                    handleOperationError(result.error)
                 }
             }
         }
@@ -240,97 +238,50 @@ class AuthViewModel(
 
     fun logout() {
 
+        val current = _uiState.value
+
+        if (current.isSubmitting) {
+            return
+        }
+
         viewModelScope.launch {
+
+            _uiState.value =
+                current.copy(
+                    isSubmitting = true,
+                    error = null
+                )
 
             when (
                 val result =
-                    logoutUseCase()
+                    authSessionCoordinator.logout()
             ) {
 
                 is Result.Success -> {
 
-                    _authState.value =
-                        AuthState.Unauthenticated(
-                            reason =
-                                AuthState.Unauthenticated
-                                    .Reason.LoggedOut
-                        )
+                    _uiState.value =
+                        AuthUiState()
                 }
 
                 is Result.Error -> {
-
-                    _authState.value =
-                        AuthState.Error(
-                            error = result.error
-                        )
+                    handleOperationError(result.error)
                 }
             }
         }
     }
 
     // ----------------------------------------------------
-    // Lock
+    // Operation error handling
     // ----------------------------------------------------
 
-    fun lockForInactivity() {
+    private fun handleOperationError(
+        error: AppError
+    ) {
 
-        if (
-            _authState.value
-                    is AuthState.Authenticated
-        ) {
-            _authState.value =
-                AuthState.Locked(
-                    reason =
-                        AuthState.Locked.LockReason
-                            .InactivityTimeout
-                )
-        }
-    }
-
-    fun lockOnAppLaunch() {
-
-        if (
-            _authState.value
-                    is AuthState.Authenticated
-        ) {
-            _authState.value =
-                AuthState.Locked(
-                    reason =
-                        AuthState.Locked.LockReason
-                            .AppLaunchRequiresUnlock
-                )
-        }
-    }
-
-    // ----------------------------------------------------
-    // Unlock
-    // ----------------------------------------------------
-
-    fun unlock() {
-
-        viewModelScope.launch {
-
-            when (
-                val result =
-                    unlockSessionUseCase()
-            ) {
-
-                is Result.Success -> {
-
-                    _authState.value =
-                        AuthState.Authenticated(
-                            user = result.data
-                        )
-                }
-
-                is Result.Error -> {
-
-                    _authState.value =
-                        AuthState.Error(
-                            error = result.error
-                        )
-                }
-            }
-        }
+        _uiState.value =
+            _uiState.value.copy(
+                isSubmitting = false,
+                error = error
+            )
     }
 }

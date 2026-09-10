@@ -4,7 +4,8 @@ import androidx.room.ColumnInfo
 
 data class UserDomainModel(
     val userId: Long,
-    val userName: String,
+    val userEmail: String,
     val passHash: String,
     val passSalt: String
+    // val createdAt: Long
 )

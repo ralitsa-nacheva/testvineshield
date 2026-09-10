@@ -23,7 +23,7 @@ interface UserDao {
     suspend fun changePassword() //todo
 
     @Query("Select * From user Where user_id = :userId")
-    suspend fun getUserById(userId: Long): Flow<UserEntity>
+    suspend fun getUserById(userId: Long): UserEntity
 
     @Query("SELECT * FROM user WHERE user_email = :email LIMIT 1")
     suspend fun getUserByEmail(email: String): UserEntity?

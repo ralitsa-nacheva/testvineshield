@@ -4,7 +4,10 @@ import com.rncoding.testvineshield.core.domain.error.AppError
 import com.rncoding.testvineshield.core.domain.error.Result
 
 interface LocalAuthenticator {
+    suspend fun isAvailable():
+            Result<Boolean, AppError>
 
-    suspend fun authenticate():
-            Result<Unit, AppError>
+    suspend fun authenticate(
+        reason: String
+    ): Result<Unit, AppError>
 }

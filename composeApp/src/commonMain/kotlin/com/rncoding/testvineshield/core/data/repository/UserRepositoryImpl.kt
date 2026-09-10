@@ -33,8 +33,8 @@ class UserRepositoryImpl(
             UserEntity(
                 userEmail = email,
                 passHash = hash,
-                passSalt = salt,
-                createdAt = Clock.System.now().toEpochMilliseconds()
+                passSalt = salt
+               // createdAt = Clock.System.now().toEpochMilliseconds()
             )
         )
 
@@ -64,14 +64,22 @@ class UserRepositoryImpl(
         userDao.upsertUser(userMapper.domainToEntity(domainUser))
     }
 
-    override suspend fun observeUser(userId: Long): Flow<UserDomainModel?> { // duplicate with getuserbyid
-        return userDao.getUserById(userId)
-            .map{entity -> userMapper.entityToDomain(entity)}
-    }
+   // override suspend fun observeUser(userId: Long): Flow<UserDomainModel?> { // duplicate with getuserbyid
+     //   return userDao.getUserById(userId)
+      //      .map{entity -> userMapper.entityToDomain(entity)}
+   // }
 
-    override suspend fun getUserById(userId: Long): Flow<UserDomainModel> {
-        return userDao.getUserById(userId)
-            .map{entity -> userMapper.entityToDomain(entity)}
+    override suspend fun getUserById(userId: Long): Result<UserDomainModel, AppError> {
+
+        val user = userDao.getUserById(userId)
+
+        if (user == null) {
+            return Result.Error(AuthError.UserAlreadyExists)
+        }
+        val userDomain = userMapper.entityToDomain(user)
+        return Result.Success(userDomain )
+        //return userDao.getUserById(userId)
+          //  .map{entity -> userMapper.entityToDomain(entity)}
     }
 
     override suspend fun deleteUser(userId: Long) {

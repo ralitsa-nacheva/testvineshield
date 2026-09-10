@@ -1,5 +1,5 @@
 package com.rncoding.testvineshield.core.domain.time
 
-interface SystemClock {
-    fun now(): Long
+interface AppClock {
+    fun nowMillis(): Long
 }

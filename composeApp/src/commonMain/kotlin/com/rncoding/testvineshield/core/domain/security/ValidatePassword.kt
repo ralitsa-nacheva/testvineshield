@@ -19,8 +19,9 @@ class ValidatePassword {
 
         if (password.length < MIN_LENGTH) {
             return Result.Error(
-                ValidationError.PasswordTooShort(
-                    minimumLength = MIN_LENGTH
+                ValidationError.TooShort(
+                    field = ValidationError.Field.PASSWORD,
+                    min = MIN_LENGTH
                 )
             )
         }

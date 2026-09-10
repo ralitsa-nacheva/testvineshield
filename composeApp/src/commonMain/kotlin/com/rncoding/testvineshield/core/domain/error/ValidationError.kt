@@ -1,104 +1,72 @@
 package com.rncoding.testvineshield.core.domain.error
 
+import com.rncoding.testvineshield.core.domain.error.AppError
+
 sealed interface ValidationError : AppError {
+
+    enum class Field(
+        val displayName: String
+    ) {
+        NAME("Name"),
+        EMAIL("Email"),
+        PASSWORD("Password")
+    }
 
     data class FieldEmpty(
         val field: Field
     ) : ValidationError {
-
-        override val userMessage: String =
-            when (field) {
-                Field.EMAIL -> "Email cannot be empty."
-                Field.PASSWORD -> "Password cannot be empty."
-                Field.NAME -> "Name cannot be empty."
-                Field.VINEYARD_NAME -> "Vineyard name cannot be empty."
-            }
-
-        override val debugMessage: String =
-            "Required field was empty: $field"
-
-        override val cause: Throwable? = null
-    }
-
-    data object InvalidEmail : ValidationError {
-
         override val userMessage =
-            "Please enter a valid email address."
-
+            "${field.displayName} is required."
         override val debugMessage =
-            "Email validation failed."
-
+            "Required field is empty: $field"
         override val cause: Throwable? = null
     }
 
-    data class PasswordTooShort(
-        val minimumLength: Int
+    data class TooShort(
+        val field: Field,
+        val min: Int
     ) : ValidationError {
-
         override val userMessage =
-            "Password must be at least $minimumLength characters."
-
+            "${field.displayName} is too short."
         override val debugMessage =
-            "Password length validation failed."
-
-        override val cause: Throwable? = null
-    }
-
-    data object PasswordMissingUppercase : ValidationError {
-
-        override val userMessage =
-            "Password must contain an uppercase letter."
-
-        override val debugMessage =
-            "Password uppercase-character validation failed."
-
-        override val cause: Throwable? = null
-    }
-
-    data object PasswordMissingDigit : ValidationError {
-
-        override val userMessage =
-            "Password must contain a digit."
-
-        override val debugMessage =
-            "Password digit validation failed."
-
+            "$field is shorter than minimum length $min"
         override val cause: Throwable? = null
     }
 
     data class TooLong(
         val field: Field,
-        val maximumLength: Int
+        val max: Int
     ) : ValidationError {
-
         override val userMessage =
-            "${field.displayName} must be less than $maximumLength characters."
-
+            "${field.displayName} is too long."
         override val debugMessage =
-            "Maximum length validation failed for $field."
-
+            "$field exceeds maximum length $max"
         override val cause: Throwable? = null
     }
 
     data class InvalidFormat(
         val field: Field
     ) : ValidationError {
-
         override val userMessage =
-            "Invalid ${field.displayName.lowercase()} format."
-
+            "${field.displayName} has an invalid format."
         override val debugMessage =
-            "Format validation failed for $field."
-
+            "Invalid format for field: $field"
         override val cause: Throwable? = null
     }
 
-    enum class Field(
-        val displayName: String
-    ) {
-        EMAIL("Email"),
-        PASSWORD("Password"),
-        NAME("Name"),
-        VINEYARD_NAME("Vineyard name")
+    data object PasswordMissingUppercase : ValidationError {
+        override val userMessage =
+            "Password must contain at least one uppercase letter."
+        override val debugMessage =
+            "Password contains no uppercase character."
+        override val cause: Throwable? = null
+    }
+
+    data object PasswordMissingDigit : ValidationError {
+        override val userMessage =
+            "Password must contain at least one digit."
+        override val debugMessage =
+            "Password contains no digit."
+        override val cause: Throwable? = null
     }
 }
