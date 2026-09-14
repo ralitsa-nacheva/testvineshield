@@ -9,6 +9,7 @@ import com.rncoding.testvineshield.core.data.local.database.daos.DiseaseAlertDao
 import com.rncoding.testvineshield.core.data.local.database.daos.DiseaseDao
 import com.rncoding.testvineshield.core.data.local.database.daos.DiseaseOccurrenceDao
 import com.rncoding.testvineshield.core.data.local.database.daos.HarvestDao
+import com.rncoding.testvineshield.core.data.local.database.daos.SecuritySettingsDao
 import com.rncoding.testvineshield.core.data.local.database.daos.SymptomDao
 import com.rncoding.testvineshield.core.data.local.database.daos.UserDao
 import com.rncoding.testvineshield.core.data.local.database.daos.VineyardDao
@@ -49,6 +50,7 @@ abstract class VineshieldDatabase: RoomDatabase() {
     abstract fun harvestDao(): HarvestDao
     abstract fun symptomDao(): SymptomDao
     abstract fun userDao(): UserDao
+    abstract fun securitySettingsDao(): SecuritySettingsDao
     abstract fun weatherCalculationsDao(): WeatherCalculationsDao
 
 }

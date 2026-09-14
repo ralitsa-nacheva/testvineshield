@@ -16,6 +16,8 @@ import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.usecases.user.LogoutUserUseCase
 import com.rncoding.testvineshield.core.domain.usecases.user.RestoreSessionUseCase
 import com.rncoding.testvineshield.core.domain.usecases.user.UnlockSessionUseCase
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
 class AuthViewModel(
@@ -39,6 +41,15 @@ class AuthViewModel(
 
     val uiState: StateFlow<AuthUiState> =
         _uiState.asStateFlow()
+
+    private val _events =
+        Channel<AuthUiEvent>(
+            capacity = Channel.BUFFERED
+        )
+
+    val events =
+        _events.receiveAsFlow()
+
 
     // ----------------------------------------------------
     // Initialization
@@ -81,6 +92,10 @@ class AuthViewModel(
         viewModelScope.launch {
             authSessionCoordinator.restoreSession()
         }
+    }
+
+    fun retryRestoreSession() {
+        restoreSession()
     }
 
     // ----------------------------------------------------
@@ -174,6 +189,9 @@ class AuthViewModel(
                             error = null,
                             password = ""
                         )
+                    _events.send(
+                        AuthUiEvent.RegistrationSuccess
+                    )
                 }
 
                 is Result.Error -> {
@@ -284,4 +302,6 @@ class AuthViewModel(
                 error = error
             )
     }
+
+
 }

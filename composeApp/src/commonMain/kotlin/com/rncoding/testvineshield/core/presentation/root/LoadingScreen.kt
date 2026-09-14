@@ -1,4 +1,4 @@
-package com.rncoding.testvineshield.core.presentation.loading
+package com.rncoding.testvineshield.core.presentation.root
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize

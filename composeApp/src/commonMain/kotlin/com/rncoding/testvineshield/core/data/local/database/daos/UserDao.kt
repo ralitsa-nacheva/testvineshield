@@ -5,39 +5,70 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
-import androidx.room.Upsert
 import com.rncoding.testvineshield.core.data.local.database.entities.UserEntity
 import com.rncoding.testvineshield.core.data.local.database.relations.UserWithVineyards
-import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface UserDao {
-    @Upsert
-    @Transaction
-    suspend fun upsertUser(user: UserEntity): Long // should split this into separate insert and updatepassword functions
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE) // is this correct?
-    suspend fun registerUser(user: UserEntity): UserEntity
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertUser(user: UserEntity): Long
 
-    @Upsert
-    suspend fun changePassword() //todo
+    @Query("""
+        SELECT *
+        FROM user
+        WHERE user_id = :userId
+        LIMIT 1
+        """
+    )
+    suspend fun getUserById(
+        userId: Long
+    ): UserEntity?
 
-    @Query("Select * From user Where user_id = :userId")
-    suspend fun getUserById(userId: Long): UserEntity
+    @Query(
+        """
+        SELECT *
+        FROM user
+        WHERE user_email = :email
+        LIMIT 1
+        """
+    )
+    suspend fun getUserByEmail(
+        email: String
+    ): UserEntity?
 
-    @Query("SELECT * FROM user WHERE user_email = :email LIMIT 1")
-    suspend fun getUserByEmail(email: String): UserEntity?
+    @Query(
+        """
+        UPDATE user
+        SET pass_hash = :passwordHash,
+            pass_salt = :passwordSalt
+        WHERE user_id = :userId
+        """
+    )
+    suspend fun updatePassword(
+        userId: Long,
+        passwordHash: String,
+        passwordSalt: String
+    ): Int
 
-    @Query("Select * From user")
-    suspend fun getAllUsers(): Flow<List<UserEntity>>
+    @Query(
+        """
+        DELETE FROM user
+        WHERE user_id = :userId
+        """
+    )
+    suspend fun deleteUser(
+        userId: Long
+    ): Int
+
+    @Query(
+        """
+        DELETE FROM user
+        """
+    )
+    suspend fun deleteAllUsers(): Int
 
     @Transaction
     @Query("SELECT * FROM user WHERE user_id = :userId")
     suspend fun getUserWithVineyards(userId: Long): List<UserWithVineyards>
-
-    @Query("Delete From user Where user_id = :userId")
-    suspend fun deleteUser(userId: Long)
-
-    @Query("Delete From user")
-    suspend fun deleteAllUsers()
 }

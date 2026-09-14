@@ -8,17 +8,14 @@ import kotlinx.coroutines.flow.Flow
 
 interface UserRepository {
 
-    suspend fun register(email: String, password: String): Result<UserDomainModel, AppError> // does it have to return anything
+    suspend fun register(email: String, password: String): Result<UserDomainModel, AppError>
 
     suspend fun login(email: String, password: String): Result<UserDomainModel, AppError>
 
-    suspend fun logout()
+    //suspend fun logout() move it in session management
 
    // suspend fun observeUser(userId: Long): Flow<UserDomainModel?>
 
     suspend fun getUserById(userId: Long): Result<UserDomainModel?, AppError>
-
-    suspend fun upsertUser(domainUser: UserDomainModel) // do i need this as i already have register function
-
     suspend fun deleteUser(userId: Long)
 }

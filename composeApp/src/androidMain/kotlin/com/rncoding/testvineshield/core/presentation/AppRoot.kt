@@ -5,7 +5,7 @@ import com.rncoding.testvineshield.core.domain.auth.AuthState
 import com.rncoding.testvineshield.core.presentation.auth.AuthScreen
 import com.rncoding.testvineshield.core.presentation.dashboard.DashboardScreen
 import com.rncoding.testvineshield.core.presentation.error.ErrorScreen
-import com.rncoding.testvineshield.core.presentation.loading.LoadingScreen
+import com.rncoding.testvineshield.core.presentation.root.LoadingScreen
 
 /**
  * Root navigation/state dispatcher for the application.

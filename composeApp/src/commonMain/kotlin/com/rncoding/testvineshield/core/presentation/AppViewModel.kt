@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rncoding.testvineshield.core.domain.auth.AuthState
+import com.rncoding.testvineshield.core.domain.auth.ObserveAuthStateUseCase
 import com.rncoding.testvineshield.core.domain.error.UnexpectedError
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
