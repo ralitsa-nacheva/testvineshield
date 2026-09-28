@@ -1,0 +1,1782 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "4d3ba053776d3e7c929cb0bb42f6abb9",
+    "entities": [
+      {
+        "tableName": "activity",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`activity_id` INTEGER NOT NULL, `vineyard_id` INTEGER NOT NULL, `block_id` INTEGER, `activity_type` TEXT NOT NULL, `activity_description` TEXT NOT NULL, `season` TEXT NOT NULL, `phenological_stage` TEXT NOT NULL, `priority` TEXT NOT NULL, `status` TEXT NOT NULL, `planned_at` TEXT NOT NULL, `completed_at` TEXT NOT NULL, `tool` TEXT, `notes` TEXT, `created_at` TEXT NOT NULL, `updated_at` TEXT NOT NULL, `treatment_product` TEXT, `treatment_product_quantity` REAL, `treatment_product_units` TEXT, `water_quantity` REAL, `treatment_product_rate` REAL, PRIMARY KEY(`activity_id`), FOREIGN KEY(`vineyard_id`) REFERENCES `vineyard`(`vineyard_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`block_id`) REFERENCES `block`(`block_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "activityId",
+            "columnName": "activity_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vineyardId",
+            "columnName": "vineyard_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "blockId",
+            "columnName": "block_id",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "activityType",
+            "columnName": "activity_type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "activityDescription",
+            "columnName": "activity_description",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "season",
+            "columnName": "season",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "phenologicalStage",
+            "columnName": "phenological_stage",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "priority",
+            "columnName": "priority",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "plannedAt",
+            "columnName": "planned_at",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "completedAt",
+            "columnName": "completed_at",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tool",
+            "columnName": "tool",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updated_at",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "treatmentProduct",
+            "columnName": "treatment_product",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "treatmentProductQuantity",
+            "columnName": "treatment_product_quantity",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "treatmentProductUnits",
+            "columnName": "treatment_product_units",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "waterQuantity",
+            "columnName": "water_quantity",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "treatmentProductRate",
+            "columnName": "treatment_product_rate",
+            "affinity": "REAL"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "activity_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_activity_vineyard_id",
+            "unique": false,
+            "columnNames": [
+              "vineyard_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_activity_vineyard_id` ON `${TABLE_NAME}` (`vineyard_id`)"
+          },
+          {
+            "name": "index_activity_block_id",
+            "unique": false,
+            "columnNames": [
+              "block_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_activity_block_id` ON `${TABLE_NAME}` (`block_id`)"
+          },
+          {
+            "name": "index_activity_block_id_completed_at",
+            "unique": false,
+            "columnNames": [
+              "block_id",
+              "completed_at"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_activity_block_id_completed_at` ON `${TABLE_NAME}` (`block_id`, `completed_at`)"
+          },
+          {
+            "name": "index_activity_vineyard_id_completed_at",
+            "unique": false,
+            "columnNames": [
+              "vineyard_id",
+              "completed_at"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_activity_vineyard_id_completed_at` ON `${TABLE_NAME}` (`vineyard_id`, `completed_at`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "vineyard",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "vineyard_id"
+            ],
+            "referencedColumns": [
+              "vineyard_id"
+            ]
+          },
+          {
+            "table": "block",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "block_id"
+            ],
+            "referencedColumns": [
+              "block_id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "activity_occurrence_cross_ref",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`activity_id` INTEGER NOT NULL, `occurrence_id` INTEGER NOT NULL, PRIMARY KEY(`activity_id`, `occurrence_id`), FOREIGN KEY(`activity_id`) REFERENCES `activity`(`activity_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`occurrence_id`) REFERENCES `disease_occurrence`(`occurrence_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "activityId",
+            "columnName": "activity_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "occurrenceId",
+            "columnName": "occurrence_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "activity_id",
+            "occurrence_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_activity_occurrence_cross_ref_occurrence_id",
+            "unique": false,
+            "columnNames": [
+              "occurrence_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_activity_occurrence_cross_ref_occurrence_id` ON `${TABLE_NAME}` (`occurrence_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "activity",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "activity_id"
+            ],
+            "referencedColumns": [
+              "activity_id"
+            ]
+          },
+          {
+            "table": "disease_occurrence",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "occurrence_id"
+            ],
+            "referencedColumns": [
+              "occurrence_id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "block",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`block_id` INTEGER NOT NULL, `vineyard_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `area` INTEGER NOT NULL, `vine_variety` TEXT NOT NULL, `color` TEXT NOT NULL, `root_stock` TEXT NOT NULL, `rows` TEXT NOT NULL, `row_spacing` INTEGER NOT NULL, `planted_at` TEXT NOT NULL, PRIMARY KEY(`block_id`), FOREIGN KEY(`vineyard_id`) REFERENCES `vineyard`(`vineyard_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "blockId",
+            "columnName": "block_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vineyardId",
+            "columnName": "vineyard_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "area",
+            "columnName": "area",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vineVariety",
+            "columnName": "vine_variety",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "color",
+            "columnName": "color",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rootStock",
+            "columnName": "root_stock",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rows",
+            "columnName": "rows",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rowSpacing",
+            "columnName": "row_spacing",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "plantedAt",
+            "columnName": "planted_at",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "block_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_block_vineyard_id",
+            "unique": false,
+            "columnNames": [
+              "vineyard_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_block_vineyard_id` ON `${TABLE_NAME}` (`vineyard_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "vineyard",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "vineyard_id"
+            ],
+            "referencedColumns": [
+              "vineyard_id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "disease_alert",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`alert_id` INTEGER NOT NULL, `disease_id` INTEGER NOT NULL, `vineyard_id` INTEGER NOT NULL, `block_id` INTEGER, `created_at` TEXT NOT NULL, `alert` TEXT NOT NULL, `alert_status` TEXT NOT NULL, `alert_severity` TEXT NOT NULL, `phenological_stage` TEXT NOT NULL, PRIMARY KEY(`alert_id`), FOREIGN KEY(`disease_id`) REFERENCES `disease`(`disease_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`vineyard_id`) REFERENCES `vineyard`(`vineyard_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`block_id`) REFERENCES `block`(`block_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "alertId",
+            "columnName": "alert_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "diseaseId",
+            "columnName": "disease_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vineyardId",
+            "columnName": "vineyard_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "blockId",
+            "columnName": "block_id",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "alert",
+            "columnName": "alert",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "alertStatus",
+            "columnName": "alert_status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "alertSeverity",
+            "columnName": "alert_severity",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "phenologicalStage",
+            "columnName": "phenological_stage",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "alert_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_disease_alert_disease_id",
+            "unique": false,
+            "columnNames": [
+              "disease_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_disease_alert_disease_id` ON `${TABLE_NAME}` (`disease_id`)"
+          },
+          {
+            "name": "index_disease_alert_vineyard_id",
+            "unique": false,
+            "columnNames": [
+              "vineyard_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_disease_alert_vineyard_id` ON `${TABLE_NAME}` (`vineyard_id`)"
+          },
+          {
+            "name": "index_disease_alert_block_id",
+            "unique": false,
+            "columnNames": [
+              "block_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_disease_alert_block_id` ON `${TABLE_NAME}` (`block_id`)"
+          },
+          {
+            "name": "index_disease_alert_vineyard_id_alert_status_created_at",
+            "unique": false,
+            "columnNames": [
+              "vineyard_id",
+              "alert_status",
+              "created_at"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_disease_alert_vineyard_id_alert_status_created_at` ON `${TABLE_NAME}` (`vineyard_id`, `alert_status`, `created_at`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "disease",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "disease_id"
+            ],
+            "referencedColumns": [
+              "disease_id"
+            ]
+          },
+          {
+            "table": "vineyard",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "vineyard_id"
+            ],
+            "referencedColumns": [
+              "vineyard_id"
+            ]
+          },
+          {
+            "table": "block",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "block_id"
+            ],
+            "referencedColumns": [
+              "block_id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "disease",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`disease_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `description` TEXT NOT NULL, `vectors` TEXT NOT NULL, `factors` TEXT NOT NULL, `treatment_suggestion` TEXT NOT NULL, PRIMARY KEY(`disease_id`))",
+        "fields": [
+          {
+            "fieldPath": "diseaseId",
+            "columnName": "disease_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "description",
+            "columnName": "description",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vectors",
+            "columnName": "vectors",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "factors",
+            "columnName": "factors",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "treatmentSuggestion",
+            "columnName": "treatment_suggestion",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "disease_id"
+          ]
+        }
+      },
+      {
+        "tableName": "disease_occurrence",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`occurrence_id` INTEGER NOT NULL, `disease_id` INTEGER NOT NULL, `vineyard_id` INTEGER NOT NULL, `block_id` INTEGER, `observed_at` TEXT NOT NULL, `severity` INTEGER NOT NULL, `status` TEXT NOT NULL, `cured_at` TEXT, `created_at` TEXT NOT NULL, `updated_at` TEXT NOT NULL, `notes` TEXT, PRIMARY KEY(`occurrence_id`), FOREIGN KEY(`disease_id`) REFERENCES `disease`(`disease_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`vineyard_id`) REFERENCES `vineyard`(`vineyard_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`block_id`) REFERENCES `block`(`block_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "occurrenceId",
+            "columnName": "occurrence_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "diseaseId",
+            "columnName": "disease_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vineyardId",
+            "columnName": "vineyard_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "blockId",
+            "columnName": "block_id",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "observedAt",
+            "columnName": "observed_at",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "severity",
+            "columnName": "severity",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "curedAt",
+            "columnName": "cured_at",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updated_at",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "occurrence_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_disease_occurrence_disease_id",
+            "unique": false,
+            "columnNames": [
+              "disease_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_disease_occurrence_disease_id` ON `${TABLE_NAME}` (`disease_id`)"
+          },
+          {
+            "name": "index_disease_occurrence_vineyard_id",
+            "unique": false,
+            "columnNames": [
+              "vineyard_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_disease_occurrence_vineyard_id` ON `${TABLE_NAME}` (`vineyard_id`)"
+          },
+          {
+            "name": "index_disease_occurrence_block_id",
+            "unique": false,
+            "columnNames": [
+              "block_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_disease_occurrence_block_id` ON `${TABLE_NAME}` (`block_id`)"
+          },
+          {
+            "name": "index_disease_occurrence_block_id_observed_at",
+            "unique": false,
+            "columnNames": [
+              "block_id",
+              "observed_at"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_disease_occurrence_block_id_observed_at` ON `${TABLE_NAME}` (`block_id`, `observed_at`)"
+          },
+          {
+            "name": "index_disease_occurrence_vineyard_id_observed_at",
+            "unique": false,
+            "columnNames": [
+              "vineyard_id",
+              "observed_at"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_disease_occurrence_vineyard_id_observed_at` ON `${TABLE_NAME}` (`vineyard_id`, `observed_at`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "disease",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "disease_id"
+            ],
+            "referencedColumns": [
+              "disease_id"
+            ]
+          },
+          {
+            "table": "vineyard",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "vineyard_id"
+            ],
+            "referencedColumns": [
+              "vineyard_id"
+            ]
+          },
+          {
+            "table": "block",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "block_id"
+            ],
+            "referencedColumns": [
+              "block_id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "DiseaseSymptomCrossRef",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`disease_id` INTEGER NOT NULL, `symptom_id` INTEGER NOT NULL, PRIMARY KEY(`disease_id`, `symptom_id`))",
+        "fields": [
+          {
+            "fieldPath": "diseaseId",
+            "columnName": "disease_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "symptomId",
+            "columnName": "symptom_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "disease_id",
+            "symptom_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_DiseaseSymptomCrossRef_symptom_id",
+            "unique": false,
+            "columnNames": [
+              "symptom_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_DiseaseSymptomCrossRef_symptom_id` ON `${TABLE_NAME}` (`symptom_id`)"
+          }
+        ]
+      },
+      {
+        "tableName": "harvest",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`harvest_id` INTEGER NOT NULL, `block_id` INTEGER NOT NULL, `season` TEXT NOT NULL, `harvest_date` TEXT NOT NULL, `units` TEXT NOT NULL, `quantity` INTEGER NOT NULL, `brix_sugar_content` INTEGER NOT NULL, PRIMARY KEY(`harvest_id`), FOREIGN KEY(`block_id`) REFERENCES `block`(`block_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "harvestId",
+            "columnName": "harvest_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "blockId",
+            "columnName": "block_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "season",
+            "columnName": "season",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "harvestDate",
+            "columnName": "harvest_date",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "units",
+            "columnName": "units",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "quantity",
+            "columnName": "quantity",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "brixSugarContent",
+            "columnName": "brix_sugar_content",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "harvest_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_harvest_block_id",
+            "unique": false,
+            "columnNames": [
+              "block_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_harvest_block_id` ON `${TABLE_NAME}` (`block_id`)"
+          },
+          {
+            "name": "index_harvest_block_id_harvest_date",
+            "unique": false,
+            "columnNames": [
+              "block_id",
+              "harvest_date"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_harvest_block_id_harvest_date` ON `${TABLE_NAME}` (`block_id`, `harvest_date`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "block",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "block_id"
+            ],
+            "referencedColumns": [
+              "block_id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "observed_symptom",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`observation_id` INTEGER NOT NULL, `symptom_id` INTEGER NOT NULL, `occurrence_id` INTEGER NOT NULL, `observed_at` INTEGER NOT NULL, `severity` INTEGER NOT NULL, `note` TEXT NOT NULL, PRIMARY KEY(`observation_id`))",
+        "fields": [
+          {
+            "fieldPath": "observationId",
+            "columnName": "observation_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "symptomId",
+            "columnName": "symptom_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "occurrenceId",
+            "columnName": "occurrence_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "observedAt",
+            "columnName": "observed_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "severity",
+            "columnName": "severity",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "note",
+            "columnName": "note",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "observation_id"
+          ]
+        }
+      },
+      {
+        "tableName": "OccurrenceActivityCrossRef",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`occurrence_id` INTEGER NOT NULL, `activity_id` INTEGER NOT NULL, `applied_at` TEXT NOT NULL, `created_at` TEXT NOT NULL, `notes` TEXT NOT NULL, PRIMARY KEY(`occurrence_id`, `activity_id`), FOREIGN KEY(`occurrence_id`) REFERENCES `disease_occurrence`(`occurrence_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`activity_id`) REFERENCES `activity`(`activity_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "occurrenceId",
+            "columnName": "occurrence_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "treatmentId",
+            "columnName": "activity_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "appliedAt",
+            "columnName": "applied_at",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "occurrence_id",
+            "activity_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_OccurrenceActivityCrossRef_occurrence_id",
+            "unique": false,
+            "columnNames": [
+              "occurrence_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_OccurrenceActivityCrossRef_occurrence_id` ON `${TABLE_NAME}` (`occurrence_id`)"
+          },
+          {
+            "name": "index_OccurrenceActivityCrossRef_activity_id",
+            "unique": false,
+            "columnNames": [
+              "activity_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_OccurrenceActivityCrossRef_activity_id` ON `${TABLE_NAME}` (`activity_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "disease_occurrence",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "occurrence_id"
+            ],
+            "referencedColumns": [
+              "occurrence_id"
+            ]
+          },
+          {
+            "table": "activity",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "activity_id"
+            ],
+            "referencedColumns": [
+              "activity_id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "OccurrenceSymptomCrossRef",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`occurrence_id` INTEGER NOT NULL, `symptom_id` INTEGER NOT NULL, `observed_at` TEXT NOT NULL, `severity` TEXT NOT NULL, `notes` TEXT NOT NULL, PRIMARY KEY(`occurrence_id`, `symptom_id`), FOREIGN KEY(`occurrence_id`) REFERENCES `disease_occurrence`(`occurrence_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`symptom_id`) REFERENCES `symptom`(`symptom_id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        "fields": [
+          {
+            "fieldPath": "occurrenceId",
+            "columnName": "occurrence_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "symptomId",
+            "columnName": "symptom_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "observedAt",
+            "columnName": "observed_at",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "severity",
+            "columnName": "severity",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "occurrence_id",
+            "symptom_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_OccurrenceSymptomCrossRef_symptom_id",
+            "unique": false,
+            "columnNames": [
+              "symptom_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_OccurrenceSymptomCrossRef_symptom_id` ON `${TABLE_NAME}` (`symptom_id`)"
+          },
+          {
+            "name": "index_OccurrenceSymptomCrossRef_occurrence_id_observed_at",
+            "unique": false,
+            "columnNames": [
+              "occurrence_id",
+              "observed_at"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_OccurrenceSymptomCrossRef_occurrence_id_observed_at` ON `${TABLE_NAME}` (`occurrence_id`, `observed_at`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "disease_occurrence",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "occurrence_id"
+            ],
+            "referencedColumns": [
+              "occurrence_id"
+            ]
+          },
+          {
+            "table": "symptom",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "symptom_id"
+            ],
+            "referencedColumns": [
+              "symptom_id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "security_settings",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`user_id` INTEGER NOT NULL, `biometric_enabled` INTEGER NOT NULL, `app_pin_enabled` INTEGER NOT NULL, PRIMARY KEY(`user_id`))",
+        "fields": [
+          {
+            "fieldPath": "userId",
+            "columnName": "user_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "biometricEnabled",
+            "columnName": "biometric_enabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "appPinEnabled",
+            "columnName": "app_pin_enabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "user_id"
+          ]
+        }
+      },
+      {
+        "tableName": "session",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`session_id` INTEGER NOT NULL, `user_id` INTEGER NOT NULL, `created_at` INTEGER NOT NULL, `last_active_at` INTEGER NOT NULL, `expires_at` INTEGER NOT NULL, PRIMARY KEY(`session_id`))",
+        "fields": [
+          {
+            "fieldPath": "sessionId",
+            "columnName": "session_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userId",
+            "columnName": "user_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastActiveAt",
+            "columnName": "last_active_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "expiresAt",
+            "columnName": "expires_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "session_id"
+          ]
+        }
+      },
+      {
+        "tableName": "symptom",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`symptom_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `plant_part` TEXT NOT NULL, `phenological_stage` TEXT NOT NULL, `notes` TEXT NOT NULL, PRIMARY KEY(`symptom_id`))",
+        "fields": [
+          {
+            "fieldPath": "symptomId",
+            "columnName": "symptom_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "plantPart",
+            "columnName": "plant_part",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "phenologicalStage",
+            "columnName": "phenological_stage",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "symptom_id"
+          ]
+        }
+      },
+      {
+        "tableName": "user",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`user_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `user_email` TEXT NOT NULL, `pass_hash` TEXT NOT NULL, `pass_salt` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "userId",
+            "columnName": "user_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "email",
+            "columnName": "user_email",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "passwordHash",
+            "columnName": "pass_hash",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "passwordSalt",
+            "columnName": "pass_salt",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "user_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_user_user_email",
+            "unique": true,
+            "columnNames": [
+              "user_email"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_user_user_email` ON `${TABLE_NAME}` (`user_email`)"
+          }
+        ]
+      },
+      {
+        "tableName": "vineyard",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`vineyard_id` INTEGER NOT NULL, `user_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `location_id` INTEGER NOT NULL, `size` REAL NOT NULL, `country` TEXT NOT NULL, `city` TEXT NOT NULL, `latitude` REAL NOT NULL, `longitude` REAL NOT NULL, `time_zone` TEXT NOT NULL, `elevation` INTEGER NOT NULL, `created_at` TEXT NOT NULL, `updated_at` TEXT NOT NULL, PRIMARY KEY(`vineyard_id`), FOREIGN KEY(`user_id`) REFERENCES `user`(`user_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "vineyardId",
+            "columnName": "vineyard_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userId",
+            "columnName": "user_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "locationId",
+            "columnName": "location_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "size",
+            "columnName": "size",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "country",
+            "columnName": "country",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "city",
+            "columnName": "city",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "latitude",
+            "columnName": "latitude",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "longitude",
+            "columnName": "longitude",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timeZone",
+            "columnName": "time_zone",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "elevation",
+            "columnName": "elevation",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updated_at",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "vineyard_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_vineyard_user_id",
+            "unique": false,
+            "columnNames": [
+              "user_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_vineyard_user_id` ON `${TABLE_NAME}` (`user_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "user",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "user_id"
+            ],
+            "referencedColumns": [
+              "user_id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "weather_calculation",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`weather_calc_id` INTEGER NOT NULL, `vineyard_id` INTEGER NOT NULL, `calculated_at` TEXT NOT NULL, `count_wetness_hours_at_10C` INTEGER NOT NULL, `count_hours_at_21C` INTEGER NOT NULL, `powdery_mildew_initial_infection` INTEGER NOT NULL, `days_from_budburst` INTEGER NOT NULL, `primary_incubation_days_count_pd` INTEGER NOT NULL, `secondary_incubation_days_count_pd` INTEGER NOT NULL, `infection_score` INTEGER NOT NULL, PRIMARY KEY(`weather_calc_id`), FOREIGN KEY(`vineyard_id`) REFERENCES `vineyard`(`vineyard_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "weatherCalcId",
+            "columnName": "weather_calc_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vineyardId",
+            "columnName": "vineyard_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "calculatedAt",
+            "columnName": "calculated_at",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "countWetnessHoursAt10C",
+            "columnName": "count_wetness_hours_at_10C",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "countHoursAt21C",
+            "columnName": "count_hours_at_21C",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "powderyMildewInitialInfection",
+            "columnName": "powdery_mildew_initial_infection",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "daysFromBudBurst",
+            "columnName": "days_from_budburst",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "primaryIncubationDaysCountPD",
+            "columnName": "primary_incubation_days_count_pd",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "secondaryIncubationDaysCountPD",
+            "columnName": "secondary_incubation_days_count_pd",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "infectionScore",
+            "columnName": "infection_score",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "weather_calc_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_weather_calculation_vineyard_id",
+            "unique": false,
+            "columnNames": [
+              "vineyard_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_weather_calculation_vineyard_id` ON `${TABLE_NAME}` (`vineyard_id`)"
+          },
+          {
+            "name": "index_weather_calculation_vineyard_id_calculated_at",
+            "unique": false,
+            "columnNames": [
+              "vineyard_id",
+              "calculated_at"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_weather_calculation_vineyard_id_calculated_at` ON `${TABLE_NAME}` (`vineyard_id`, `calculated_at`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "vineyard",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "vineyard_id"
+            ],
+            "referencedColumns": [
+              "vineyard_id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "weather",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`weather_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `vineyard_id` INTEGER NOT NULL, `timestamp` INTEGER NOT NULL, `temperature_2m` REAL NOT NULL, `relative_humidity_2m` REAL NOT NULL, `dew_point_2m` REAL NOT NULL, `cloud_cover` REAL NOT NULL, `wind_speed_10m` REAL NOT NULL, `precipitation` REAL NOT NULL, `rain` REAL NOT NULL, `showers` REAL NOT NULL, `snowfall` REAL NOT NULL, `snow_depth` REAL NOT NULL, `weather_code` INTEGER NOT NULL, `freezing_level_height` REAL NOT NULL, `visibility` REAL NOT NULL, `soil_temperature_0cm` REAL NOT NULL, `soil_temperature_6cm` REAL NOT NULL, `soil_moisture_0_to_1cm` REAL NOT NULL, `soil_moisture_1_to_3cm` REAL NOT NULL, `is_day` INTEGER NOT NULL, FOREIGN KEY(`vineyard_id`) REFERENCES `vineyard`(`vineyard_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "weatherId",
+            "columnName": "weather_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vineyardId",
+            "columnName": "vineyard_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timestamp",
+            "columnName": "timestamp",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hourlyTemp2m",
+            "columnName": "temperature_2m",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "relativeHumidity2m",
+            "columnName": "relative_humidity_2m",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dewPoint2m",
+            "columnName": "dew_point_2m",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cloudCover",
+            "columnName": "cloud_cover",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "windSpeed10m",
+            "columnName": "wind_speed_10m",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "precipitation",
+            "columnName": "precipitation",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rain",
+            "columnName": "rain",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "showers",
+            "columnName": "showers",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "snowfall",
+            "columnName": "snowfall",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "snowDepth",
+            "columnName": "snow_depth",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "weatherCode",
+            "columnName": "weather_code",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "freezingLevelHeight",
+            "columnName": "freezing_level_height",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "visibility",
+            "columnName": "visibility",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "soilTemperature0cm",
+            "columnName": "soil_temperature_0cm",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "soilTemperature6cm",
+            "columnName": "soil_temperature_6cm",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "soilMoisture0to1cm",
+            "columnName": "soil_moisture_0_to_1cm",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "soilMoisture1to3cm",
+            "columnName": "soil_moisture_1_to_3cm",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isDay",
+            "columnName": "is_day",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "weather_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_weather_vineyard_id_timestamp",
+            "unique": true,
+            "columnNames": [
+              "vineyard_id",
+              "timestamp"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_weather_vineyard_id_timestamp` ON `${TABLE_NAME}` (`vineyard_id`, `timestamp`)"
+          },
+          {
+            "name": "index_weather_timestamp",
+            "unique": false,
+            "columnNames": [
+              "timestamp"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_weather_timestamp` ON `${TABLE_NAME}` (`timestamp`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "vineyard",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "vineyard_id"
+            ],
+            "referencedColumns": [
+              "vineyard_id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "weather_forecast",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`forecast_id` INTEGER NOT NULL, `vineyard_id` INTEGER NOT NULL, `timestamp` INTEGER NOT NULL, `temperature_2m` REAL NOT NULL, `relative_humidity_2m` REAL NOT NULL, `dew_point_2m` REAL NOT NULL, `cloud_cover` REAL NOT NULL, `wind_speed_10m` REAL NOT NULL, `precipitation` REAL NOT NULL, `rain` REAL NOT NULL, `showers` REAL NOT NULL, `snowfall` REAL NOT NULL, `snow_depth` REAL NOT NULL, `weather_code` INTEGER NOT NULL, `freezing_level_height` REAL NOT NULL, `visibility` REAL NOT NULL, `soil_temperature_0cm` REAL NOT NULL, `soil_temperature_6cm` REAL NOT NULL, `soil_moisture_0_to_1cm` REAL NOT NULL, `soil_moisture_1_to_3cm` REAL NOT NULL, `is_day` INTEGER NOT NULL, `forecast_created_at` INTEGER NOT NULL, PRIMARY KEY(`forecast_id`), FOREIGN KEY(`vineyard_id`) REFERENCES `vineyard`(`vineyard_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "weatherId",
+            "columnName": "forecast_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vineyardId",
+            "columnName": "vineyard_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timestamp",
+            "columnName": "timestamp",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hourlyTemp2m",
+            "columnName": "temperature_2m",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "relativeHumidity2m",
+            "columnName": "relative_humidity_2m",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dewPoint2m",
+            "columnName": "dew_point_2m",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cloudCover",
+            "columnName": "cloud_cover",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "windSpeed10m",
+            "columnName": "wind_speed_10m",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "precipitation",
+            "columnName": "precipitation",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rain",
+            "columnName": "rain",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "showers",
+            "columnName": "showers",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "snowfall",
+            "columnName": "snowfall",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "snowDepth",
+            "columnName": "snow_depth",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "weatherCode",
+            "columnName": "weather_code",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "freezingLevelHeight",
+            "columnName": "freezing_level_height",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "visibility",
+            "columnName": "visibility",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "soilTemperature0cm",
+            "columnName": "soil_temperature_0cm",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "soilTemperature6cm",
+            "columnName": "soil_temperature_6cm",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "soilMoisture0to1cm",
+            "columnName": "soil_moisture_0_to_1cm",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "soilMoisture1to3cm",
+            "columnName": "soil_moisture_1_to_3cm",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isDay",
+            "columnName": "is_day",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "forecastCreatedAt",
+            "columnName": "forecast_created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "forecast_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_weather_forecast_vineyard_id_timestamp",
+            "unique": true,
+            "columnNames": [
+              "vineyard_id",
+              "timestamp"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_weather_forecast_vineyard_id_timestamp` ON `${TABLE_NAME}` (`vineyard_id`, `timestamp`)"
+          },
+          {
+            "name": "index_weather_forecast_timestamp",
+            "unique": false,
+            "columnNames": [
+              "timestamp"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_weather_forecast_timestamp` ON `${TABLE_NAME}` (`timestamp`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "vineyard",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "vineyard_id"
+            ],
+            "referencedColumns": [
+              "vineyard_id"
+            ]
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4d3ba053776d3e7c929cb0bb42f6abb9')"
+    ]
+  }
+}
