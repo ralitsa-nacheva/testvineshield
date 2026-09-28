@@ -1,0 +1,9 @@
+package com.rncoding.testvineshield.core.data.datasource
+
+import com.rncoding.testvineshield.core.data.remote.dto.HourlyWeatherDto
+import com.rncoding.testvineshield.core.data.remote.dto.WeatherDto
+
+interface WeatherRemoteDataSource {
+    suspend fun fetchWeather(latitude: Double, longitude: Double): HourlyWeatherDto
+    suspend fun fetchWeatherForecast(latitude: Double, longitude: Double): WeatherDto
+}
