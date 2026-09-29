@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "4d3ba053776d3e7c929cb0bb42f6abb9",
+    "identityHash": "ac3d2d43413cbb300b8f40edf27d9595",
     "entities": [
       {
         "tableName": "activity",
@@ -188,66 +188,6 @@
             ],
             "referencedColumns": [
               "block_id"
-            ]
-          }
-        ]
-      },
-      {
-        "tableName": "activity_occurrence_cross_ref",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`activity_id` INTEGER NOT NULL, `occurrence_id` INTEGER NOT NULL, PRIMARY KEY(`activity_id`, `occurrence_id`), FOREIGN KEY(`activity_id`) REFERENCES `activity`(`activity_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`occurrence_id`) REFERENCES `disease_occurrence`(`occurrence_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
-        "fields": [
-          {
-            "fieldPath": "activityId",
-            "columnName": "activity_id",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "occurrenceId",
-            "columnName": "occurrence_id",
-            "affinity": "INTEGER",
-            "notNull": true
-          }
-        ],
-        "primaryKey": {
-          "autoGenerate": false,
-          "columnNames": [
-            "activity_id",
-            "occurrence_id"
-          ]
-        },
-        "indices": [
-          {
-            "name": "index_activity_occurrence_cross_ref_occurrence_id",
-            "unique": false,
-            "columnNames": [
-              "occurrence_id"
-            ],
-            "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_activity_occurrence_cross_ref_occurrence_id` ON `${TABLE_NAME}` (`occurrence_id`)"
-          }
-        ],
-        "foreignKeys": [
-          {
-            "table": "activity",
-            "onDelete": "CASCADE",
-            "onUpdate": "NO ACTION",
-            "columns": [
-              "activity_id"
-            ],
-            "referencedColumns": [
-              "activity_id"
-            ]
-          },
-          {
-            "table": "disease_occurrence",
-            "onDelete": "CASCADE",
-            "onUpdate": "NO ACTION",
-            "columns": [
-              "occurrence_id"
-            ],
-            "referencedColumns": [
-              "occurrence_id"
             ]
           }
         ]
@@ -696,8 +636,8 @@
         ]
       },
       {
-        "tableName": "DiseaseSymptomCrossRef",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`disease_id` INTEGER NOT NULL, `symptom_id` INTEGER NOT NULL, PRIMARY KEY(`disease_id`, `symptom_id`))",
+        "tableName": "disease_symptom_cross_ref",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`disease_id` INTEGER NOT NULL, `symptom_id` INTEGER NOT NULL, PRIMARY KEY(`disease_id`, `symptom_id`), FOREIGN KEY(`disease_id`) REFERENCES `disease`(`disease_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`symptom_id`) REFERENCES `symptom`(`symptom_id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
         "fields": [
           {
             "fieldPath": "diseaseId",
@@ -721,13 +661,37 @@
         },
         "indices": [
           {
-            "name": "index_DiseaseSymptomCrossRef_symptom_id",
+            "name": "index_disease_symptom_cross_ref_symptom_id",
             "unique": false,
             "columnNames": [
               "symptom_id"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_DiseaseSymptomCrossRef_symptom_id` ON `${TABLE_NAME}` (`symptom_id`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_disease_symptom_cross_ref_symptom_id` ON `${TABLE_NAME}` (`symptom_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "disease",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "disease_id"
+            ],
+            "referencedColumns": [
+              "disease_id"
+            ]
+          },
+          {
+            "table": "symptom",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "symptom_id"
+            ],
+            "referencedColumns": [
+              "symptom_id"
+            ]
           }
         ]
       },
@@ -821,7 +785,7 @@
       },
       {
         "tableName": "observed_symptom",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`observation_id` INTEGER NOT NULL, `symptom_id` INTEGER NOT NULL, `occurrence_id` INTEGER NOT NULL, `observed_at` INTEGER NOT NULL, `severity` INTEGER NOT NULL, `note` TEXT NOT NULL, PRIMARY KEY(`observation_id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`observation_id` INTEGER NOT NULL, `symptom_id` INTEGER NOT NULL, `occurrence_id` INTEGER NOT NULL, `observed_at` INTEGER NOT NULL, `severity` INTEGER NOT NULL, `note` TEXT NOT NULL, PRIMARY KEY(`observation_id`), FOREIGN KEY(`occurrence_id`) REFERENCES `disease_occurrence`(`occurrence_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`symptom_id`) REFERENCES `symptom`(`symptom_id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
         "fields": [
           {
             "fieldPath": "observationId",
@@ -865,7 +829,51 @@
           "columnNames": [
             "observation_id"
           ]
-        }
+        },
+        "indices": [
+          {
+            "name": "index_observed_symptom_occurrence_id",
+            "unique": false,
+            "columnNames": [
+              "occurrence_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_observed_symptom_occurrence_id` ON `${TABLE_NAME}` (`occurrence_id`)"
+          },
+          {
+            "name": "index_observed_symptom_symptom_id",
+            "unique": false,
+            "columnNames": [
+              "symptom_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_observed_symptom_symptom_id` ON `${TABLE_NAME}` (`symptom_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "disease_occurrence",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "occurrence_id"
+            ],
+            "referencedColumns": [
+              "occurrence_id"
+            ]
+          },
+          {
+            "table": "symptom",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "symptom_id"
+            ],
+            "referencedColumns": [
+              "symptom_id"
+            ]
+          }
+        ]
       },
       {
         "tableName": "OccurrenceActivityCrossRef",
@@ -878,7 +886,7 @@
             "notNull": true
           },
           {
-            "fieldPath": "treatmentId",
+            "fieldPath": "activityId",
             "columnName": "activity_id",
             "affinity": "INTEGER",
             "notNull": true
@@ -1044,7 +1052,7 @@
       },
       {
         "tableName": "security_settings",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`user_id` INTEGER NOT NULL, `biometric_enabled` INTEGER NOT NULL, `app_pin_enabled` INTEGER NOT NULL, PRIMARY KEY(`user_id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`user_id` INTEGER NOT NULL, `biometric_enabled` INTEGER NOT NULL, `app_pin_enabled` INTEGER NOT NULL, PRIMARY KEY(`user_id`), FOREIGN KEY(`user_id`) REFERENCES `user`(`user_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "userId",
@@ -1070,49 +1078,31 @@
           "columnNames": [
             "user_id"
           ]
-        }
-      },
-      {
-        "tableName": "session",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`session_id` INTEGER NOT NULL, `user_id` INTEGER NOT NULL, `created_at` INTEGER NOT NULL, `last_active_at` INTEGER NOT NULL, `expires_at` INTEGER NOT NULL, PRIMARY KEY(`session_id`))",
-        "fields": [
+        },
+        "indices": [
           {
-            "fieldPath": "sessionId",
-            "columnName": "session_id",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "userId",
-            "columnName": "user_id",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "createdAt",
-            "columnName": "created_at",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "lastActiveAt",
-            "columnName": "last_active_at",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "expiresAt",
-            "columnName": "expires_at",
-            "affinity": "INTEGER",
-            "notNull": true
+            "name": "index_security_settings_user_id",
+            "unique": false,
+            "columnNames": [
+              "user_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_security_settings_user_id` ON `${TABLE_NAME}` (`user_id`)"
           }
         ],
-        "primaryKey": {
-          "autoGenerate": false,
-          "columnNames": [
-            "session_id"
-          ]
-        }
+        "foreignKeys": [
+          {
+            "table": "user",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "user_id"
+            ],
+            "referencedColumns": [
+              "user_id"
+            ]
+          }
+        ]
       },
       {
         "tableName": "symptom",
@@ -1776,7 +1766,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4d3ba053776d3e7c929cb0bb42f6abb9')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ac3d2d43413cbb300b8f40edf27d9595')"
     ]
   }
 }

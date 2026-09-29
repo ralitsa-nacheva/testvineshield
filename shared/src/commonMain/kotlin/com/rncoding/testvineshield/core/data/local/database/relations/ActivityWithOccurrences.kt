@@ -5,6 +5,7 @@ import androidx.room.Junction
 import androidx.room.Relation
 import com.rncoding.testvineshield.core.data.local.database.entities.ActivityEntity
 import com.rncoding.testvineshield.core.data.local.database.entities.DiseaseOccurrenceEntity
+import com.rncoding.testvineshield.core.data.local.database.entities.OccurrenceActivityCrossRef
 
 data class ActivityWithOccurrences(
     @Embedded
@@ -14,7 +15,7 @@ data class ActivityWithOccurrences(
         parentColumn = "activity_id",
         entityColumn = "occurrence_id",
         associateBy = Junction(
-            ActivityOccurrenceCrossRef::class,
+            OccurrenceActivityCrossRef::class,
             parentColumn = "activity_id",
             entityColumn = "occurrence_id"
         )

@@ -1,6 +1,5 @@
 package com.rncoding.testvineshield.core.presentation.root
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -15,54 +14,54 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.rncoding.testvineshield.core.domain.datamodels.UserDomainModel
 import com.rncoding.testvineshield.core.presentation.account.AccountScreenRoot
+import com.rncoding.testvineshield.core.presentation.security.SecuritySettingsScreenRoot
 
 @Composable
-fun MainAppScreen(
-    user: UserDomainModel
-) {
-    var showAccount by remember {
-        mutableStateOf(false)
-    }
+fun MainAppScreen(user: UserDomainModel) {
 
-    if (showAccount) {
+    var showAccount by remember { mutableStateOf(false) }
+    var showSecuritySettings by remember { mutableStateOf(false) }
 
-        AccountScreenRoot(
-            onBack = {
-                showAccount = false
-            },
-            onSecuritySettings = {
-                // Connect to SecuritySettingsScreen
-                // after the basic Account flow compiles.
-            }
-        )
-
-    } else {
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.Center
-        ) {
-
-            Text(
-                text = "VineShield"
-            )
-
-            Text(
-                text = "Welcome"
-            )
-
-            Text(
-                text = user.userEmail
-            )
-
-            Button(
-                onClick = {
-                    showAccount = true
+    when {
+        showSecuritySettings -> {
+            SecuritySettingsScreenRoot(
+                userId = user.userId,
+                onBack = {
+                    showSecuritySettings = false
                 }
+            )
+        }
+
+        showAccount -> {
+            AccountScreenRoot(
+                onBack = {
+                    showAccount = false
+                },
+                onSecuritySettings = {
+                    showSecuritySettings = true
+                }
+            )
+        }
+
+        else -> {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
             ) {
-                Text("Account")
+                Text("VineShield")
+
+                Text("Welcome")
+
+                Text(user.userEmail)
+
+                Button(
+                    onClick = {
+                        showAccount = true
+                    }
+                ) {
+                    Text("Account")
+                }
             }
         }
     }

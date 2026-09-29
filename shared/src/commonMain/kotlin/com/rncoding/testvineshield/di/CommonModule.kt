@@ -39,6 +39,7 @@ import com.rncoding.testvineshield.core.domain.usecases.user.RestoreSessionUseCa
 import com.rncoding.testvineshield.core.domain.usecases.user.UnlockSessionUseCase
 import com.rncoding.testvineshield.core.domain.usecases.user.UpdateUserUseCase
 import com.rncoding.testvineshield.core.presentation.account.AccountViewModel
+import com.rncoding.testvineshield.core.presentation.security.SecuritySettingsViewModel
 import com.rncoding.testvineshield.core.presentation.user_auth.AuthViewModel
 import kotlinx.serialization.json.Json
 import org.koin.core.module.dsl.viewModel
@@ -292,6 +293,14 @@ val commonModule =
             AccountViewModel(
                 authSessionCoordinator = get(),
                 observeAuthStateUseCase = get()
+            )
+        }
+
+        viewModel { (userId: Long) ->
+            SecuritySettingsViewModel(
+                userId = userId,
+                repository = get(),
+                biometricAuthenticator = get()
             )
         }
 
