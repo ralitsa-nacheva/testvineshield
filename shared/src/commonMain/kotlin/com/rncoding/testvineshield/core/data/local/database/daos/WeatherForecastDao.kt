@@ -3,21 +3,48 @@ package com.rncoding.testvineshield.core.data.local.database.daos
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Upsert
-import androidx.room.Transaction
 import com.rncoding.testvineshield.core.data.local.database.entities.WeatherForecastEntity
 import kotlinx.coroutines.flow.Flow
 
-
 @Dao
 interface WeatherForecastDao {
+
     @Upsert
-    @Transaction
-    suspend fun upsertForecast(forecast: WeatherForecastEntity)
+    suspend fun upsertForecast(
+        forecast: WeatherForecastEntity
+    )
 
-    @Query("Select * From weather_forecast Where vineyard_id= :vineyardId")
-    suspend fun observeForecastWeather(vineyardId: Long): Flow<WeatherForecastEntity>
+    @Query(
+        """
+        SELECT *
+        FROM weather_forecast
+        WHERE vineyard_id = :vineyardId
+        ORDER BY timestamp ASC
+        """
+    )
+    fun observeForecastWeather(
+        vineyardId: Long
+    ): Flow<List<WeatherForecastEntity>>
 
-    @Query("Delete From weather_forecast")
-    @Transaction
+    @Query(
+        """
+        SELECT *
+        FROM weather_forecast
+        WHERE vineyard_id = :vineyardId
+          AND timestamp >= :fromTimestamp
+        ORDER BY timestamp ASC
+        LIMIT 1
+        """
+    )
+    fun observeNextForecastWeather(
+        vineyardId: Long,
+        fromTimestamp: Long
+    ): Flow<WeatherForecastEntity?>
+
+    @Query(
+        """
+        DELETE FROM weather_forecast
+        """
+    )
     suspend fun deleteAllForecastWeather()
 }

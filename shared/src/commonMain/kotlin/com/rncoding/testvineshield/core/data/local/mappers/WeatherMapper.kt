@@ -1,6 +1,6 @@
 package com.rncoding.testvineshield.core.data.local.mappers
 
-import com.rncoding.testvineshield.core.data.local.database.entities.WeatherEntity
+import com.rncoding.testvineshield.core.data.local.database.entities.WeatherHistoryEntity
 import com.rncoding.testvineshield.core.data.remote.dto.WeatherDto
 import com.rncoding.testvineshield.core.domain.datamodels.WeatherDomainModel
 import kotlinx.datetime.LocalDateTime
@@ -14,9 +14,9 @@ class WeatherMapper {
         weatherDto: WeatherDto,
         vineyardId: Long,
         lastTimestamp: Long?
-    ):List<WeatherEntity> {
+    ):List<WeatherHistoryEntity> {
 
-        val weatherValues = mutableListOf<WeatherEntity>()
+        val weatherValues = mutableListOf<WeatherHistoryEntity>()
         val timezone = weatherDto.timezone
 
         for (i in weatherDto.hourlyWeather.timestamp.indices) {
@@ -28,7 +28,7 @@ class WeatherMapper {
                 continue
             }
             weatherValues.add(
-                WeatherEntity(
+                WeatherHistoryEntity(
                      weatherId = 0L,
                      vineyardId = vineyardId,
                      timestamp = timestamp,
@@ -66,7 +66,7 @@ class WeatherMapper {
     }
 
 
-    fun entityToDomain(entity: WeatherEntity): WeatherDomainModel {
+    fun entityToDomain(entity: WeatherHistoryEntity): WeatherDomainModel {
         return WeatherDomainModel(
             vineyardId = entity.vineyardId,
             timestamp = entity.timestamp,

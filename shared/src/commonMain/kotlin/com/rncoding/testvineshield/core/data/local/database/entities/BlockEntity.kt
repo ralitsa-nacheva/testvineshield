@@ -14,7 +14,7 @@ import kotlinx.datetime.LocalDate
     onDelete = ForeignKey.CASCADE
 )], indices = [Index("vineyard_id")])
 data class BlockEntity(
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "block_id")
     val blockId: Long,
     @ColumnInfo(name = "vineyard_id")

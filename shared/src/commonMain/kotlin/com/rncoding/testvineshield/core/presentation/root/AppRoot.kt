@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import com.rncoding.testvineshield.core.domain.auth.AuthState
+import com.rncoding.testvineshield.core.presentation.navigation.AuthenticatedApp
 import com.rncoding.testvineshield.core.presentation.user_auth.AuthViewModel
 import com.rncoding.testvineshield.core.presentation.user_auth.LockScreen
 import com.rncoding.testvineshield.core.presentation.user_auth.LoginRegisterScreen
@@ -38,11 +39,10 @@ fun AppRoot(
             )
         }
 
-        is AuthState.Authenticated -> {
-            MainAppScreen(
-                user = state.user
+        is AuthState.Authenticated ->
+            AuthenticatedApp(
+                userId = state.user.userId
             )
-        }
 
         is AuthState.Error -> {
             AuthStartupErrorScreen(

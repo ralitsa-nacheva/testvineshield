@@ -16,7 +16,7 @@ import androidx.room.PrimaryKey
     Index(value = ["timestamp"])
 ])
 data class WeatherForecastEntity(
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "forecast_id")
     val weatherId: Long,
     @ColumnInfo(name = "vineyard_id")

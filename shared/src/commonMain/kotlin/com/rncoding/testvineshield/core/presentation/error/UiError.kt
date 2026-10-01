@@ -28,6 +28,14 @@ sealed interface UiError {
         EMAIL,
         PASSWORD,
         NAME,
-        VINEYARD_NAME
+
+        VINEYARD_NAME,
+        VINEYARD_SIZE,
+        COUNTRY,
+        CITY,
+        LATITUDE,
+        LONGITUDE,
+        TIME_ZONE,
+        ELEVATION
     }
 }

@@ -10,5 +10,6 @@ data class VineyardSummaryProjection(
     val lastActivityStatus: String?,
     val latestTemperature: Double?,
     val activeAlert: String?,
-    val currentDiseaseCount: Int
+    val currentDiseaseCount: Int,
+    val sortOrder: Int
 )

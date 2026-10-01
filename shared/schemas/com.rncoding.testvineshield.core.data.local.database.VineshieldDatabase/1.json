@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "ac3d2d43413cbb300b8f40edf27d9595",
+    "identityHash": "da1fc6f9bd7466ca312ef97ec904e4f1",
     "entities": [
       {
         "tableName": "activity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`activity_id` INTEGER NOT NULL, `vineyard_id` INTEGER NOT NULL, `block_id` INTEGER, `activity_type` TEXT NOT NULL, `activity_description` TEXT NOT NULL, `season` TEXT NOT NULL, `phenological_stage` TEXT NOT NULL, `priority` TEXT NOT NULL, `status` TEXT NOT NULL, `planned_at` TEXT NOT NULL, `completed_at` TEXT NOT NULL, `tool` TEXT, `notes` TEXT, `created_at` TEXT NOT NULL, `updated_at` TEXT NOT NULL, `treatment_product` TEXT, `treatment_product_quantity` REAL, `treatment_product_units` TEXT, `water_quantity` REAL, `treatment_product_rate` REAL, PRIMARY KEY(`activity_id`), FOREIGN KEY(`vineyard_id`) REFERENCES `vineyard`(`vineyard_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`block_id`) REFERENCES `block`(`block_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`activity_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `vineyard_id` INTEGER NOT NULL, `block_id` INTEGER, `activity_type` TEXT NOT NULL, `activity_description` TEXT NOT NULL, `season` TEXT NOT NULL, `phenological_stage` TEXT NOT NULL, `priority` TEXT NOT NULL, `status` TEXT NOT NULL, `planned_at` TEXT NOT NULL, `completed_at` TEXT, `tool` TEXT, `notes` TEXT, `created_at` TEXT NOT NULL, `updated_at` TEXT NOT NULL, `treatment_product` TEXT, `treatment_product_quantity` REAL, `treatment_product_units` TEXT, `water_quantity` REAL, `treatment_product_rate` REAL, FOREIGN KEY(`vineyard_id`) REFERENCES `vineyard`(`vineyard_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`block_id`) REFERENCES `block`(`block_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "activityId",
@@ -70,8 +70,7 @@
           {
             "fieldPath": "completedAt",
             "columnName": "completed_at",
-            "affinity": "TEXT",
-            "notNull": true
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "tool",
@@ -122,7 +121,7 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": false,
+          "autoGenerate": true,
           "columnNames": [
             "activity_id"
           ]
@@ -194,7 +193,7 @@
       },
       {
         "tableName": "block",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`block_id` INTEGER NOT NULL, `vineyard_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `area` INTEGER NOT NULL, `vine_variety` TEXT NOT NULL, `color` TEXT NOT NULL, `root_stock` TEXT NOT NULL, `rows` TEXT NOT NULL, `row_spacing` INTEGER NOT NULL, `planted_at` TEXT NOT NULL, PRIMARY KEY(`block_id`), FOREIGN KEY(`vineyard_id`) REFERENCES `vineyard`(`vineyard_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`block_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `vineyard_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `area` INTEGER NOT NULL, `vine_variety` TEXT NOT NULL, `color` TEXT NOT NULL, `root_stock` TEXT NOT NULL, `rows` TEXT NOT NULL, `row_spacing` INTEGER NOT NULL, `planted_at` TEXT NOT NULL, FOREIGN KEY(`vineyard_id`) REFERENCES `vineyard`(`vineyard_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "blockId",
@@ -258,7 +257,7 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": false,
+          "autoGenerate": true,
           "columnNames": [
             "block_id"
           ]
@@ -290,7 +289,7 @@
       },
       {
         "tableName": "disease_alert",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`alert_id` INTEGER NOT NULL, `disease_id` INTEGER NOT NULL, `vineyard_id` INTEGER NOT NULL, `block_id` INTEGER, `created_at` TEXT NOT NULL, `alert` TEXT NOT NULL, `alert_status` TEXT NOT NULL, `alert_severity` TEXT NOT NULL, `phenological_stage` TEXT NOT NULL, PRIMARY KEY(`alert_id`), FOREIGN KEY(`disease_id`) REFERENCES `disease`(`disease_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`vineyard_id`) REFERENCES `vineyard`(`vineyard_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`block_id`) REFERENCES `block`(`block_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`alert_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `disease_id` INTEGER NOT NULL, `vineyard_id` INTEGER NOT NULL, `block_id` INTEGER, `created_at` TEXT NOT NULL, `alert` TEXT NOT NULL, `alert_status` TEXT NOT NULL, `alert_severity` TEXT NOT NULL, `phenological_stage` TEXT NOT NULL, FOREIGN KEY(`disease_id`) REFERENCES `disease`(`disease_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`vineyard_id`) REFERENCES `vineyard`(`vineyard_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`block_id`) REFERENCES `block`(`block_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "alertId",
@@ -347,7 +346,7 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": false,
+          "autoGenerate": true,
           "columnNames": [
             "alert_id"
           ]
@@ -430,7 +429,7 @@
       },
       {
         "tableName": "disease",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`disease_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `description` TEXT NOT NULL, `vectors` TEXT NOT NULL, `factors` TEXT NOT NULL, `treatment_suggestion` TEXT NOT NULL, PRIMARY KEY(`disease_id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`disease_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `description` TEXT NOT NULL, `vectors` TEXT NOT NULL, `factors` TEXT NOT NULL, `treatment_suggestion` TEXT NOT NULL)",
         "fields": [
           {
             "fieldPath": "diseaseId",
@@ -470,7 +469,7 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": false,
+          "autoGenerate": true,
           "columnNames": [
             "disease_id"
           ]
@@ -478,7 +477,7 @@
       },
       {
         "tableName": "disease_occurrence",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`occurrence_id` INTEGER NOT NULL, `disease_id` INTEGER NOT NULL, `vineyard_id` INTEGER NOT NULL, `block_id` INTEGER, `observed_at` TEXT NOT NULL, `severity` INTEGER NOT NULL, `status` TEXT NOT NULL, `cured_at` TEXT, `created_at` TEXT NOT NULL, `updated_at` TEXT NOT NULL, `notes` TEXT, PRIMARY KEY(`occurrence_id`), FOREIGN KEY(`disease_id`) REFERENCES `disease`(`disease_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`vineyard_id`) REFERENCES `vineyard`(`vineyard_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`block_id`) REFERENCES `block`(`block_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`occurrence_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `disease_id` INTEGER NOT NULL, `vineyard_id` INTEGER NOT NULL, `block_id` INTEGER, `observed_at` TEXT NOT NULL, `severity` INTEGER NOT NULL, `status` TEXT NOT NULL, `cured_at` TEXT, `created_at` TEXT NOT NULL, `updated_at` TEXT NOT NULL, `notes` TEXT, FOREIGN KEY(`disease_id`) REFERENCES `disease`(`disease_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`vineyard_id`) REFERENCES `vineyard`(`vineyard_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`block_id`) REFERENCES `block`(`block_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "occurrenceId",
@@ -545,7 +544,7 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": false,
+          "autoGenerate": true,
           "columnNames": [
             "occurrence_id"
           ]
@@ -589,14 +588,15 @@
             "createSql": "CREATE INDEX IF NOT EXISTS `index_disease_occurrence_block_id_observed_at` ON `${TABLE_NAME}` (`block_id`, `observed_at`)"
           },
           {
-            "name": "index_disease_occurrence_vineyard_id_observed_at",
+            "name": "index_disease_occurrence_vineyard_id_status_observed_at",
             "unique": false,
             "columnNames": [
               "vineyard_id",
+              "status",
               "observed_at"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_disease_occurrence_vineyard_id_observed_at` ON `${TABLE_NAME}` (`vineyard_id`, `observed_at`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_disease_occurrence_vineyard_id_status_observed_at` ON `${TABLE_NAME}` (`vineyard_id`, `status`, `observed_at`)"
           }
         ],
         "foreignKeys": [
@@ -697,7 +697,7 @@
       },
       {
         "tableName": "harvest",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`harvest_id` INTEGER NOT NULL, `block_id` INTEGER NOT NULL, `season` TEXT NOT NULL, `harvest_date` TEXT NOT NULL, `units` TEXT NOT NULL, `quantity` INTEGER NOT NULL, `brix_sugar_content` INTEGER NOT NULL, PRIMARY KEY(`harvest_id`), FOREIGN KEY(`block_id`) REFERENCES `block`(`block_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`harvest_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `block_id` INTEGER NOT NULL, `season` TEXT NOT NULL, `harvest_date` TEXT NOT NULL, `units` TEXT NOT NULL, `quantity` INTEGER NOT NULL, `brix_sugar_content` INTEGER NOT NULL, FOREIGN KEY(`block_id`) REFERENCES `block`(`block_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "harvestId",
@@ -743,7 +743,7 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": false,
+          "autoGenerate": true,
           "columnNames": [
             "harvest_id"
           ]
@@ -785,7 +785,7 @@
       },
       {
         "tableName": "observed_symptom",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`observation_id` INTEGER NOT NULL, `symptom_id` INTEGER NOT NULL, `occurrence_id` INTEGER NOT NULL, `observed_at` INTEGER NOT NULL, `severity` INTEGER NOT NULL, `note` TEXT NOT NULL, PRIMARY KEY(`observation_id`), FOREIGN KEY(`occurrence_id`) REFERENCES `disease_occurrence`(`occurrence_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`symptom_id`) REFERENCES `symptom`(`symptom_id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`observation_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `symptom_id` INTEGER NOT NULL, `occurrence_id` INTEGER NOT NULL, `observed_at` INTEGER NOT NULL, `severity` INTEGER NOT NULL, `note` TEXT NOT NULL, FOREIGN KEY(`occurrence_id`) REFERENCES `disease_occurrence`(`occurrence_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`symptom_id`) REFERENCES `symptom`(`symptom_id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
         "fields": [
           {
             "fieldPath": "observationId",
@@ -825,7 +825,7 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": false,
+          "autoGenerate": true,
           "columnNames": [
             "observation_id"
           ]
@@ -1052,7 +1052,7 @@
       },
       {
         "tableName": "security_settings",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`user_id` INTEGER NOT NULL, `biometric_enabled` INTEGER NOT NULL, `app_pin_enabled` INTEGER NOT NULL, PRIMARY KEY(`user_id`), FOREIGN KEY(`user_id`) REFERENCES `user`(`user_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`user_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `biometric_enabled` INTEGER NOT NULL, `app_pin_enabled` INTEGER NOT NULL, FOREIGN KEY(`user_id`) REFERENCES `user`(`user_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "userId",
@@ -1074,7 +1074,7 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": false,
+          "autoGenerate": true,
           "columnNames": [
             "user_id"
           ]
@@ -1106,7 +1106,7 @@
       },
       {
         "tableName": "symptom",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`symptom_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `plant_part` TEXT NOT NULL, `phenological_stage` TEXT NOT NULL, `notes` TEXT NOT NULL, PRIMARY KEY(`symptom_id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`symptom_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `plant_part` TEXT NOT NULL, `phenological_stage` TEXT NOT NULL, `notes` TEXT NOT NULL)",
         "fields": [
           {
             "fieldPath": "symptomId",
@@ -1140,7 +1140,7 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": false,
+          "autoGenerate": true,
           "columnNames": [
             "symptom_id"
           ]
@@ -1195,7 +1195,7 @@
       },
       {
         "tableName": "vineyard",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`vineyard_id` INTEGER NOT NULL, `user_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `location_id` INTEGER NOT NULL, `size` REAL NOT NULL, `country` TEXT NOT NULL, `city` TEXT NOT NULL, `latitude` REAL NOT NULL, `longitude` REAL NOT NULL, `time_zone` TEXT NOT NULL, `elevation` INTEGER NOT NULL, `created_at` TEXT NOT NULL, `updated_at` TEXT NOT NULL, PRIMARY KEY(`vineyard_id`), FOREIGN KEY(`user_id`) REFERENCES `user`(`user_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`vineyard_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `user_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `size` REAL NOT NULL, `country` TEXT NOT NULL, `city` TEXT NOT NULL, `latitude` REAL NOT NULL, `longitude` REAL NOT NULL, `time_zone` TEXT NOT NULL, `elevation` INTEGER NOT NULL, `sort_order` INTEGER NOT NULL, `created_at` TEXT NOT NULL, `updated_at` TEXT NOT NULL, FOREIGN KEY(`user_id`) REFERENCES `user`(`user_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "vineyardId",
@@ -1213,12 +1213,6 @@
             "fieldPath": "name",
             "columnName": "name",
             "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "locationId",
-            "columnName": "location_id",
-            "affinity": "INTEGER",
             "notNull": true
           },
           {
@@ -1264,6 +1258,12 @@
             "notNull": true
           },
           {
+            "fieldPath": "sortOrder",
+            "columnName": "sort_order",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
             "fieldPath": "createdAt",
             "columnName": "created_at",
             "affinity": "TEXT",
@@ -1277,7 +1277,7 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": false,
+          "autoGenerate": true,
           "columnNames": [
             "vineyard_id"
           ]
@@ -1309,7 +1309,7 @@
       },
       {
         "tableName": "weather_calculation",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`weather_calc_id` INTEGER NOT NULL, `vineyard_id` INTEGER NOT NULL, `calculated_at` TEXT NOT NULL, `count_wetness_hours_at_10C` INTEGER NOT NULL, `count_hours_at_21C` INTEGER NOT NULL, `powdery_mildew_initial_infection` INTEGER NOT NULL, `days_from_budburst` INTEGER NOT NULL, `primary_incubation_days_count_pd` INTEGER NOT NULL, `secondary_incubation_days_count_pd` INTEGER NOT NULL, `infection_score` INTEGER NOT NULL, PRIMARY KEY(`weather_calc_id`), FOREIGN KEY(`vineyard_id`) REFERENCES `vineyard`(`vineyard_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`weather_calc_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `vineyard_id` INTEGER NOT NULL, `calculated_at` TEXT NOT NULL, `count_wetness_hours_at_10C` INTEGER NOT NULL, `count_hours_at_21C` INTEGER NOT NULL, `powdery_mildew_initial_infection` INTEGER NOT NULL, `days_from_budburst` INTEGER NOT NULL, `primary_incubation_days_count_pd` INTEGER NOT NULL, `secondary_incubation_days_count_pd` INTEGER NOT NULL, `infection_score` INTEGER NOT NULL, FOREIGN KEY(`vineyard_id`) REFERENCES `vineyard`(`vineyard_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "weatherCalcId",
@@ -1373,7 +1373,7 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": false,
+          "autoGenerate": true,
           "columnNames": [
             "weather_calc_id"
           ]
@@ -1414,7 +1414,7 @@
         ]
       },
       {
-        "tableName": "weather",
+        "tableName": "weather_history",
         "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`weather_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `vineyard_id` INTEGER NOT NULL, `timestamp` INTEGER NOT NULL, `temperature_2m` REAL NOT NULL, `relative_humidity_2m` REAL NOT NULL, `dew_point_2m` REAL NOT NULL, `cloud_cover` REAL NOT NULL, `wind_speed_10m` REAL NOT NULL, `precipitation` REAL NOT NULL, `rain` REAL NOT NULL, `showers` REAL NOT NULL, `snowfall` REAL NOT NULL, `snow_depth` REAL NOT NULL, `weather_code` INTEGER NOT NULL, `freezing_level_height` REAL NOT NULL, `visibility` REAL NOT NULL, `soil_temperature_0cm` REAL NOT NULL, `soil_temperature_6cm` REAL NOT NULL, `soil_moisture_0_to_1cm` REAL NOT NULL, `soil_moisture_1_to_3cm` REAL NOT NULL, `is_day` INTEGER NOT NULL, FOREIGN KEY(`vineyard_id`) REFERENCES `vineyard`(`vineyard_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
@@ -1552,23 +1552,23 @@
         },
         "indices": [
           {
-            "name": "index_weather_vineyard_id_timestamp",
+            "name": "index_weather_history_vineyard_id_timestamp",
             "unique": true,
             "columnNames": [
               "vineyard_id",
               "timestamp"
             ],
             "orders": [],
-            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_weather_vineyard_id_timestamp` ON `${TABLE_NAME}` (`vineyard_id`, `timestamp`)"
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_weather_history_vineyard_id_timestamp` ON `${TABLE_NAME}` (`vineyard_id`, `timestamp`)"
           },
           {
-            "name": "index_weather_timestamp",
+            "name": "index_weather_history_timestamp",
             "unique": false,
             "columnNames": [
               "timestamp"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_weather_timestamp` ON `${TABLE_NAME}` (`timestamp`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_weather_history_timestamp` ON `${TABLE_NAME}` (`timestamp`)"
           }
         ],
         "foreignKeys": [
@@ -1587,7 +1587,7 @@
       },
       {
         "tableName": "weather_forecast",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`forecast_id` INTEGER NOT NULL, `vineyard_id` INTEGER NOT NULL, `timestamp` INTEGER NOT NULL, `temperature_2m` REAL NOT NULL, `relative_humidity_2m` REAL NOT NULL, `dew_point_2m` REAL NOT NULL, `cloud_cover` REAL NOT NULL, `wind_speed_10m` REAL NOT NULL, `precipitation` REAL NOT NULL, `rain` REAL NOT NULL, `showers` REAL NOT NULL, `snowfall` REAL NOT NULL, `snow_depth` REAL NOT NULL, `weather_code` INTEGER NOT NULL, `freezing_level_height` REAL NOT NULL, `visibility` REAL NOT NULL, `soil_temperature_0cm` REAL NOT NULL, `soil_temperature_6cm` REAL NOT NULL, `soil_moisture_0_to_1cm` REAL NOT NULL, `soil_moisture_1_to_3cm` REAL NOT NULL, `is_day` INTEGER NOT NULL, `forecast_created_at` INTEGER NOT NULL, PRIMARY KEY(`forecast_id`), FOREIGN KEY(`vineyard_id`) REFERENCES `vineyard`(`vineyard_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`forecast_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `vineyard_id` INTEGER NOT NULL, `timestamp` INTEGER NOT NULL, `temperature_2m` REAL NOT NULL, `relative_humidity_2m` REAL NOT NULL, `dew_point_2m` REAL NOT NULL, `cloud_cover` REAL NOT NULL, `wind_speed_10m` REAL NOT NULL, `precipitation` REAL NOT NULL, `rain` REAL NOT NULL, `showers` REAL NOT NULL, `snowfall` REAL NOT NULL, `snow_depth` REAL NOT NULL, `weather_code` INTEGER NOT NULL, `freezing_level_height` REAL NOT NULL, `visibility` REAL NOT NULL, `soil_temperature_0cm` REAL NOT NULL, `soil_temperature_6cm` REAL NOT NULL, `soil_moisture_0_to_1cm` REAL NOT NULL, `soil_moisture_1_to_3cm` REAL NOT NULL, `is_day` INTEGER NOT NULL, `forecast_created_at` INTEGER NOT NULL, FOREIGN KEY(`vineyard_id`) REFERENCES `vineyard`(`vineyard_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "weatherId",
@@ -1723,7 +1723,7 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": false,
+          "autoGenerate": true,
           "columnNames": [
             "forecast_id"
           ]
@@ -1766,7 +1766,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ac3d2d43413cbb300b8f40edf27d9595')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'da1fc6f9bd7466ca312ef97ec904e4f1')"
     ]
   }
 }

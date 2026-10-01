@@ -7,6 +7,8 @@ import com.rncoding.testvineshield.core.domain.error.NetworkError
 import com.rncoding.testvineshield.core.domain.error.SecurityError
 import com.rncoding.testvineshield.core.domain.error.StorageError
 import com.rncoding.testvineshield.core.domain.error.ValidationError
+import com.rncoding.testvineshield.core.domain.error.VineyardField
+import com.rncoding.testvineshield.core.domain.error.VineyardValidationError
 
 /**
  * Converts domain errors into presentation-level UI errors.
@@ -175,25 +177,42 @@ class UiErrorMapper {
 
             is ValidationError.FieldEmpty ->
                 UiError.Inline(
-                    field = UiError.Field,
+                    field = error.field.toUiField(),
                     message = error.userMessage
                 )
 
             is ValidationError.TooShort ->
                 UiError.Inline(
-                    field = error.field.displayName,
+                    field = error.field.toUiField(),
                     message = error.userMessage
                 )
 
             is ValidationError.TooLong ->
                 UiError.Inline(
-                    field = error.field.displayName,
+                    field = error.field.toUiField(),
                     message = error.userMessage
                 )
 
             is ValidationError.InvalidFormat ->
                 UiError.Inline(
-                    field = error.field.displayName,
+                    field = error.field.toUiField(),
+                    message = error.userMessage
+                )
+
+            ValidationError.PasswordMissingUppercase ->
+                UiError.Inline(
+                    field = UiError.Field.PASSWORD,
+                    message = error.userMessage
+                )
+
+            ValidationError.PasswordMissingDigit ->
+                UiError.Inline(
+                    field = UiError.Field.PASSWORD,
+                    message = error.userMessage
+                )
+            is VineyardValidationError ->
+                UiError.Inline(
+                    field = error.field.toUiField(),
                     message = error.userMessage
                 )
 
@@ -205,6 +224,50 @@ class UiErrorMapper {
                 UiError.Snackbar(
                     message = error.userMessage
                 )
+        }
+    }
+
+    private fun ValidationError.Field.toUiField():
+            UiError.Field {
+
+        return when (this) {
+
+            ValidationError.Field.EMAIL ->
+                UiError.Field.EMAIL
+
+            ValidationError.Field.PASSWORD ->
+                UiError.Field.PASSWORD
+
+            ValidationError.Field.NAME ->
+                UiError.Field.NAME
+        }
+    }
+
+    private fun VineyardField.toUiField(): UiError.Field {
+        return when (this) {
+            VineyardField.NAME ->
+                UiError.Field.VINEYARD_NAME
+
+            VineyardField.SIZE ->
+                UiError.Field.VINEYARD_SIZE
+
+            VineyardField.COUNTRY ->
+                UiError.Field.COUNTRY
+
+            VineyardField.CITY ->
+                UiError.Field.CITY
+
+            VineyardField.LATITUDE ->
+                UiError.Field.LATITUDE
+
+            VineyardField.LONGITUDE ->
+                UiError.Field.LONGITUDE
+
+            VineyardField.TIME_ZONE ->
+                UiError.Field.TIME_ZONE
+
+            VineyardField.ELEVATION ->
+                UiError.Field.ELEVATION
         }
     }
 }

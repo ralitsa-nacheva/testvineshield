@@ -149,15 +149,6 @@ class AuthSessionCoordinator(
         return result
     }
 
-    fun onConfirmNewPasswordChanged(value: String) {
-        _uiState.update {
-            it.copy(
-                confirmNewPassword = value,
-                errorMessage = null
-            )
-        }
-    }
-
     suspend fun updateAccount(
         currentPassword: String,
         newEmail: String,

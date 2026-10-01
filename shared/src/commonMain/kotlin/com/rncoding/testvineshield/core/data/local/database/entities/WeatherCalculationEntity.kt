@@ -24,7 +24,7 @@ import kotlin.time.Instant
     ]
 )
 data class WeatherCalculationEntity(
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "weather_calc_id")
     val weatherCalcId: Long,
 

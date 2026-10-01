@@ -22,7 +22,7 @@ import androidx.room.PrimaryKey
 )
 data class SecuritySettingsEntity(
 
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "user_id")
     val userId: Long,
 

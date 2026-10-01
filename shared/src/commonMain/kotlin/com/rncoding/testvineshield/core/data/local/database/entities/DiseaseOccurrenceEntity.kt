@@ -6,6 +6,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import kotlinx.datetime.LocalDate
+import com.rncoding.testvineshield.core.domain.datamodels.enums.DiseaseOccurrenceStatus
 
 
 @Entity(tableName = "disease_occurrence", foreignKeys = [ForeignKey(
@@ -28,10 +29,10 @@ import kotlinx.datetime.LocalDate
     Index("vineyard_id"),
     Index("block_id"),
     Index(value = ["block_id", "observed_at"]),
-    Index(value = ["vineyard_id", "observed_at"])
-]) // TODO add indices (blockId, status, startedAt) or (blockId, status), (vineyardId, status)
+    Index(value = ["vineyard_id", "status", "observed_at"])
+])
 data class DiseaseOccurrenceEntity(
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "occurrence_id")
     val occurrenceId: Long,
     @ColumnInfo(name = "disease_id")
@@ -42,8 +43,10 @@ data class DiseaseOccurrenceEntity(
     val blockId: Long?,
     @ColumnInfo(name = "observed_at")
     val observedAt: LocalDate,
+    // Severity is the percentage of affected tissue/area: 0..100.
+    // Enforced by the domain validation layer.
     val severity: Int,
-    val status: String,
+    val status: DiseaseOccurrenceStatus,
     @ColumnInfo(name = "cured_at")
     val curedAt: LocalDate?,
     @ColumnInfo(name = "created_at")

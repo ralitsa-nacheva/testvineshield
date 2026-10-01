@@ -6,6 +6,9 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import kotlinx.datetime.LocalDate
+import com.rncoding.testvineshield.core.domain.datamodels.enums.AlertSeverity
+import com.rncoding.testvineshield.core.domain.datamodels.enums.AlertStatus
+import com.rncoding.testvineshield.core.domain.datamodels.enums.PhenologicalStage
 
 @Entity(tableName = "disease_alert", foreignKeys = [ForeignKey(
     entity = DiseaseEntity::class,
@@ -29,7 +32,7 @@ import kotlinx.datetime.LocalDate
     Index(value = ["vineyard_id", "alert_status", "created_at"])
 ]) // Add indices (vineyardId, isOpen, createdAt) or (vineyardId, isOpen, createdAt) and (blockId)
 data class DiseaseAlertEntity(
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "alert_id")
     val alertId: Long,
     @ColumnInfo(name = "disease_id")
@@ -42,9 +45,9 @@ data class DiseaseAlertEntity(
     val createdAt: LocalDate,
     val alert: String,
     @ColumnInfo(name = "alert_status")
-    val alertStatus: String,
+    val alertStatus: AlertStatus,
     @ColumnInfo(name = "alert_severity")
-    val alertSeverity: String,
+    val alertSeverity: AlertSeverity,
     @ColumnInfo(name = "phenological_stage")
-    val phenologicalStage: String
+    val phenologicalStage: PhenologicalStage
 )

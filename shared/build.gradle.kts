@@ -94,7 +94,8 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtime.compose)
 
             // Navigation
-            implementation(libs.jetbrains.compose.navigation)
+            implementation(libs.navigation3.ui)
+            implementation(libs.lifecycle.viewmodel.navigation3)
 
             // Kotlin serialization
             implementation(libs.kotlinx.serialization.json)
@@ -117,8 +118,6 @@ kotlin {
             // Date/time
             implementation(libs.kotlinx.datetime)
 
-            // Activity
-            implementation(libs.androidx.activity.compose)
         }
 
         // =====================================================================

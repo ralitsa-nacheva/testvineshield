@@ -4,8 +4,8 @@ import com.rncoding.testvineshield.core.domain.datamodels.UserDomainModel
 import com.rncoding.testvineshield.core.domain.error.AppError
 import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.repository.UserRepository
-import com.rncoding.testvineshield.core.domain.security.ValidateEmail
-import com.rncoding.testvineshield.core.domain.security.ValidatePassword
+import com.rncoding.testvineshield.core.domain.validation.ValidateEmail
+import com.rncoding.testvineshield.core.domain.validation.ValidatePassword
 
 class UpdateUserUseCase(
     private val userRepository: UserRepository,

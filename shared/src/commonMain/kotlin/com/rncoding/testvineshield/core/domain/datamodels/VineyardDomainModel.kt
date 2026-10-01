@@ -6,7 +6,6 @@ data class VineyardDomainModel(
     val vineyardId: Long,
     val userId: Long,
     val name: String,
-    val locationId: Int,
     val size: Double,
     val country: String,
     val city: String,
@@ -14,6 +13,7 @@ data class VineyardDomainModel(
     val longitude: Double,
     val timeZone: String,
     val elevation: Int,
+    val sortOrder: Int,
     val createdAt: LocalDate,
     val updatedAt: LocalDate
 )

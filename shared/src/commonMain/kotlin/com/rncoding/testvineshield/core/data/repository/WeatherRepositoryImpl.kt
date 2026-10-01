@@ -1,6 +1,6 @@
 package com.rncoding.testvineshield.core.data.repository
 
-import com.rncoding.testvineshield.core.data.local.database.daos.WeatherDao
+import com.rncoding.testvineshield.core.data.local.database.daos.WeatherHistoryDao
 import com.rncoding.testvineshield.core.data.local.database.daos.WeatherForecastDao
 import com.rncoding.testvineshield.core.data.local.mappers.WeatherMapper
 import com.rncoding.testvineshield.core.data.remote.OpenMeteoApi
@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.map
 
 class WeatherRepositoryImpl(
     private val remoteDataSource: WeatherRemoteDataSourceImpl,
-    private val weatherDao: WeatherDao,
+    private val weatherHistoryDao: WeatherHistoryDao,
     private val forecastDao: WeatherForecastDao,
     private val weatherApi: OpenMeteoApi,
     private val weatherMapper: WeatherMapper
@@ -25,19 +25,19 @@ class WeatherRepositoryImpl(
     ) {
         val response = remoteDataSource.fetchWeather(latitude, longitude)
 
-        val lastTimestamp = weatherDao.getLastWeatherTimestamp(vineyardId)
+        val lastTimestamp = weatherHistoryDao.getLastWeatherTimestamp(vineyardId)
 
         val entities = weatherMapper.weatherDtoToEntity(response, vineyardId, lastTimestamp )
 
         for (i in entities.indices){
             val entity = entities[i]
-            weatherDao.upsertWeather(entity)
+            weatherHistoryDao.upsertWeather(entity)
         }
 
     }
 
     override suspend fun observeLatestVineyardWeather(vineyardId: Long): Flow<WeatherDomainModel> {
-        return weatherDao.observeLatestVineyardWeather(vineyardId)
+        return weatherHistoryDao.observeLatestVineyardWeather(vineyardId)
             .map{entity -> weatherMapper.entityToDomain(entity)}
 
     }
@@ -46,7 +46,7 @@ class WeatherRepositoryImpl(
         vineyardId: Long,
         startDay: Long
     ): Flow<List<WeatherDomainModel>> {
-        return weatherDao.observeHistoricalVineyardWeather(vineyardId, startDay)
+        return weatherHistoryDao.observeHistoricalVineyardWeather(vineyardId, startDay)
             .map {entities ->
                 entities.map {entity -> weatherMapper.entityToDomain(entity)}
             }

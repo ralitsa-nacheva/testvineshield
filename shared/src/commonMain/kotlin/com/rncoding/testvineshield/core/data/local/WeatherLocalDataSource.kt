@@ -1,13 +1,13 @@
 package com.rncoding.testvineshield.core.data.local
 
 import kotlinx.coroutines.flow.Flow
-import com.rncoding.testvineshield.core.data.local.database.daos.WeatherDao
-import com.rncoding.testvineshield.core.data.local.database.entities.WeatherEntity
+import com.rncoding.testvineshield.core.data.local.database.daos.WeatherHistoryDao
+import com.rncoding.testvineshield.core.data.local.database.entities.WeatherHistoryEntity
 
-class WeatherLocalDataSource(private val weatherDao: WeatherDao) {
-    suspend fun observeLatestVineyardWeather(vineyardId: Long): Flow<WeatherEntity> =
-        weatherDao.observeLatestVineyardWeather(vineyardId)
+class WeatherLocalDataSource(private val weatherHistoryDao: WeatherHistoryDao) {
+    suspend fun observeLatestVineyardWeather(vineyardId: Long): Flow<WeatherHistoryEntity?> =
+        weatherHistoryDao.observeLatestVineyardWeather(vineyardId)
 
-    suspend fun upsertWeather(weather: WeatherEntity) =
-        weatherDao.upsertWeather(weather)
+    suspend fun upsertWeather(weather: WeatherHistoryEntity) =
+        weatherHistoryDao.upsertWeather(weather)
 }

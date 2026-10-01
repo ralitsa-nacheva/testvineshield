@@ -6,6 +6,9 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import kotlinx.datetime.LocalDate
+import com.rncoding.testvineshield.core.domain.datamodels.enums.ActivityPriority
+import com.rncoding.testvineshield.core.domain.datamodels.enums.ActivityStatus
+import com.rncoding.testvineshield.core.domain.datamodels.enums.PhenologicalStage
 
 @Entity(tableName = "activity", foreignKeys = [ForeignKey(
     entity = VineyardEntity::class,
@@ -23,9 +26,9 @@ import kotlinx.datetime.LocalDate
     Index("block_id"),
     Index(value = ["block_id", "completed_at"]),
     Index(value = ["vineyard_id", "completed_at"])
-]) // TODO Add indices (blockId, performedAt) or (blockId, completedDate), (vineyardId, completedDate)
+])
 data class ActivityEntity(
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "activity_id")
     val activityId: Long,
     @ColumnInfo(name = "vineyard_id")
@@ -38,13 +41,13 @@ data class ActivityEntity(
     val activityDescription: String,
     val season: String,
     @ColumnInfo(name = "phenological_stage")
-    val phenologicalStage: String, // enum?
-    val priority: String,
-    val status: String,
+    val phenologicalStage: PhenologicalStage,
+    val priority: ActivityPriority,
+    val status: ActivityStatus,
     @ColumnInfo(name = "planned_at")
     val plannedAt: LocalDate,
     @ColumnInfo(name = "completed_at")
-    val completedAt: LocalDate,
+    val completedAt: LocalDate?,
     val tool: String?,
     val notes: String?,
     @ColumnInfo(name = "created_at")

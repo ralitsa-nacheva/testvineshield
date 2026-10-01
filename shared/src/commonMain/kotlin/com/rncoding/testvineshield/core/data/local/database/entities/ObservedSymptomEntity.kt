@@ -28,7 +28,7 @@ import androidx.room.PrimaryKey
     ]
 )
 data class ObservedSymptomEntity
-(   @PrimaryKey
+(   @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "observation_id")
     val observationId: Long,
     @ColumnInfo(name = "symptom_id")

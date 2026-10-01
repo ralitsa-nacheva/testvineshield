@@ -4,6 +4,7 @@ import androidx.room.ConstructedBy
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.rncoding.testvineshield.core.data.local.database.converters.DomainEnumRoomConverters
 import com.rncoding.testvineshield.core.data.local.database.converters.LocalDateRoomConverters
 import com.rncoding.testvineshield.core.data.local.database.daos.ActivityDao
 import com.rncoding.testvineshield.core.data.local.database.daos.BlockDao
@@ -17,7 +18,7 @@ import com.rncoding.testvineshield.core.data.local.database.daos.SymptomDao
 import com.rncoding.testvineshield.core.data.local.database.daos.UserDao
 import com.rncoding.testvineshield.core.data.local.database.daos.VineyardDao
 import com.rncoding.testvineshield.core.data.local.database.daos.WeatherCalculationsDao
-import com.rncoding.testvineshield.core.data.local.database.daos.WeatherDao
+import com.rncoding.testvineshield.core.data.local.database.daos.WeatherHistoryDao
 import com.rncoding.testvineshield.core.data.local.database.daos.WeatherForecastDao
 import com.rncoding.testvineshield.core.data.local.database.entities.ActivityEntity
 import com.rncoding.testvineshield.core.data.local.database.entities.BlockEntity
@@ -33,7 +34,7 @@ import com.rncoding.testvineshield.core.data.local.database.entities.SecuritySet
 import com.rncoding.testvineshield.core.data.local.database.entities.SymptomEntity
 import com.rncoding.testvineshield.core.data.local.database.entities.UserEntity
 import com.rncoding.testvineshield.core.data.local.database.entities.VineyardEntity
-import com.rncoding.testvineshield.core.data.local.database.entities.WeatherEntity
+import com.rncoding.testvineshield.core.data.local.database.entities.WeatherHistoryEntity
 import com.rncoding.testvineshield.core.data.local.database.entities.WeatherCalculationEntity
 import com.rncoding.testvineshield.core.data.local.database.entities.WeatherForecastEntity
 
@@ -41,9 +42,9 @@ import com.rncoding.testvineshield.core.data.local.database.entities.WeatherFore
     DiseaseEntity::class, DiseaseOccurrenceEntity::class, DiseaseSymptomCrossRef::class, HarvestEntity::class,
     ObservedSymptomEntity::class, OccurrenceActivityCrossRef::class, OccurrenceSymptomCrossRef::class, SecuritySettingsEntity::class,
     SymptomEntity::class, UserEntity::class, VineyardEntity::class, WeatherCalculationEntity::class,
-    WeatherEntity::class, WeatherForecastEntity::class],
+    WeatherHistoryEntity::class, WeatherForecastEntity::class],
     version = 1)
-@TypeConverters(LocalDateRoomConverters::class)
+@TypeConverters(LocalDateRoomConverters::class, DomainEnumRoomConverters::class)
 @ConstructedBy(VineshieldConstructor::class)
 
 abstract class VineshieldDatabase: RoomDatabase() {
@@ -63,7 +64,7 @@ abstract class VineshieldDatabase: RoomDatabase() {
     abstract fun securitySettingsDao(): SecuritySettingsDao
     abstract fun weatherCalculationsDao(): WeatherCalculationsDao
 
-    abstract fun weatherDao(): WeatherDao
+    abstract fun weatherHistoryDao(): WeatherHistoryDao
 
     abstract fun weatherForecastDao(): WeatherForecastDao
 

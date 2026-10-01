@@ -1,7 +1,8 @@
-package com.rncoding.testvineshield.core.domain.security
+package com.rncoding.testvineshield.core.domain.validation
 
 import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.error.ValidationError
+
 class ValidateEmail {
 
     operator fun invoke(

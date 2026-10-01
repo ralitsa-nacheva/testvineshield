@@ -15,15 +15,13 @@ import kotlinx.datetime.LocalDate
 )], indices = [
     Index("user_id")
 ])
-class VineyardEntity(
-    @PrimaryKey
+data class VineyardEntity(
+    @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "vineyard_id")
-    val vineyardId: Long,
+    val vineyardId: Long=0L,
     @ColumnInfo(name = "user_id")
     val userId: Long,
     val name: String,
-    @ColumnInfo(name = "location_id")
-    val locationId: Int,
     val size: Double,
     val country: String,
     val city: String,
@@ -32,6 +30,8 @@ class VineyardEntity(
     @ColumnInfo(name = "time_zone")
     val timeZone: String,
     val elevation: Int,
+    @ColumnInfo(name = "sort_order")
+    val sortOrder: Int,
     @ColumnInfo(name = "created_at")
     val createdAt: LocalDate,
     @ColumnInfo(name = "updated_at")

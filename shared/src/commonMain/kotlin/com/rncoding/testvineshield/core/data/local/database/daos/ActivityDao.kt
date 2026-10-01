@@ -38,9 +38,19 @@ interface ActivityDao {
     suspend fun getActivityWithOccurrences(activityId: Long): List<ActivityWithOccurrences>
 
     // use this in vineyard summary, maybe add another function to count all open activities
-    @Query("Select activity_type From activity Where vineyard_id = :vineyardId And status = 'Open' " +
-            "And created_at = (Select Max(created_at) From activity Where vineyard_id = :vineyardId)")
-    suspend fun getLastOpenActivityByVineyard(vineyardId: Long): String
+    @Query(
+        """
+    SELECT activity_type
+    FROM activity
+    WHERE vineyard_id = :vineyardId
+      AND status IN ('planned', 'in_progress')
+    ORDER BY updated_at DESC, activity_id DESC
+    LIMIT 1
+    """
+    )
+    suspend fun getLatestPendingActivityByVineyard(
+        vineyardId: Long
+    ): String?
 
     @Query("Select * From activity Where vineyard_id = :vineyardId")
     suspend fun getAllActivitiesForVineyard(vineyardId: Long): List<ActivityEntity>
@@ -48,9 +58,19 @@ interface ActivityDao {
     @Query("Select Count(activity_id) From activity Where vineyard_id = :vineyardId")
     suspend fun countAllActivitiesForVineyard(vineyardId: Long): Int
 
-    @Query("Select * From activity Where block_id = :blockId And status = 'Open' " +
-            "And created_at =(Select Max(created_at) From activity Where block_id = :blockId)")
-    suspend fun getLastActivityByBlock(blockId: Long): ActivityEntity
+    @Query(
+        """
+    SELECT *
+    FROM activity
+    WHERE block_id = :blockId
+      AND status IN ('planned', 'in_progress')
+    ORDER BY updated_at DESC, activity_id DESC
+    LIMIT 1
+    """
+    )
+    suspend fun getLatestPendingActivityByBlock(
+        blockId: Long
+    ): ActivityEntity?
 
     @Query("Select * From activity Where block_id = :blockId")
     suspend fun getAllActivitiesForBlock(blockId: Long): List<ActivityEntity>

@@ -13,23 +13,26 @@ import com.rncoding.testvineshield.core.data.local.database.daos.SymptomDao
 import com.rncoding.testvineshield.core.data.local.database.daos.UserDao
 import com.rncoding.testvineshield.core.data.local.database.daos.VineyardDao
 import com.rncoding.testvineshield.core.data.local.database.daos.WeatherCalculationsDao
-import com.rncoding.testvineshield.core.data.local.database.daos.WeatherDao
+import com.rncoding.testvineshield.core.data.local.database.daos.WeatherHistoryDao
 import com.rncoding.testvineshield.core.data.local.database.daos.WeatherForecastDao
 import com.rncoding.testvineshield.core.data.local.mappers.SecuritySettingsMapper
 import com.rncoding.testvineshield.core.data.local.mappers.UserMapper
+import com.rncoding.testvineshield.core.data.local.mappers.VineyardMapper
+import com.rncoding.testvineshield.core.data.local.mappers.VineyardSummaryMapper
 import com.rncoding.testvineshield.core.data.repository.SecuritySettingsRepositoryImpl
 import com.rncoding.testvineshield.core.data.repository.SessionRepositoryImpl
 import com.rncoding.testvineshield.core.data.repository.UserRepositoryImpl
 import com.rncoding.testvineshield.core.data.time.SystemAppClock
 import com.rncoding.testvineshield.core.domain.auth.AuthSessionCoordinator
+import com.rncoding.testvineshield.core.domain.auth.AuthenticatedUserProvider
 import com.rncoding.testvineshield.core.domain.auth.ObserveAuthStateUseCase
 import com.rncoding.testvineshield.core.domain.repository.SecuritySettingsRepository
 import com.rncoding.testvineshield.core.domain.repository.SessionRepository
 import com.rncoding.testvineshield.core.domain.repository.UserRepository
 import com.rncoding.testvineshield.core.domain.security.PasswordHasher
 import com.rncoding.testvineshield.core.domain.security.SessionManager
-import com.rncoding.testvineshield.core.domain.security.ValidateEmail
-import com.rncoding.testvineshield.core.domain.security.ValidatePassword
+import com.rncoding.testvineshield.core.domain.validation.ValidateEmail
+import com.rncoding.testvineshield.core.domain.validation.ValidatePassword
 import com.rncoding.testvineshield.core.domain.time.AppClock
 import com.rncoding.testvineshield.core.domain.usecases.user.DeleteUserUseCase
 import com.rncoding.testvineshield.core.domain.usecases.user.LoginUserUseCase
@@ -38,12 +41,26 @@ import com.rncoding.testvineshield.core.domain.usecases.user.RegisterUserUseCase
 import com.rncoding.testvineshield.core.domain.usecases.user.RestoreSessionUseCase
 import com.rncoding.testvineshield.core.domain.usecases.user.UnlockSessionUseCase
 import com.rncoding.testvineshield.core.domain.usecases.user.UpdateUserUseCase
+import com.rncoding.testvineshield.core.domain.usecases.vineyard.CreateVineyardUseCase
+import com.rncoding.testvineshield.core.domain.usecases.vineyard.DeleteVineyardUseCase
+import com.rncoding.testvineshield.core.domain.usecases.vineyard.GetVineyardUseCase
+import com.rncoding.testvineshield.core.domain.usecases.vineyard.ObserveVineyardSummariesUseCase
+import com.rncoding.testvineshield.core.domain.usecases.vineyard.ObserveVineyardUseCase
+import com.rncoding.testvineshield.core.domain.usecases.vineyard.ReorderVineyardsUseCase
+import com.rncoding.testvineshield.core.domain.usecases.vineyard.UpdateVineyardUseCase
+import com.rncoding.testvineshield.core.domain.validation.VineyardValidator
 import com.rncoding.testvineshield.core.presentation.account.AccountViewModel
 import com.rncoding.testvineshield.core.presentation.security.SecuritySettingsViewModel
 import com.rncoding.testvineshield.core.presentation.user_auth.AuthViewModel
+import com.rncoding.testvineshield.core.presentation.vineyard_list.VineyardListMapper
+import com.rncoding.testvineshield.core.presentation.vineyard_list.VineyardListViewModel
+import com.rncoding.testvineshield.core.presentation.vineyard_editor.VineyardEditorMode
+import com.rncoding.testvineshield.core.presentation.vineyard_editor.VineyardEditorViewModel
+import com.rncoding.testvineshield.core.presentation.vineyard_details.VineyardDetailsViewModel
 import kotlinx.serialization.json.Json
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
+
 
 val commonModule =
     module {
@@ -54,6 +71,13 @@ val commonModule =
 
         single<AppClock> {
             SystemAppClock()
+        }
+
+        single {
+            Json {
+                ignoreUnknownKeys = true
+                encodeDefaults = true
+            }
         }
 
 
@@ -113,17 +137,13 @@ val commonModule =
             get<VineshieldDatabase>().weatherCalculationsDao()
         }
 
-        single<WeatherDao> {
-            get<VineshieldDatabase>().weatherDao()
+        single<WeatherHistoryDao> {
+            get<VineshieldDatabase>().weatherHistoryDao()
         }
 
         single<WeatherForecastDao> {
             get<VineshieldDatabase>().weatherForecastDao()
         }
-
-
-
-
 
 
         /*
@@ -136,6 +156,18 @@ val commonModule =
 
         single {
             SecuritySettingsMapper()
+        }
+
+        single {
+            VineyardMapper()
+        }
+
+        single {
+            VineyardSummaryMapper()
+        }
+
+        single {
+            VineyardListMapper()
         }
 
 
@@ -152,12 +184,6 @@ val commonModule =
             )
         }
 
-        single {
-            Json {
-                ignoreUnknownKeys = true
-                encodeDefaults = true
-            }
-        }
 
         single<SessionRepository> {
             SessionRepositoryImpl(
@@ -185,6 +211,15 @@ val commonModule =
             )
         }
 
+        /*
+         * Providers
+         */
+
+        single {
+            AuthenticatedUserProvider(
+                authSessionCoordinator = get()
+            )
+        }
 
         /*
          * Validators
@@ -196,6 +231,10 @@ val commonModule =
 
         factory {
             ValidatePassword()
+        }
+
+        single {
+            VineyardValidator()
         }
 
 
@@ -258,6 +297,11 @@ val commonModule =
             )
         }
 
+        factory {
+            ObserveAuthStateUseCase(
+                authSessionCoordinator = get()
+            )
+        }
 
 
         /*
@@ -276,11 +320,66 @@ val commonModule =
             )
         }
 
+
+         /*
+         * Vineyard use cases
+         */
         factory {
-            ObserveAuthStateUseCase(
-                authSessionCoordinator = get()
+            ObserveVineyardSummariesUseCase(
+                repository = get(),
+                authenticatedUserProvider = get()
             )
         }
+
+        factory {
+            GetVineyardUseCase(
+                repository = get(),
+                authenticatedUserProvider = get()
+            )
+        }
+
+        factory {
+            DeleteVineyardUseCase(
+                repository = get(),
+                authenticatedUserProvider = get()
+            )
+        }
+
+        factory {
+            ReorderVineyardsUseCase(
+                repository = get(),
+                authenticatedUserProvider = get()
+            )
+        }
+
+        factory {
+            CreateVineyardUseCase(
+                repository = get(),
+                authenticatedUserProvider = get(),
+                validator = get(),
+                clock = get()
+            )
+        }
+
+        factory {
+            UpdateVineyardUseCase(
+                repository = get(),
+                authenticatedUserProvider = get(),
+                validator = get(),
+                clock = get()
+            )
+        }
+
+        factory {
+            ObserveVineyardUseCase(
+                repository = get(),
+                authenticatedUserProvider = get()
+            )
+        }
+
+        /*
+         * View models
+         */
 
         viewModel {
             AuthViewModel(
@@ -304,4 +403,29 @@ val commonModule =
             )
         }
 
+        viewModel {
+            VineyardListViewModel(
+                observeVineyardSummariesUseCase = get(),
+                deleteVineyardUseCase = get(),
+                reorderVineyardsUseCase = get(),
+                mapper = get()
+            )
+        }
+
+        viewModel { (mode: VineyardEditorMode) ->
+            VineyardEditorViewModel(
+                mode = mode,
+                createVineyardUseCase = get(),
+                updateVineyardUseCase = get(),
+                getVineyardUseCase = get()
+            )
+        }
+
+        viewModel { (vineyardId: Long) ->
+            VineyardDetailsViewModel(
+                vineyardId = vineyardId,
+                observeVineyardUseCase = get(),
+                deleteVineyardUseCase = get()
+            )
+        }
     }
