@@ -2,6 +2,6 @@ package com.rncoding.testvineshield.core.data.remote
 
 import io.ktor.client.HttpClient
 
-expect class HttpClientFactory {
+interface HttpClientFactory {
     fun create(): HttpClient
 }
