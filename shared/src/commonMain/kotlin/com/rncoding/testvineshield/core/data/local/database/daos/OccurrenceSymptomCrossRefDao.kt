@@ -13,7 +13,7 @@ interface OccurrenceSymptomCrossRefDao {
     @Upsert
     suspend fun upsertCrossRefs(refs: List<OccurrenceSymptomCrossRef>)
 
-    @Query("DELETE FROM OccurrenceSymptomCrossRef WHERE occurrence_id = :occurrenceId")
+    @Query("DELETE FROM occurrence_symptom_cross_ref WHERE occurrence_id = :occurrenceId")
     suspend fun deleteByOccurrenceId(occurrenceId: Long)
 
     @Transaction

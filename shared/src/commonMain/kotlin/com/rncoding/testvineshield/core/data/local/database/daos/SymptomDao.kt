@@ -19,6 +19,15 @@ interface SymptomDao {
     @Upsert
     suspend fun upsertAllSymptom(symptoms: List<SymptomEntity>)
 
+    @Query(
+        """
+    SELECT *
+    FROM symptom
+    ORDER BY name ASC, symptom_id ASC
+    """
+    )
+    fun observeSymptoms(): Flow<List<SymptomEntity>>
+
     @Query("Select * From symptom Where symptom_id = :symptomId")
     suspend fun getSymptomById(symptomId: Long): SymptomEntity
 
@@ -35,7 +44,7 @@ interface SymptomDao {
 
     @Transaction
     @Query("SELECT * FROM symptom WHERE symptom_id = :symptomId")
-    suspend fun getSymptomWithOccurrences(symptomId: Int): List<SymptomWithOccurrences>
+    suspend fun getSymptomWithOccurrences(symptomId: Long): SymptomWithOccurrences?
 
     @Transaction
     @Query("SELECT * FROM symptom")

@@ -7,6 +7,7 @@ import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 import com.rncoding.testvineshield.core.data.local.database.entities.DiseaseOccurrenceEntity
 import com.rncoding.testvineshield.core.data.local.database.projections.DiseaseOccurrenceSummaryProjection
+import com.rncoding.testvineshield.core.data.local.database.projections.DiseaseRiskSymptomProjection
 import com.rncoding.testvineshield.core.data.local.database.relations.OccurrenceWithActivities
 import com.rncoding.testvineshield.core.data.local.database.relations.OccurrenceWithSymptoms
 
@@ -19,8 +20,16 @@ interface DiseaseOccurrenceDao {
     @Query("Select * From disease_occurrence")
     fun observeOccurrences(): Flow<List<DiseaseOccurrenceEntity>>
 
-    @Query("Select * From disease_occurrence Where occurrence_id = :occurrenceId")
-    suspend fun getDiseaseOccurrenceById(occurrenceId: Long): DiseaseOccurrenceEntity
+    @Query(
+        """
+    SELECT *
+    FROM disease_occurrence
+    WHERE occurrence_id = :occurrenceId
+    """
+    )
+    suspend fun getDiseaseOccurrenceById(
+        occurrenceId: Long
+    ): DiseaseOccurrenceEntity?
 
     @Query("Delete From disease_occurrence Where occurrence_id = :occurrenceId")
     suspend fun deleteDiseaseOccurrenceById(occurrenceId: Long)
@@ -92,5 +101,39 @@ interface DiseaseOccurrenceDao {
     fun observeActiveDiseaseOccurrencesForVineyard(
         vineyardId: Long
     ): Flow<List<DiseaseOccurrenceSummaryProjection>>
+
+    @Query(
+        """
+    SELECT
+        s.symptom_id AS symptom_id,
+        s.code AS code,
+        s.name AS name,
+        s.plant_part AS plant_part,
+        s.phenological_stage AS phenological_stage,
+        os.observed_at AS observed_at,
+        os.severity AS severity,
+        os.notes AS notes
+    FROM occurrence_symptom_cross_ref os
+    INNER JOIN symptom s
+        ON s.symptom_id = os.symptom_id
+    WHERE os.occurrence_id = :occurrenceId
+    ORDER BY os.observed_at DESC, s.symptom_id ASC
+    """
+    )
+    suspend fun getRiskSymptomsForOccurrence(
+        occurrenceId: Long
+    ): List<DiseaseRiskSymptomProjection>
+
+    @Query(
+        """
+    SELECT *
+    FROM disease_occurrence
+    WHERE block_id = :blockId
+    ORDER BY observed_at DESC, occurrence_id DESC
+    """
+    )
+    fun observeOccurrencesForBlock(
+        blockId: Long
+    ): Flow<List<DiseaseOccurrenceEntity>>
 
 }

@@ -15,8 +15,14 @@ interface DiseaseAlertDao {
     @Transaction
     suspend fun upsertDiseaseAlert(alert: DiseaseAlertEntity)
 
-    @Query("Select * From disease_alert")
-    fun getAllAlerts(): Flow<DiseaseAlertEntity>
+    @Query(
+        """
+    SELECT *
+    FROM disease_alert
+    ORDER BY created_at DESC, alert_id DESC
+    """
+    )
+    fun observeAllAlerts(): Flow<List<DiseaseAlertEntity>>
 
     @Query("Select * From disease_alert Where vineyard_id = :vineyardId")
     suspend fun getAllAlertsForVineyard(vineyardId: Long): List<DiseaseAlertEntity>
@@ -30,6 +36,19 @@ interface DiseaseAlertDao {
 
     @Query("Delete From disease_alert Where alert_id = :alertId")
     suspend fun deleteAlertById(alertId: Long)
+
+    @Query(
+        """
+    SELECT *
+    FROM disease_alert
+    WHERE vineyard_id = :vineyardId
+      AND alert_status = 'active'
+    ORDER BY created_at DESC, alert_id DESC
+    """
+    )
+    fun observeActiveAlerts(
+        vineyardId: Long
+    ): Flow<List<DiseaseAlertEntity>>
 
     // use this for vineyard summary
     @Query(

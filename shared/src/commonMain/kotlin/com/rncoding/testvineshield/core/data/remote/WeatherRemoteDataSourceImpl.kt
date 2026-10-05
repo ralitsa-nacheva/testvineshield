@@ -1,9 +1,7 @@
 package com.rncoding.testvineshield.core.data.remote
 
 import com.rncoding.testvineshield.core.data.datasource.WeatherRemoteDataSource
-import com.rncoding.testvineshield.core.data.local.database.daos.WeatherForecastDao
-import com.rncoding.testvineshield.core.data.remote.dto.HourlyWeatherDto
-import  com.rncoding.testvineshield.core.data.remote.dto.WeatherDto
+import com.rncoding.testvineshield.core.data.remote.dto.WeatherDto
 
 class WeatherRemoteDataSourceImpl(
     private val weatherApi: OpenMeteoApi
@@ -12,13 +10,20 @@ class WeatherRemoteDataSourceImpl(
     override suspend fun fetchWeather(
         latitude: Double,
         longitude: Double
-    ): HourlyWeatherDto {
-        return weatherApi.getHourlyWeather(latitude, longitude)
+    ): WeatherDto {
+        return weatherApi.getHourlyWeather(
+            latitude = latitude,
+            longitude = longitude
+        )
     }
 
-    override  suspend fun fetchWeatherForecast(
+    override suspend fun fetchWeatherForecast(
         latitude: Double,
-        longitude: Double): WeatherDto {
-        return weatherApi.getForecastWeather(latitude, longitude)
+        longitude: Double
+    ): WeatherDto {
+        return weatherApi.getForecastWeather(
+            latitude = latitude,
+            longitude = longitude
+        )
     }
 }

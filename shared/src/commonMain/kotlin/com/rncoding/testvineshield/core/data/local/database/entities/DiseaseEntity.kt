@@ -9,6 +9,8 @@ data class DiseaseEntity(
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "disease_id")
     val diseaseId: Long,
+    @ColumnInfo(name = "code")
+    val code: String?,
     val name: String,
     val description: String,
     val vectors: String,

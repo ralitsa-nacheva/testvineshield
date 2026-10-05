@@ -7,29 +7,26 @@ import com.rncoding.testvineshield.core.domain.datamodels.SymptomDomainModel
 import kotlinx.coroutines.flow.Flow
 
 interface DiseaseRepository {
-    fun observeDiseaseCatalog(): Flow<List<DiseaseDomainModel>>
+
+    fun observeDiseaseCatalog():
+            Flow<List<DiseaseDomainModel>>
+
+    fun observeSymptoms():
+            Flow<List<SymptomDomainModel>>
+
     fun observeDiseaseOccurrences(
         blockId: Long
-    ): Flow<List<DiseaseOccurrenceDomainModel>>//returns domain model
+    ): Flow<List<DiseaseOccurrenceDomainModel>>
 
-    fun observeSymptoms(): Flow<List<SymptomDomainModel>>//returns domain model
-    fun observeActiveAlerts(vineyardId: Long): Flow<List<DiseaseAlertDomainModel>>//returns domain model
-    fun observeDiseaseOccurrenceDetails(occurrenceId: Long): Flow<DiseaseOccurrenceDomainModel> // ??returns aggregate
-    fun observeCaseSummariesForBlock(blockId: Long): Flow<List<DiseaseCaseSummary>>//returns domain model
-    suspend fun createOccurrence(cmd: RecordDiseaseOccurrence): Long // to entity
-    suspend fun addObservedSymptom(cmd: AddObservedSymptom) // to entity
-    suspend fun removeObservedSymptom(observationId: Long) // to entity
-    suspend fun addTreatment(cmd: AddTreatment) // to entity
-    suspend fun removeTreatment(treatmentId: Long) // to entity
-    suspend fun addSymptomAndTreatment(
-        occurrenceId: Long,
-        symptomId: Long,
-        treatmentName: String
-    ) // to entity
-    suspend fun markCured(occurrenceId: Long, curedAt: Instant) // to entity
-    suspend fun reopenCase(occurrenceId: Long) // to entity
-    suspend fun createAlert(cmd: CreateAlert): Long // to entity
-    suspend fun resolveAlert(alertId: Long, resolvedAt: Instant) // to entity
-    //delete disease occurrence, get occurrence by id, delete all, get all
-    suspend fun saveOccurrenceWithSymptoms()
+    fun observeActiveAlerts(
+        vineyardId: Long
+    ): Flow<List<DiseaseAlertDomainModel>>
+
+    suspend fun getDiseaseOccurrence(
+        occurrenceId: Long
+    ): DiseaseOccurrenceDomainModel?
+
+    suspend fun deleteDiseaseOccurrence(
+        occurrenceId: Long
+    )
 }

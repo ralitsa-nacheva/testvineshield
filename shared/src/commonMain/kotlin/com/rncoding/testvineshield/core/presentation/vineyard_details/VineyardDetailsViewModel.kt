@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.usecases.vineyard.DeleteVineyardUseCase
-import com.rncoding.testvineshield.core.domain.usecases.vineyard.ObserveVineyardUseCase
+import com.rncoding.testvineshield.core.domain.usecases.vineyard.ObserveVineyardDetailsUseCase
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,8 +16,9 @@ import kotlinx.coroutines.launch
 
 class VineyardDetailsViewModel(
     private val vineyardId: Long,
-    private val observeVineyardUseCase: ObserveVineyardUseCase,
-    private val deleteVineyardUseCase: DeleteVineyardUseCase
+    private val observeVineyardDetailsUseCase: ObserveVineyardDetailsUseCase,
+    private val deleteVineyardUseCase: DeleteVineyardUseCase,
+    private val vineyardDetailsUiMapper: VineyardDetailsUiMapper
 ) : ViewModel() {
 
     private val _state =
@@ -37,7 +38,7 @@ class VineyardDetailsViewModel(
         _events.receiveAsFlow()
 
     init {
-        observeVineyard()
+        observeDetails()
     }
 
     fun requestDelete() {
@@ -67,7 +68,8 @@ class VineyardDetailsViewModel(
     fun confirmDelete() {
         val current = _state.value
 
-        if (current.isDeleting ||
+        if (
+            current.isDeleting ||
             !current.showDeleteConfirmation
         ) {
             return
@@ -82,9 +84,7 @@ class VineyardDetailsViewModel(
         viewModelScope.launch {
             when (
                 val result =
-                    deleteVineyardUseCase(
-                        vineyardId
-                    )
+                    deleteVineyardUseCase(vineyardId)
             ) {
                 is Result.Success<*> -> {
                     _state.update {
@@ -109,8 +109,7 @@ class VineyardDetailsViewModel(
 
                     _events.send(
                         VineyardDetailsEvent.ShowSnackbar(
-                            message =
-                                result.error.userMessage
+                            result.error.userMessage
                         )
                     )
                 }
@@ -125,8 +124,7 @@ class VineyardDetailsViewModel(
 
                     _events.send(
                         VineyardDetailsEvent.ShowSnackbar(
-                            message =
-                                "Unable to delete the vineyard."
+                            "Unable to delete the vineyard."
                         )
                     )
                 }
@@ -134,11 +132,9 @@ class VineyardDetailsViewModel(
         }
     }
 
-    private fun observeVineyard() {
+    private fun observeDetails() {
         viewModelScope.launch {
-            observeVineyardUseCase(
-                vineyardId
-            )
+            observeVineyardDetailsUseCase(vineyardId)
                 .catch { throwable ->
                     _state.update {
                         it.copy(
@@ -149,13 +145,16 @@ class VineyardDetailsViewModel(
                         )
                     }
                 }
-                .collect { vineyard ->
+                .collect { summary ->
                     _state.update {
                         it.copy(
                             isLoading = false,
-                            vineyard = vineyard,
+                            details =
+                                summary?.let(
+                                    vineyardDetailsUiMapper::toUi
+                                ),
                             errorMessage =
-                                if (vineyard == null) {
+                                if (summary == null) {
                                     "Vineyard could not be found."
                                 } else {
                                     null

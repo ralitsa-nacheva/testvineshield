@@ -5,6 +5,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.rncoding.testvineshield.core.domain.datamodels.enums.PhenologicalStage
 import kotlinx.datetime.LocalDate
 
 @Entity(tableName = "block", foreignKeys = [ForeignKey(
@@ -30,6 +31,8 @@ data class BlockEntity(
     @ColumnInfo(name = "row_spacing")
     val rowSpacing: Int,
     @ColumnInfo(name = "planted_at")
-    val plantedAt: LocalDate
+    val plantedAt: LocalDate,
+    @ColumnInfo(name = "phenological_stage")
+    val phenologicalStage: PhenologicalStage?
 
 )

@@ -67,14 +67,7 @@ interface BlockDao {
         b.name AS name,
         b.area AS area,
         b.vine_variety AS vine_variety,
-
-        (
-            SELECT a.phenological_stage
-            FROM activity a
-            WHERE a.block_id = b.block_id
-            ORDER BY a.updated_at DESC, a.activity_id DESC
-            LIMIT 1
-        ) AS phenological_stage,
+        b.phenological_stage AS phenological_stage,
 
         (
             SELECT a.activity_type

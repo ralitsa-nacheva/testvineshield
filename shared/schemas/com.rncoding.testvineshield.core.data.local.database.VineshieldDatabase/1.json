@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "da1fc6f9bd7466ca312ef97ec904e4f1",
+    "identityHash": "66d41861a8fd2c54b1d5606656e02c9e",
     "entities": [
       {
         "tableName": "activity",
@@ -193,7 +193,7 @@
       },
       {
         "tableName": "block",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`block_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `vineyard_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `area` INTEGER NOT NULL, `vine_variety` TEXT NOT NULL, `color` TEXT NOT NULL, `root_stock` TEXT NOT NULL, `rows` TEXT NOT NULL, `row_spacing` INTEGER NOT NULL, `planted_at` TEXT NOT NULL, FOREIGN KEY(`vineyard_id`) REFERENCES `vineyard`(`vineyard_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`block_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `vineyard_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `area` INTEGER NOT NULL, `vine_variety` TEXT NOT NULL, `color` TEXT NOT NULL, `root_stock` TEXT NOT NULL, `rows` TEXT NOT NULL, `row_spacing` INTEGER NOT NULL, `planted_at` TEXT NOT NULL, `phenological_stage` TEXT, FOREIGN KEY(`vineyard_id`) REFERENCES `vineyard`(`vineyard_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "blockId",
@@ -254,6 +254,11 @@
             "columnName": "planted_at",
             "affinity": "TEXT",
             "notNull": true
+          },
+          {
+            "fieldPath": "phenologicalStage",
+            "columnName": "phenological_stage",
+            "affinity": "TEXT"
           }
         ],
         "primaryKey": {
@@ -429,13 +434,18 @@
       },
       {
         "tableName": "disease",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`disease_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `description` TEXT NOT NULL, `vectors` TEXT NOT NULL, `factors` TEXT NOT NULL, `treatment_suggestion` TEXT NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`disease_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `code` TEXT, `name` TEXT NOT NULL, `description` TEXT NOT NULL, `vectors` TEXT NOT NULL, `factors` TEXT NOT NULL, `treatment_suggestion` TEXT NOT NULL)",
         "fields": [
           {
             "fieldPath": "diseaseId",
             "columnName": "disease_id",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "code",
+            "columnName": "code",
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "name",
@@ -963,7 +973,7 @@
         ]
       },
       {
-        "tableName": "OccurrenceSymptomCrossRef",
+        "tableName": "occurrence_symptom_cross_ref",
         "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`occurrence_id` INTEGER NOT NULL, `symptom_id` INTEGER NOT NULL, `observed_at` TEXT NOT NULL, `severity` TEXT NOT NULL, `notes` TEXT NOT NULL, PRIMARY KEY(`occurrence_id`, `symptom_id`), FOREIGN KEY(`occurrence_id`) REFERENCES `disease_occurrence`(`occurrence_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`symptom_id`) REFERENCES `symptom`(`symptom_id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
         "fields": [
           {
@@ -1006,23 +1016,23 @@
         },
         "indices": [
           {
-            "name": "index_OccurrenceSymptomCrossRef_symptom_id",
+            "name": "index_occurrence_symptom_cross_ref_symptom_id",
             "unique": false,
             "columnNames": [
               "symptom_id"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_OccurrenceSymptomCrossRef_symptom_id` ON `${TABLE_NAME}` (`symptom_id`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_occurrence_symptom_cross_ref_symptom_id` ON `${TABLE_NAME}` (`symptom_id`)"
           },
           {
-            "name": "index_OccurrenceSymptomCrossRef_occurrence_id_observed_at",
+            "name": "index_occurrence_symptom_cross_ref_occurrence_id_observed_at",
             "unique": false,
             "columnNames": [
               "occurrence_id",
               "observed_at"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_OccurrenceSymptomCrossRef_occurrence_id_observed_at` ON `${TABLE_NAME}` (`occurrence_id`, `observed_at`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_occurrence_symptom_cross_ref_occurrence_id_observed_at` ON `${TABLE_NAME}` (`occurrence_id`, `observed_at`)"
           }
         ],
         "foreignKeys": [
@@ -1106,13 +1116,18 @@
       },
       {
         "tableName": "symptom",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`symptom_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `plant_part` TEXT NOT NULL, `phenological_stage` TEXT NOT NULL, `notes` TEXT NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`symptom_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `code` TEXT, `name` TEXT NOT NULL, `plant_part` TEXT NOT NULL, `phenological_stage` TEXT NOT NULL, `notes` TEXT NOT NULL)",
         "fields": [
           {
             "fieldPath": "symptomId",
             "columnName": "symptom_id",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "code",
+            "columnName": "code",
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "name",
@@ -1766,7 +1781,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'da1fc6f9bd7466ca312ef97ec904e4f1')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '66d41861a8fd2c54b1d5606656e02c9e')"
     ]
   }
 }

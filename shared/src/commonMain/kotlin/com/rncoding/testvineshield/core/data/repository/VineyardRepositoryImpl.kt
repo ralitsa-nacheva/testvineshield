@@ -1,10 +1,25 @@
 package com.rncoding.testvineshield.core.data.repository
 
+import com.rncoding.testvineshield.core.data.local.database.daos.BlockDao
+import com.rncoding.testvineshield.core.data.local.database.daos.DiseaseAlertDao
+import com.rncoding.testvineshield.core.data.local.database.daos.DiseaseOccurrenceDao
 import com.rncoding.testvineshield.core.data.local.database.daos.VineyardDao
+import com.rncoding.testvineshield.core.data.local.database.daos.WeatherCalculationsDao
+import com.rncoding.testvineshield.core.data.local.database.daos.WeatherHistoryDao
+import com.rncoding.testvineshield.core.data.local.mappers.BlockSummaryMapper
+import com.rncoding.testvineshield.core.data.local.mappers.DiseaseAlertSummaryMapper
+import com.rncoding.testvineshield.core.data.local.mappers.DiseaseOccurrenceSummaryMapper
 import com.rncoding.testvineshield.core.data.local.mappers.VineyardMapper
 import com.rncoding.testvineshield.core.data.local.mappers.VineyardSummaryMapper
+import com.rncoding.testvineshield.core.data.local.mappers.VineyardWeatherRiskSummaryMapper
+import com.rncoding.testvineshield.core.data.local.mappers.VineyardWeatherSummaryMapper
+import com.rncoding.testvineshield.core.domain.datamodels.BlockSummary
+import com.rncoding.testvineshield.core.domain.datamodels.DiseaseAlertSummary
+import com.rncoding.testvineshield.core.domain.datamodels.DiseaseOccurrenceSummary
 import com.rncoding.testvineshield.core.domain.datamodels.VineyardDomainModel
 import com.rncoding.testvineshield.core.domain.datamodels.VineyardSummary
+import com.rncoding.testvineshield.core.domain.datamodels.VineyardWeatherRiskSummary
+import com.rncoding.testvineshield.core.domain.datamodels.VineyardWeatherSummary
 import com.rncoding.testvineshield.core.domain.error.AppError
 import com.rncoding.testvineshield.core.domain.error.DatabaseError
 import com.rncoding.testvineshield.core.domain.error.Result
@@ -15,7 +30,18 @@ import kotlinx.coroutines.flow.map
 class VineyardRepositoryImpl(
     private val vineyardDao: VineyardDao,
     private val vineyardMapper: VineyardMapper,
-    private val vineyardSummaryMapper: VineyardSummaryMapper
+    private val vineyardSummaryMapper: VineyardSummaryMapper,
+    private val blockDao: BlockDao,
+    private val weatherHistoryDao: WeatherHistoryDao,
+    private val weatherCalculationsDao: WeatherCalculationsDao,
+    private val diseaseOccurrenceDao: DiseaseOccurrenceDao,
+    private val diseaseAlertDao: DiseaseAlertDao,
+
+    private val blockSummaryMapper: BlockSummaryMapper,
+    private val vineyardWeatherSummaryMapper: VineyardWeatherSummaryMapper,
+    private val vineyardWeatherRiskSummaryMapper: VineyardWeatherRiskSummaryMapper,
+    private val diseaseOccurrenceSummaryMapper: DiseaseOccurrenceSummaryMapper,
+    private val diseaseAlertSummaryMapper: DiseaseAlertSummaryMapper
 ) : VineyardRepository {
 
     override fun observeVineyards(
@@ -237,5 +263,69 @@ class VineyardRepositoryImpl(
                 )
             )
         }
+    }
+
+    override fun observeBlockSummaries(
+        vineyardId: Long
+    ): Flow<List<BlockSummary>> {
+        return blockDao
+            .observeBlockSummariesForVineyard(vineyardId)
+            .map { projections ->
+                projections.map(
+                    blockSummaryMapper::toDomain
+                )
+            }
+    }
+
+    override fun observeLatestWeather(
+        vineyardId: Long
+    ): Flow<VineyardWeatherSummary?> {
+        return weatherHistoryDao
+            .observeLatestVineyardWeather(vineyardId)
+            .map { entity ->
+                entity?.let(
+                    vineyardWeatherSummaryMapper::toDomain
+                )
+            }
+    }
+
+    override fun observeLatestWeatherRisk(
+        vineyardId: Long
+    ): Flow<VineyardWeatherRiskSummary?> {
+        return weatherCalculationsDao
+            .observeLatestCalculation(vineyardId)
+            .map { entity ->
+                entity?.let(
+                    vineyardWeatherRiskSummaryMapper::toDomain
+                )
+            }
+    }
+
+    override fun observeActiveDiseaseOccurrences(
+        vineyardId: Long
+    ): Flow<List<DiseaseOccurrenceSummary>> {
+        return diseaseOccurrenceDao
+            .observeActiveDiseaseOccurrencesForVineyard(
+                vineyardId
+            )
+            .map { projections ->
+                projections.map(
+                    diseaseOccurrenceSummaryMapper::toDomain
+                )
+            }
+    }
+
+    override fun observeActiveDiseaseAlerts(
+        vineyardId: Long
+    ): Flow<List<DiseaseAlertSummary>> {
+        return diseaseAlertDao
+            .observeActiveAlertsForVineyard(
+                vineyardId
+            )
+            .map { projections ->
+                projections.map(
+                    diseaseAlertSummaryMapper::toDomain
+                )
+            }
     }
 }

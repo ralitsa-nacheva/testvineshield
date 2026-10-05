@@ -6,7 +6,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import kotlinx.datetime.LocalDate
 
-@Entity(primaryKeys = ["occurrence_id", "symptom_id"], foreignKeys = [ForeignKey(
+@Entity(tableName = "occurrence_symptom_cross_ref", primaryKeys = ["occurrence_id", "symptom_id"], foreignKeys = [ForeignKey(
     entity = DiseaseOccurrenceEntity::class,
     parentColumns = ["occurrence_id"],
     childColumns = ["occurrence_id"],

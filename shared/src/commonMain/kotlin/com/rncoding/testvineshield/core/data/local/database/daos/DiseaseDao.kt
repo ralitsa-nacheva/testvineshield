@@ -16,7 +16,13 @@ interface DiseaseDao {
     @Upsert
     suspend fun upsertDisease(disease: DiseaseEntity)
 
-    @Query("Select * From disease")
+    @Query(
+        """
+    SELECT *
+    FROM disease
+    ORDER BY name ASC, disease_id ASC
+    """
+    )
     fun observeDiseases(): Flow<List<DiseaseEntity>>
 
     @Transaction

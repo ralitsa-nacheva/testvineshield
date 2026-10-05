@@ -15,20 +15,34 @@ import com.rncoding.testvineshield.core.data.local.database.daos.VineyardDao
 import com.rncoding.testvineshield.core.data.local.database.daos.WeatherCalculationsDao
 import com.rncoding.testvineshield.core.data.local.database.daos.WeatherHistoryDao
 import com.rncoding.testvineshield.core.data.local.database.daos.WeatherForecastDao
+import com.rncoding.testvineshield.core.data.local.mappers.BlockMapper
+import com.rncoding.testvineshield.core.data.local.mappers.BlockSummaryMapper
+import com.rncoding.testvineshield.core.data.local.mappers.DiseaseAlertMapper
+import com.rncoding.testvineshield.core.data.local.mappers.DiseaseAlertSummaryMapper
+import com.rncoding.testvineshield.core.data.local.mappers.DiseaseMapper
+import com.rncoding.testvineshield.core.data.local.mappers.DiseaseOccurrenceMapper
+import com.rncoding.testvineshield.core.data.local.mappers.DiseaseOccurrenceSummaryMapper
 import com.rncoding.testvineshield.core.data.local.mappers.SecuritySettingsMapper
+import com.rncoding.testvineshield.core.data.local.mappers.SymptomMapper
 import com.rncoding.testvineshield.core.data.local.mappers.UserMapper
 import com.rncoding.testvineshield.core.data.local.mappers.VineyardMapper
 import com.rncoding.testvineshield.core.data.local.mappers.VineyardSummaryMapper
+import com.rncoding.testvineshield.core.data.local.mappers.VineyardWeatherRiskSummaryMapper
+import com.rncoding.testvineshield.core.data.local.mappers.VineyardWeatherSummaryMapper
+import com.rncoding.testvineshield.core.data.repository.DiseaseRepositoryImpl
 import com.rncoding.testvineshield.core.data.repository.SecuritySettingsRepositoryImpl
 import com.rncoding.testvineshield.core.data.repository.SessionRepositoryImpl
 import com.rncoding.testvineshield.core.data.repository.UserRepositoryImpl
+import com.rncoding.testvineshield.core.data.repository.VineyardRepositoryImpl
 import com.rncoding.testvineshield.core.data.time.SystemAppClock
 import com.rncoding.testvineshield.core.domain.auth.AuthSessionCoordinator
 import com.rncoding.testvineshield.core.domain.auth.AuthenticatedUserProvider
 import com.rncoding.testvineshield.core.domain.auth.ObserveAuthStateUseCase
+import com.rncoding.testvineshield.core.domain.repository.DiseaseRepository
 import com.rncoding.testvineshield.core.domain.repository.SecuritySettingsRepository
 import com.rncoding.testvineshield.core.domain.repository.SessionRepository
 import com.rncoding.testvineshield.core.domain.repository.UserRepository
+import com.rncoding.testvineshield.core.domain.repository.VineyardRepository
 import com.rncoding.testvineshield.core.domain.security.PasswordHasher
 import com.rncoding.testvineshield.core.domain.security.SessionManager
 import com.rncoding.testvineshield.core.domain.validation.ValidateEmail
@@ -44,6 +58,7 @@ import com.rncoding.testvineshield.core.domain.usecases.user.UpdateUserUseCase
 import com.rncoding.testvineshield.core.domain.usecases.vineyard.CreateVineyardUseCase
 import com.rncoding.testvineshield.core.domain.usecases.vineyard.DeleteVineyardUseCase
 import com.rncoding.testvineshield.core.domain.usecases.vineyard.GetVineyardUseCase
+import com.rncoding.testvineshield.core.domain.usecases.vineyard.ObserveVineyardDetailsUseCase
 import com.rncoding.testvineshield.core.domain.usecases.vineyard.ObserveVineyardSummariesUseCase
 import com.rncoding.testvineshield.core.domain.usecases.vineyard.ObserveVineyardUseCase
 import com.rncoding.testvineshield.core.domain.usecases.vineyard.ReorderVineyardsUseCase
@@ -52,6 +67,7 @@ import com.rncoding.testvineshield.core.domain.validation.VineyardValidator
 import com.rncoding.testvineshield.core.presentation.account.AccountViewModel
 import com.rncoding.testvineshield.core.presentation.security.SecuritySettingsViewModel
 import com.rncoding.testvineshield.core.presentation.user_auth.AuthViewModel
+import com.rncoding.testvineshield.core.presentation.vineyard_details.VineyardDetailsUiMapper
 import com.rncoding.testvineshield.core.presentation.vineyard_list.VineyardListMapper
 import com.rncoding.testvineshield.core.presentation.vineyard_list.VineyardListViewModel
 import com.rncoding.testvineshield.core.presentation.vineyard_editor.VineyardEditorMode
@@ -170,6 +186,31 @@ val commonModule =
             VineyardListMapper()
         }
 
+        single {
+            BlockSummaryMapper()
+        }
+
+        single {
+            DiseaseOccurrenceSummaryMapper()
+        }
+
+        single {
+            DiseaseAlertSummaryMapper()
+        }
+
+        single {
+            VineyardWeatherSummaryMapper()
+        }
+
+        single {
+            VineyardWeatherRiskSummaryMapper()
+        }
+
+        single { DiseaseMapper() }
+        single { SymptomMapper() }
+        single { DiseaseOccurrenceMapper() }
+        single { DiseaseAlertMapper() }
+
 
         /*
          * Repositories
@@ -199,6 +240,37 @@ val commonModule =
             )
         }
 
+        single<VineyardRepository> {
+            VineyardRepositoryImpl(
+                vineyardDao = get(),
+                blockDao = get(),
+                weatherHistoryDao = get(),
+                weatherCalculationsDao = get(),
+                diseaseOccurrenceDao = get(),
+                diseaseAlertDao = get(),
+                vineyardMapper = get(),
+                vineyardSummaryMapper = get(),
+                blockSummaryMapper = get(),
+                vineyardWeatherSummaryMapper = get(),
+                vineyardWeatherRiskSummaryMapper = get(),
+                diseaseOccurrenceSummaryMapper = get(),
+                diseaseAlertSummaryMapper = get()
+            )
+        }
+
+        single<DiseaseRepository> {
+            DiseaseRepositoryImpl(
+                diseaseDao = get(),
+                diseaseOccurrenceDao = get(),
+                symptomDao = get(),
+                diseaseAlertDao = get(),
+                diseaseMapper = get(),
+                diseaseOccurrenceMapper = get(),
+                symptomMapper = get(),
+                diseaseAlertMapper = get()
+            )
+        }
+
 
         /*
          * Session manager
@@ -210,6 +282,12 @@ val commonModule =
                 clock = get()
             )
         }
+
+        single {
+            VineyardDetailsUiMapper()
+        }
+
+        single { BlockMapper() }
 
         /*
          * Providers
@@ -377,6 +455,13 @@ val commonModule =
             )
         }
 
+        factory {
+            ObserveVineyardDetailsUseCase(
+                repository = get(),
+                authenticatedUserProvider = get()
+            )
+        }
+
         /*
          * View models
          */
@@ -424,8 +509,9 @@ val commonModule =
         viewModel { (vineyardId: Long) ->
             VineyardDetailsViewModel(
                 vineyardId = vineyardId,
-                observeVineyardUseCase = get(),
-                deleteVineyardUseCase = get()
+                observeVineyardDetailsUseCase = get(),
+                deleteVineyardUseCase = get(),
+                vineyardDetailsUiMapper = get()
             )
         }
     }
