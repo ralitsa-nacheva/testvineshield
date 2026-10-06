@@ -116,4 +116,16 @@ interface BlockDao {
         vineyardId: Long
     ): Flow<List<BlockSummaryProjection>>
 
+    @Query(
+        """
+    SELECT *
+    FROM block
+    WHERE block_id = :blockId
+    LIMIT 1
+    """
+    )
+    suspend fun getBlockById(
+        blockId: Long
+    ): BlockEntity?
+
 }

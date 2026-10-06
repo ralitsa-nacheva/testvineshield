@@ -38,6 +38,7 @@ import com.rncoding.testvineshield.core.data.time.SystemAppClock
 import com.rncoding.testvineshield.core.domain.auth.AuthSessionCoordinator
 import com.rncoding.testvineshield.core.domain.auth.AuthenticatedUserProvider
 import com.rncoding.testvineshield.core.domain.auth.ObserveAuthStateUseCase
+import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskHostContextProvider
 import com.rncoding.testvineshield.core.domain.repository.DiseaseRepository
 import com.rncoding.testvineshield.core.domain.repository.SecuritySettingsRepository
 import com.rncoding.testvineshield.core.domain.repository.SessionRepository
@@ -296,6 +297,13 @@ val commonModule =
         single {
             AuthenticatedUserProvider(
                 authSessionCoordinator = get()
+            )
+        }
+
+        single<DiseaseRiskHostContextProvider> {
+            DefaultDiseaseRiskHostContextProvider(
+                blockDao = get(),
+                diseaseOccurrenceDao = get()
             )
         }
 

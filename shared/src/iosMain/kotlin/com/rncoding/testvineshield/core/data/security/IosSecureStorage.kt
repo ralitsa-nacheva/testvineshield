@@ -148,6 +148,31 @@ class IosSecureStorage : SecureStorage {
         }
     }
 
+    override suspend fun clear() {
+
+        val query =
+            mapOf(
+                kSecClass to
+                        kSecClassGenericPassword,
+
+                kSecAttrService to
+                        SERVICE
+            )
+
+        val status =
+            SecItemDelete(
+                query.toCFDictionary()
+            )
+
+        check(
+            status == 0 ||
+                    status == errSecItemNotFound
+        ) {
+            "Keychain clear failed. " +
+                    "status=$status"
+        }
+    }
+
     private fun baseQuery(
         key: String
     ): Map<Any?, Any?> =

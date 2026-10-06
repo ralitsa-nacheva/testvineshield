@@ -136,4 +136,22 @@ interface DiseaseOccurrenceDao {
         blockId: Long
     ): Flow<List<DiseaseOccurrenceEntity>>
 
+    @Query(
+        """
+    SELECT *
+    FROM disease_occurrence
+    WHERE vineyard_id = :vineyardId
+      AND block_id = :blockId
+      AND disease_id = :diseaseId
+      AND status = 'active'
+    ORDER BY observed_at DESC, occurrence_id DESC
+    LIMIT 1
+    """
+    )
+    suspend fun getActiveOccurrenceForRisk(
+        vineyardId: Long,
+        blockId: Long,
+        diseaseId: Long
+    ): DiseaseOccurrenceEntity?
+
 }

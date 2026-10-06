@@ -141,6 +141,12 @@ class AndroidSecureStorage(
             .apply()
     }
 
+    override suspend fun clear() {
+        preferences.edit()
+            .clear()
+            .apply()
+    }
+
     private fun getOrCreateKey(): SecretKey {
 
         val existingKey =
