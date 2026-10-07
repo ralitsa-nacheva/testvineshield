@@ -21,9 +21,9 @@ class PowderyMildewUcDavisCalculator {
             qualifyingHours >= REQUIRED_CONDUCIVE_HOURS
 
         val highTemperaturePenalty =
-            day.hourlyTemperaturesCelsius.any { temperature ->
-                temperature >= HIGH_TEMP_PENALTY_C
-            }
+            hasHighTemperaturePenalty(
+                day.hourlyTemperaturesCelsius
+            )
 
         return if (!previousState.initiated) {
             evaluateBeforeInitiation(
@@ -73,7 +73,11 @@ class PowderyMildewUcDavisCalculator {
                 initiated = initiated,
                 currentIndex = index,
                 consecutiveQualifyingDays =
-                    consecutiveDays,
+                    if (initiated) {
+                        0
+                    } else {
+                        consecutiveDays
+                    },
                 lastEvaluatedDate = day.date
             )
 
@@ -102,7 +106,8 @@ class PowderyMildewUcDavisCalculator {
         highTemperaturePenalty: Boolean
     ): Evaluation {
 
-        var index = previousState.currentIndex
+        var index =
+            previousState.currentIndex
 
         if (qualifyingDay) {
             index += DAILY_INCREASE
@@ -114,15 +119,17 @@ class PowderyMildewUcDavisCalculator {
             index -= HIGH_TEMP_DECREASE
         }
 
-        index = index.coerceIn(
-            MIN_RISK_INDEX,
-            MAX_RISK_INDEX
-        )
+        index =
+            index.coerceIn(
+                MIN_RISK_INDEX,
+                MAX_RISK_INDEX
+            )
 
         val newState =
             previousState.copy(
                 initiated = true,
                 currentIndex = index,
+                consecutiveQualifyingDays = 0,
                 lastEvaluatedDate = day.date
             )
 
@@ -158,10 +165,10 @@ class PowderyMildewUcDavisCalculator {
 
             if (conducive) {
                 current += 1
-
-                if (current > longest) {
-                    longest = current
-                }
+                longest = maxOf(
+                    longest,
+                    current
+                )
             } else {
                 current = 0
             }
@@ -170,9 +177,36 @@ class PowderyMildewUcDavisCalculator {
         return longest
     }
 
+    private fun hasHighTemperaturePenalty(
+        temperatures: List<Double>
+    ): Boolean {
+
+        var consecutiveHours = 0
+
+        for (temperature in temperatures) {
+
+            if (temperature >= HIGH_TEMP_PENALTY_C) {
+                consecutiveHours += 1
+
+                if (
+                    consecutiveHours >=
+                    HIGH_TEMP_PENALTY_HOURS
+                ) {
+                    return true
+                }
+            } else {
+                consecutiveHours = 0
+            }
+        }
+
+        return false
+    }
+
     companion object {
+
         const val MODEL_VERSION =
-            "UC_DAVIS_GUBLER_THOMAS_HOURLY_V1"
+            "UC_DAVIS_GUBLER_THOMAS_HOURLY_REVISED_V1"
+
         const val MIN_CONDUCIVE_TEMP_C = 21.0
         const val MAX_CONDUCIVE_TEMP_C = 30.0
 
@@ -184,7 +218,8 @@ class PowderyMildewUcDavisCalculator {
         const val DAILY_INCREASE = 20
         const val DAILY_DECREASE = 10
 
-        const val HIGH_TEMP_PENALTY_C = 35.0
+        const val HIGH_TEMP_PENALTY_C = 38.0
+        const val HIGH_TEMP_PENALTY_HOURS = 2
         const val HIGH_TEMP_DECREASE = 10
 
         const val MIN_RISK_INDEX = 0

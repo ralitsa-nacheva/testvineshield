@@ -47,7 +47,7 @@ class DownyMildewPrimaryInfectionCalculator {
         val maximumDegreeHours =
             wetPeriods
                 .mapNotNull {
-                    LeafWetnessDegreeHourCalculator
+                    WetPeriodDegreeHourCalculator
                         .calculate(it)
                 }
                 .maxOrNull()

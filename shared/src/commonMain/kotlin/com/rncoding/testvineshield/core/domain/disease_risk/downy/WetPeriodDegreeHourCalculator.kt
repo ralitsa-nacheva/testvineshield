@@ -2,7 +2,7 @@ package com.rncoding.testvineshield.core.domain.disease_risk.downy
 
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskWeatherPoint
 
-object LeafWetnessDegreeHourCalculator {
+object WetPeriodDegreeHourCalculator {
 
     fun calculate(
         weather: List<DiseaseRiskWeatherPoint>
