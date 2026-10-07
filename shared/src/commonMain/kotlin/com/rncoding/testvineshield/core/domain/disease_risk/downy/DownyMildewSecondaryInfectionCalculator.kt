@@ -7,10 +7,14 @@ class DownyMildewSecondaryInfectionCalculator {
 
     data class Result(
         val activeOilSpotsObserved: Boolean,
+
         val longestSporulationPeriodHours: Int,
         val sporulationConditionsMet: Boolean,
+        val sporulationCompletedAt: Long?,
+
         val maximumWetDegreeHours: Double?,
         val wetnessThresholdMet: Boolean?,
+
         val infectionConditionsMet: Boolean?
     )
 
@@ -23,24 +27,106 @@ class DownyMildewSecondaryInfectionCalculator {
                 activeOilSpotsObserved = false,
                 longestSporulationPeriodHours = 0,
                 sporulationConditionsMet = false,
+                sporulationCompletedAt = null,
                 maximumWetDegreeHours = null,
                 wetnessThresholdMet = null,
                 infectionConditionsMet = false
             )
         }
 
-        val longestSporulationPeriodHours =
-            longestContinuousSporulationPeriod(
-                input.weather
+        if (input.weather.isEmpty()) {
+            return Result(
+                activeOilSpotsObserved = true,
+                longestSporulationPeriodHours = 0,
+                sporulationConditionsMet = false,
+                sporulationCompletedAt = null,
+                maximumWetDegreeHours = null,
+                wetnessThresholdMet = null,
+                infectionConditionsMet = null
+            )
+        }
+
+        val weather =
+            input.weather.sortedBy {
+                it.timestamp
+            }
+
+        val sporulation =
+            evaluateSporulation(
+                weather = weather
             )
 
-        val sporulationConditionsMet =
-            longestSporulationPeriodHours >=
-                    REQUIRED_SPORULATION_HOURS
+        if (!sporulation.conditionsMet) {
+            return Result(
+                activeOilSpotsObserved = true,
+                longestSporulationPeriodHours =
+                    sporulation.longestPeriodHours,
+                sporulationConditionsMet = false,
+                sporulationCompletedAt = null,
+                maximumWetDegreeHours = null,
+                wetnessThresholdMet = null,
+                infectionConditionsMet = false
+            )
+        }
+
+        val sporulationCompletedAt =
+            sporulation.completedAt
+
+        if (sporulationCompletedAt == null) {
+            return Result(
+                activeOilSpotsObserved = true,
+                longestSporulationPeriodHours =
+                    sporulation.longestPeriodHours,
+                sporulationConditionsMet = true,
+                sporulationCompletedAt = null,
+                maximumWetDegreeHours = null,
+                wetnessThresholdMet = null,
+                infectionConditionsMet = null
+            )
+        }
+
+        val postSporulationWeather =
+            weather.filter { point ->
+                point.timestamp >
+                        sporulationCompletedAt
+            }
+
+        if (postSporulationWeather.isEmpty()) {
+            return Result(
+                activeOilSpotsObserved = true,
+                longestSporulationPeriodHours =
+                    sporulation.longestPeriodHours,
+                sporulationConditionsMet = true,
+                sporulationCompletedAt =
+                    sporulationCompletedAt,
+                maximumWetDegreeHours = null,
+                wetnessThresholdMet = null,
+                infectionConditionsMet = null
+            )
+        }
+
+        val wetnessEvidenceAvailable =
+            postSporulationWeather.all { point ->
+                point.leafWetness?.value != null
+            }
+
+        if (!wetnessEvidenceAvailable) {
+            return Result(
+                activeOilSpotsObserved = true,
+                longestSporulationPeriodHours =
+                    sporulation.longestPeriodHours,
+                sporulationConditionsMet = true,
+                sporulationCompletedAt =
+                    sporulationCompletedAt,
+                maximumWetDegreeHours = null,
+                wetnessThresholdMet = null,
+                infectionConditionsMet = null
+            )
+        }
 
         val wetPeriods =
             ContinuousWetPeriodExtractor.extract(
-                input.weather
+                postSporulationWeather
             )
 
         val maximumWetDegreeHours =
@@ -54,86 +140,117 @@ class DownyMildewSecondaryInfectionCalculator {
         val wetnessThresholdMet =
             maximumWetDegreeHours?.let {
                 it >= REQUIRED_WET_DEGREE_HOURS
-            }
-
-        val infectionConditionsMet =
-            wetnessThresholdMet?.let {
-                sporulationConditionsMet && it
-            }
+            } ?: false
 
         return Result(
             activeOilSpotsObserved = true,
             longestSporulationPeriodHours =
-                longestSporulationPeriodHours,
-            sporulationConditionsMet =
-                sporulationConditionsMet,
+                sporulation.longestPeriodHours,
+            sporulationConditionsMet = true,
+            sporulationCompletedAt =
+                sporulationCompletedAt,
             maximumWetDegreeHours =
                 maximumWetDegreeHours,
             wetnessThresholdMet =
                 wetnessThresholdMet,
             infectionConditionsMet =
-                infectionConditionsMet
+                wetnessThresholdMet
         )
     }
 
-    private fun longestContinuousSporulationPeriod(
+    private fun evaluateSporulation(
         weather: List<DiseaseRiskWeatherPoint>
-    ): Int {
+    ): SporulationEvaluation {
 
-        val sorted =
-            weather.sortedBy {
-                it.timestamp
-            }
+        var currentHours = 0
+        var longestHours = 0
 
-        var longest = 0
-        var current = 0
-        var previousTimestamp: Long? = null
+        var previousQualifyingTimestamp: Long? =
+            null
 
-        for (point in sorted) {
+        var firstCompletionTimestamp: Long? =
+            null
 
-            val humidity =
-                point.relativeHumidityPercent
+        for (point in weather) {
 
             val qualifies =
-                point.isDay == false &&
-                        humidity != null &&
-                        point.temperatureCelsius >=
-                        MIN_SPORULATION_TEMP_C &&
-                        humidity >=
-                        MIN_SPORULATION_RH_PERCENT
-
-            val previous =
-                previousTimestamp
-
-            val continuous =
-                previous == null ||
-                        point.timestamp - previous <=
-                        ONE_HOUR_MILLIS
-
-            if (qualifies && continuous) {
-                current += 1
-                longest = maxOf(
-                    longest,
-                    current
+                qualifiesForSporulation(
+                    point = point
                 )
-            } else if (qualifies) {
-                current = 1
-                longest = maxOf(
-                    longest,
-                    current
-                )
-            } else {
-                current = 0
+
+            if (!qualifies) {
+                currentHours = 0
+                previousQualifyingTimestamp = null
+                continue
             }
 
-            previousTimestamp =
+            val previousTimestamp =
+                previousQualifyingTimestamp
+
+            val continuous =
+                previousTimestamp == null ||
+                        point.timestamp -
+                        previousTimestamp ==
+                        ONE_HOUR_MILLIS
+
+            if (continuous) {
+                currentHours += 1
+            } else {
+                currentHours = 1
+            }
+
+            longestHours =
+                maxOf(
+                    longestHours,
+                    currentHours
+                )
+
+            if (
+                currentHours >=
+                REQUIRED_SPORULATION_HOURS &&
+                firstCompletionTimestamp == null
+            ) {
+                firstCompletionTimestamp =
+                    point.timestamp
+            }
+
+            previousQualifyingTimestamp =
                 point.timestamp
         }
 
-        return longest
+        return SporulationEvaluation(
+            longestPeriodHours =
+                longestHours,
+            conditionsMet =
+                firstCompletionTimestamp != null,
+            completedAt =
+                firstCompletionTimestamp
+        )
     }
 
+    private fun qualifiesForSporulation(
+        point: DiseaseRiskWeatherPoint
+    ): Boolean {
+
+        val relativeHumidity =
+            point.relativeHumidityPercent
+
+        return point.isDay == false &&
+                relativeHumidity != null &&
+                point.temperatureCelsius >=
+                MIN_SPORULATION_TEMP_C &&
+                relativeHumidity >=
+                MIN_SPORULATION_RH_PERCENT
+    }
+
+    private data class SporulationEvaluation(
+        val longestPeriodHours: Int,
+        val conditionsMet: Boolean,
+        val completedAt: Long?
+    )
+
     companion object {
+
         const val MIN_SPORULATION_TEMP_C =
             13.0
 

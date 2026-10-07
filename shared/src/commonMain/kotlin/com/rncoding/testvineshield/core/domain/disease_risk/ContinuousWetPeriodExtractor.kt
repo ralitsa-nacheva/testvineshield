@@ -30,12 +30,16 @@ object ContinuousWetPeriodExtractor {
                 val previous =
                     current.lastOrNull()
 
+                val difference =
+                    if (previous == null) {
+                        null
+                    } else {
+                        point.timestamp - previous.timestamp
+                    }
+
                 val continuous =
                     previous == null ||
-                            point.timestamp -
-                            previous.timestamp <=
-                            ONE_HOUR_MILLIS
-
+                            difference == ONE_HOUR_MILLIS
                 if (!continuous) {
                     if (current.isNotEmpty()) {
                         periods += current
