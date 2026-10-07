@@ -121,10 +121,12 @@ interface BlockDao {
     SELECT *
     FROM block
     WHERE block_id = :blockId
+      AND vineyard_id = :vineyardId
     LIMIT 1
     """
     )
     suspend fun getBlockById(
+        vineyardId: Long,
         blockId: Long
     ): BlockEntity?
 

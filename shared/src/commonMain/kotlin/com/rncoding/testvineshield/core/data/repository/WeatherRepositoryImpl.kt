@@ -36,8 +36,8 @@ class WeatherRepositoryImpl(
                 lastTimestamp = lastTimestamp
             )
 
-        for (entity in entities) {
-            weatherHistoryDao.upsertWeather(entity)
+        if (entities.isNotEmpty()) {
+            weatherHistoryDao.upsertWeather(entities)
         }
     }
 
@@ -55,12 +55,12 @@ class WeatherRepositoryImpl(
 
     override fun observeHistoricalVineyardWeather(
         vineyardId: Long,
-        startDay: Long
+        startTimestamp: Long
     ): Flow<List<WeatherDomainModel>> {
         return weatherHistoryDao
             .observeHistoricalVineyardWeather(
                 vineyardId = vineyardId,
-                startTimestamp = startDay
+                startTimestamp = startTimestamp
             )
             .map { entities ->
                 entities.map(

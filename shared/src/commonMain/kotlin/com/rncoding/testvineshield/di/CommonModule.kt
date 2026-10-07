@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.di
 
+import com.rncoding.testvineshield.core.data.disease_risk.DefaultDiseaseRiskHostContextProvider
 import com.rncoding.testvineshield.core.data.local.database.VineshieldDatabase
 import com.rncoding.testvineshield.core.data.local.database.daos.ActivityDao
 import com.rncoding.testvineshield.core.data.local.database.daos.BlockDao
@@ -74,6 +75,11 @@ import com.rncoding.testvineshield.core.presentation.vineyard_list.VineyardListV
 import com.rncoding.testvineshield.core.presentation.vineyard_editor.VineyardEditorMode
 import com.rncoding.testvineshield.core.presentation.vineyard_editor.VineyardEditorViewModel
 import com.rncoding.testvineshield.core.presentation.vineyard_details.VineyardDetailsViewModel
+import com.rncoding.testvineshield.core.data.disease_risk.DefaultDiseaseRiskWeatherProvider
+import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskWeatherProvider
+import com.rncoding.testvineshield.core.domain.disease_risk.wetness.DiseaseRiskWeatherEnricher
+import com.rncoding.testvineshield.core.domain.disease_risk.wetness.LeafWetnessEstimator
+import com.rncoding.testvineshield.core.domain.disease_risk.wetness.WeatherBasedLeafWetnessEstimator
 import kotlinx.serialization.json.Json
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -304,6 +310,23 @@ val commonModule =
             DefaultDiseaseRiskHostContextProvider(
                 blockDao = get(),
                 diseaseOccurrenceDao = get()
+            )
+        }
+
+        single<LeafWetnessEstimator> {
+            WeatherBasedLeafWetnessEstimator()
+        }
+
+        single {
+            DiseaseRiskWeatherEnricher(
+                leafWetnessEstimator = get()
+            )
+        }
+
+        single<DiseaseRiskWeatherProvider> {
+            DefaultDiseaseRiskWeatherProvider(
+                weatherHistoryDao = get(),
+                weatherEnricher = get()
             )
         }
 

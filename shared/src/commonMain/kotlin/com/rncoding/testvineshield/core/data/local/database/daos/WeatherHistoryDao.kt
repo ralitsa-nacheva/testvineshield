@@ -11,7 +11,7 @@ interface WeatherHistoryDao {
 
     @Upsert
     suspend fun upsertWeather(
-        weather: WeatherHistoryEntity
+        weather: List<WeatherHistoryEntity>
     )
 
     @Query(
@@ -77,6 +77,22 @@ interface WeatherHistoryDao {
     suspend fun getLastWeatherTimestamp(
         vineyardId: Long
     ): Long?
+
+    @Query(
+        """
+    SELECT *
+    FROM weather_history
+    WHERE vineyard_id = :vineyardId
+      AND timestamp >= :startTimestamp
+      AND timestamp <= :endTimestamp
+    ORDER BY timestamp ASC
+    """
+    )
+    suspend fun getWeatherForRiskWindow(
+        vineyardId: Long,
+        startTimestamp: Long,
+        endTimestamp: Long
+    ): List<WeatherHistoryEntity>
 
     @Query(
         """

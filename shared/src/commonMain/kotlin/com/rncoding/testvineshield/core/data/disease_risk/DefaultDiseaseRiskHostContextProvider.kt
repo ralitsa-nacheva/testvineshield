@@ -22,14 +22,11 @@ class DefaultDiseaseRiskHostContextProvider(
 
         val block =
             blockDao.getBlockById(
+                vineyardId = vineyardId,
                 blockId = blockId
             )
 
-        // Do not use host evidence belonging to another vineyard.
-        if (
-            block == null ||
-            block.vineyardId != vineyardId
-        ) {
+        if (block == null) {
             return emptyHostContext()
         }
 

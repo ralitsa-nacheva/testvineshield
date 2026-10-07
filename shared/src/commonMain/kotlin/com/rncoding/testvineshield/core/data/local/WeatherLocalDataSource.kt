@@ -8,6 +8,6 @@ class WeatherLocalDataSource(private val weatherHistoryDao: WeatherHistoryDao) {
     suspend fun observeLatestVineyardWeather(vineyardId: Long): Flow<WeatherHistoryEntity?> =
         weatherHistoryDao.observeLatestVineyardWeather(vineyardId)
 
-    suspend fun upsertWeather(weather: WeatherHistoryEntity) =
+    suspend fun upsertWeather(weather: List<WeatherHistoryEntity>) =
         weatherHistoryDao.upsertWeather(weather)
 }

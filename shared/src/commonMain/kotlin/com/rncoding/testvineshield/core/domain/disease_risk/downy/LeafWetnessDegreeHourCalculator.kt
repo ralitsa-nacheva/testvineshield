@@ -12,12 +12,18 @@ object LeafWetnessDegreeHourCalculator {
             return null
         }
 
-        if (weather.any { it.leafWetness?.value == null }) {
+        if (
+            weather.any {
+                it.leafWetness?.value == null
+            }
+        ) {
             return null
         }
 
         return weather
-            .filter { it.leafWetness?.value == null }
+            .filter {
+                it.leafWetness?.value == true
+            }
             .sumOf { point ->
                 point.temperatureCelsius
                     .coerceAtLeast(0.0)

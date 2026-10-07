@@ -4,7 +4,7 @@ import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskWeatherPo
 import com.rncoding.testvineshield.core.domain.disease_risk.EnvironmentalMeasurement
 import com.rncoding.testvineshield.core.domain.disease_risk.MeasurementConfidence
 import com.rncoding.testvineshield.core.domain.disease_risk.MeasurementSource
-import kotlin.math.abs
+
 
 class WeatherBasedLeafWetnessEstimator : LeafWetnessEstimator {
 
@@ -48,7 +48,7 @@ class WeatherBasedLeafWetnessEstimator : LeafWetnessEstimator {
         }
 
         return EnvironmentalMeasurement(
-            value = false,
+            value = null,
             source = MeasurementSource.ESTIMATED,
             confidence = MeasurementConfidence.LOW
         )

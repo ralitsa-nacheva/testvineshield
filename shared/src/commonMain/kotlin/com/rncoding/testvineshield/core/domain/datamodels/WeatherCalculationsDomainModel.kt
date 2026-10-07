@@ -1,6 +1,5 @@
 package com.rncoding.testvineshield.core.domain.datamodels
 
-import androidx.room.ColumnInfo
 import kotlinx.datetime.LocalDate
 
 data class WeatherCalculationsDomainModel(
