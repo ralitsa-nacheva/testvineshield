@@ -51,9 +51,9 @@ data class ActivityEntity(
     val tool: String?,
     val notes: String?,
     @ColumnInfo(name = "created_at")
-    val createdAt: LocalDate,
+    val createdAt: Long,
     @ColumnInfo(name = "updated_at")
-    val updatedAt: LocalDate,
+    val updatedAt: Long,
     @ColumnInfo(name = "treatment_product")
     val treatmentProduct: String?,
     @ColumnInfo(name = "treatment_product_quantity")

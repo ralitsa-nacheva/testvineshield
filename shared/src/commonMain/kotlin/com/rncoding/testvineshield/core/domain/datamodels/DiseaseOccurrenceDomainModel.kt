@@ -14,7 +14,7 @@ data class DiseaseOccurrenceDomainModel(
     val severity: Int,
     val status: DiseaseOccurrenceStatus,
     val curedAt: LocalDate?,
-    val createdAt: LocalDate,
-    val updatedAt: LocalDate,
+    val createdAt: Long,
+    val updatedAt: Long,
     val notes: String?
 )

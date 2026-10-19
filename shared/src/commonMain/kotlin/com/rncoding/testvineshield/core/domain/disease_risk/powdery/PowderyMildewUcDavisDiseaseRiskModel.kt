@@ -11,6 +11,8 @@ import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskModelEval
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskModelState
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskModelType
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskResult
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.plus
 
 class PowderyMildewUcDavisDiseaseRiskModel(
     private val calculator:
@@ -54,6 +56,17 @@ class PowderyMildewUcDavisDiseaseRiskModel(
                     )
             }
 
+        if (
+            previousState == null &&
+            input.monitoringStartDate == null
+        ) {
+            return insufficientData(
+                input = input,
+                calculatedAt = calculatedAt,
+                previousState = null
+            )
+        }
+
         val dailyWeather =
             try {
                 PowderyMildewDailyWeatherAdapter.map(
@@ -76,6 +89,30 @@ class PowderyMildewUcDavisDiseaseRiskModel(
             )
         }
 
+        if (previousState == null) {
+
+            val monitoringStartDate =
+                requireNotNull(input.monitoringStartDate)
+
+            if (dailyWeather.first().date != monitoringStartDate) {
+                return insufficientData(
+                    input = input,
+                    calculatedAt = calculatedAt,
+                    previousState = null
+                )
+            }
+        }
+
+        if (
+            previousState is PowderyMildewRiskState &&
+            previousState.lastEvaluatedDate == null
+        ) {
+            return stateError(
+                input = input,
+                calculatedAt = calculatedAt
+            )
+        }
+
         var currentState =
             initialState
 
@@ -93,6 +130,24 @@ class PowderyMildewUcDavisDiseaseRiskModel(
                 day.date <= lastEvaluatedDate
             ) {
                 continue
+            }
+
+            val previousDate = currentState.lastEvaluatedDate
+
+            if (previousDate != null) {
+
+                val expectedNextDate = previousDate.plus(
+                    1,
+                    DateTimeUnit.DAY
+                )
+
+                if (day.date != expectedNextDate) {
+                    return insufficientData(
+                        input = input,
+                        calculatedAt = calculatedAt,
+                        previousState = initialState
+                    )
+                }
             }
 
             val evaluation =

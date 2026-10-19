@@ -37,12 +37,18 @@ import com.rncoding.testvineshield.core.data.local.database.entities.VineyardEnt
 import com.rncoding.testvineshield.core.data.local.database.entities.WeatherHistoryEntity
 import com.rncoding.testvineshield.core.data.local.database.entities.WeatherCalculationEntity
 import com.rncoding.testvineshield.core.data.local.database.entities.WeatherForecastEntity
+import com.rncoding.testvineshield.core.data.local.database.daos.DiseaseRiskDao
+import com.rncoding.testvineshield.core.data.local.database.daos.DiseaseRiskMonitoringConfigurationDao
+import com.rncoding.testvineshield.core.data.local.database.entities.DiseaseRiskEvaluationEntity
+import com.rncoding.testvineshield.core.data.local.database.entities.DiseaseRiskModelStateEntity
+import com.rncoding.testvineshield.core.data.local.database.entities.DiseaseRiskMonitoringConfigurationEntity
 
 @Database(entities = [ActivityEntity::class, BlockEntity::class, DiseaseAlertEntity::class,
-    DiseaseEntity::class, DiseaseOccurrenceEntity::class, DiseaseSymptomCrossRef::class, HarvestEntity::class,
-    ObservedSymptomEntity::class, OccurrenceActivityCrossRef::class, OccurrenceSymptomCrossRef::class, SecuritySettingsEntity::class,
-    SymptomEntity::class, UserEntity::class, VineyardEntity::class, WeatherCalculationEntity::class,
-    WeatherHistoryEntity::class, WeatherForecastEntity::class],
+    DiseaseEntity::class, DiseaseOccurrenceEntity::class, DiseaseRiskMonitoringConfigurationEntity::class,
+    DiseaseRiskEvaluationEntity::class, DiseaseRiskModelStateEntity::class, DiseaseSymptomCrossRef::class,
+    HarvestEntity::class, ObservedSymptomEntity::class, OccurrenceActivityCrossRef::class,
+    OccurrenceSymptomCrossRef::class, SecuritySettingsEntity::class, SymptomEntity::class, UserEntity::class,
+    VineyardEntity::class, WeatherCalculationEntity::class, WeatherHistoryEntity::class, WeatherForecastEntity::class],
     version = 1)
 @TypeConverters(LocalDateRoomConverters::class, DomainEnumRoomConverters::class)
 @ConstructedBy(VineshieldConstructor::class)
@@ -57,6 +63,11 @@ abstract class VineshieldDatabase: RoomDatabase() {
     abstract fun diseaseAlertDao(): DiseaseAlertDao
     abstract fun diseaseDao(): DiseaseDao
     abstract fun diseaseOccurrenceDao(): DiseaseOccurrenceDao
+
+    abstract fun diseaseRiskDao(): DiseaseRiskDao
+
+    abstract fun diseaseRiskMonitoringConfigurationDao():
+            DiseaseRiskMonitoringConfigurationDao
     abstract fun harvestDao(): HarvestDao
     abstract fun occurrenceSymptomCrossRefDao(): OccurrenceSymptomCrossRefDao
     abstract fun symptomDao(): SymptomDao

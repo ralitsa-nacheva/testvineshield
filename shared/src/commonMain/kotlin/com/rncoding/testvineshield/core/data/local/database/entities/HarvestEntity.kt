@@ -15,7 +15,7 @@ import kotlinx.datetime.LocalDate
 )], indices = [
     Index("block_id"),
     Index(value = ["block_id", "harvest_date"])
-]) // Add indices (blockId, date) or (blockId, harvestDate)
+])
 data class HarvestEntity(
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "harvest_id")

@@ -1,6 +1,9 @@
 package com.rncoding.testvineshield.di
 
+import com.rncoding.testvineshield.core.data.datasource.WeatherRemoteDataSource
 import com.rncoding.testvineshield.core.data.disease_risk.DefaultDiseaseRiskHostContextProvider
+import com.rncoding.testvineshield.core.data.disease_risk.DefaultDiseaseRiskPersistence
+import com.rncoding.testvineshield.core.data.disease_risk.DefaultDiseaseRiskVineyardContextProvider
 import com.rncoding.testvineshield.core.data.local.database.VineshieldDatabase
 import com.rncoding.testvineshield.core.data.local.database.daos.ActivityDao
 import com.rncoding.testvineshield.core.data.local.database.daos.BlockDao
@@ -76,10 +79,28 @@ import com.rncoding.testvineshield.core.presentation.vineyard_editor.VineyardEdi
 import com.rncoding.testvineshield.core.presentation.vineyard_editor.VineyardEditorViewModel
 import com.rncoding.testvineshield.core.presentation.vineyard_details.VineyardDetailsViewModel
 import com.rncoding.testvineshield.core.data.disease_risk.DefaultDiseaseRiskWeatherProvider
+import com.rncoding.testvineshield.core.data.disease_risk.DiseaseRiskMonitoringConfigurationRepositoryImpl
+import com.rncoding.testvineshield.core.data.disease_risk.DiseaseRiskStateCodec
+import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskEvaluationCoordinator
+import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskPersistence
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskWeatherProvider
 import com.rncoding.testvineshield.core.domain.disease_risk.wetness.DiseaseRiskWeatherEnricher
 import com.rncoding.testvineshield.core.domain.disease_risk.wetness.LeafWetnessEstimator
 import com.rncoding.testvineshield.core.domain.disease_risk.wetness.WeatherBasedLeafWetnessEstimator
+import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskModelRegistry
+import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskMonitoringConfigurationRepository
+import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskVineyardContextProvider
+import com.rncoding.testvineshield.core.domain.disease_risk.powdery.PowderyMildewAscosporeDiseaseRiskModel
+import com.rncoding.testvineshield.core.domain.disease_risk.powdery.PowderyMildewUcDavisDiseaseRiskModel
+import com.rncoding.testvineshield.core.domain.disease_risk.downy.DownyMildewPrimaryDiseaseRiskModel
+import com.rncoding.testvineshield.core.domain.disease_risk.downy.DownyMildewSecondaryDiseaseRiskModel
+import com.rncoding.testvineshield.core.domain.disease_risk.botrytis.BotrytisDiseaseRiskModel
+import com.rncoding.testvineshield.core.data.disease_risk.DefaultDiseaseRiskWeatherWindowPolicy
+import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskWeatherWindowPolicy
+import com.rncoding.testvineshield.core.data.local.mappers.WeatherForecastMapper
+import com.rncoding.testvineshield.core.data.remote.WeatherRemoteDataSourceImpl
+import com.rncoding.testvineshield.core.data.repository.WeatherForecastRepositoryImpl
+import com.rncoding.testvineshield.core.domain.repositories.WeatherForecastRepository
 import kotlinx.serialization.json.Json
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -103,6 +124,17 @@ val commonModule =
             }
         }
 
+        single<DiseaseRiskWeatherWindowPolicy> {
+            DefaultDiseaseRiskWeatherWindowPolicy()
+        }
+
+        /*
+         * Datasources
+         */
+
+        single<WeatherRemoteDataSource> {
+            WeatherRemoteDataSourceImpl(get())
+        }
 
         /*
          * Room DAOs
@@ -168,6 +200,22 @@ val commonModule =
             get<VineshieldDatabase>().weatherForecastDao()
         }
 
+        single {
+            get<VineshieldDatabase>().diseaseRiskDao()
+        }
+
+        single<DiseaseRiskPersistence> {
+            DefaultDiseaseRiskPersistence(
+                diseaseRiskDao = get(),
+                stateCodec = get()
+            )
+        }
+
+        single {
+            get<VineshieldDatabase>()
+                .diseaseRiskMonitoringConfigurationDao()
+        }
+
 
         /*
          * Mappers
@@ -217,6 +265,7 @@ val commonModule =
         single { SymptomMapper() }
         single { DiseaseOccurrenceMapper() }
         single { DiseaseAlertMapper() }
+        single { WeatherForecastMapper() }
 
 
         /*
@@ -278,6 +327,36 @@ val commonModule =
             )
         }
 
+        single<DiseaseRiskMonitoringConfigurationRepository> {
+            DiseaseRiskMonitoringConfigurationRepositoryImpl(
+                dao = get(),
+                coordinator = get()
+            )
+        }
+        single<WeatherForecastRepository> {
+            WeatherForecastRepositoryImpl(
+                remoteDataSource = get(),
+                forecastDao = get(),
+                forecastMapper = get()
+            )
+        }
+
+        /*
+         * Disease risk registry
+         */
+
+        single {
+            DiseaseRiskModelRegistry(
+                models = listOf(
+                    PowderyMildewAscosporeDiseaseRiskModel(),
+                    PowderyMildewUcDavisDiseaseRiskModel(),
+                    DownyMildewPrimaryDiseaseRiskModel(),
+                    DownyMildewSecondaryDiseaseRiskModel(),
+                    BotrytisDiseaseRiskModel()
+                )
+            )
+        }
+
 
         /*
          * Session manager
@@ -328,6 +407,20 @@ val commonModule =
                 weatherHistoryDao = get(),
                 weatherEnricher = get()
             )
+        }
+
+        single<DiseaseRiskVineyardContextProvider> {
+            DefaultDiseaseRiskVineyardContextProvider(
+                vineyardDao = get()
+            )
+        }
+
+        /*
+         * Codec
+         */
+
+        single {
+            DiseaseRiskStateCodec()
         }
 
         /*
@@ -414,7 +507,7 @@ val commonModule =
 
 
         /*
-         * Global auth coordinator
+         * Coordinators
          */
 
         single {
@@ -427,6 +520,10 @@ val commonModule =
                 updateUserUseCase = get(),
                 deleteUserUseCase = get()
             )
+        }
+
+        single {
+            DiseaseRiskEvaluationCoordinator()
         }
 
 

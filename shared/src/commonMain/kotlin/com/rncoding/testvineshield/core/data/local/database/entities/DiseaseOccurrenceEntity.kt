@@ -50,8 +50,8 @@ data class DiseaseOccurrenceEntity(
     @ColumnInfo(name = "cured_at")
     val curedAt: LocalDate?,
     @ColumnInfo(name = "created_at")
-    val createdAt: LocalDate,
+    val createdAt: Long,
     @ColumnInfo(name = "updated_at")
-    val updatedAt: LocalDate,
+    val updatedAt: Long,
     val notes: String?
 )

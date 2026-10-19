@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class HourlyWeatherDto(
     @SerialName("time")
-    val timestamp: List<String>,
+    val timestamp: List<Long>,
     @SerialName("temperature_2m")
     val hourlyTemp2m: List<Double>,
     @SerialName("relative_humidity_2m")

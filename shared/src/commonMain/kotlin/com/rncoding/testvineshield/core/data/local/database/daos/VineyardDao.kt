@@ -194,4 +194,16 @@ interface VineyardDao {
     fun observeVineyardSummaries(
         userId: Long
     ): Flow<List<VineyardSummaryProjection>>
+
+    @Query(
+        """
+    SELECT time_zone
+    FROM vineyard
+    WHERE vineyard_id = :vineyardId
+    LIMIT 1
+    """
+    )
+    suspend fun getVineyardTimeZone(
+        vineyardId: Long
+    ): String?
 }

@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "66d41861a8fd2c54b1d5606656e02c9e",
+    "identityHash": "7329925c2b1988d2de4d0d2def8dcc5f",
     "entities": [
       {
         "tableName": "activity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`activity_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `vineyard_id` INTEGER NOT NULL, `block_id` INTEGER, `activity_type` TEXT NOT NULL, `activity_description` TEXT NOT NULL, `season` TEXT NOT NULL, `phenological_stage` TEXT NOT NULL, `priority` TEXT NOT NULL, `status` TEXT NOT NULL, `planned_at` TEXT NOT NULL, `completed_at` TEXT, `tool` TEXT, `notes` TEXT, `created_at` TEXT NOT NULL, `updated_at` TEXT NOT NULL, `treatment_product` TEXT, `treatment_product_quantity` REAL, `treatment_product_units` TEXT, `water_quantity` REAL, `treatment_product_rate` REAL, FOREIGN KEY(`vineyard_id`) REFERENCES `vineyard`(`vineyard_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`block_id`) REFERENCES `block`(`block_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`activity_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `vineyard_id` INTEGER NOT NULL, `block_id` INTEGER, `activity_type` TEXT NOT NULL, `activity_description` TEXT NOT NULL, `season` TEXT NOT NULL, `phenological_stage` TEXT NOT NULL, `priority` TEXT NOT NULL, `status` TEXT NOT NULL, `planned_at` TEXT NOT NULL, `completed_at` TEXT, `tool` TEXT, `notes` TEXT, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `treatment_product` TEXT, `treatment_product_quantity` REAL, `treatment_product_units` TEXT, `water_quantity` REAL, `treatment_product_rate` REAL, FOREIGN KEY(`vineyard_id`) REFERENCES `vineyard`(`vineyard_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`block_id`) REFERENCES `block`(`block_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "activityId",
@@ -85,13 +85,13 @@
           {
             "fieldPath": "createdAt",
             "columnName": "created_at",
-            "affinity": "TEXT",
+            "affinity": "INTEGER",
             "notNull": true
           },
           {
             "fieldPath": "updatedAt",
             "columnName": "updated_at",
-            "affinity": "TEXT",
+            "affinity": "INTEGER",
             "notNull": true
           },
           {
@@ -487,7 +487,7 @@
       },
       {
         "tableName": "disease_occurrence",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`occurrence_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `disease_id` INTEGER NOT NULL, `vineyard_id` INTEGER NOT NULL, `block_id` INTEGER, `observed_at` TEXT NOT NULL, `severity` INTEGER NOT NULL, `status` TEXT NOT NULL, `cured_at` TEXT, `created_at` TEXT NOT NULL, `updated_at` TEXT NOT NULL, `notes` TEXT, FOREIGN KEY(`disease_id`) REFERENCES `disease`(`disease_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`vineyard_id`) REFERENCES `vineyard`(`vineyard_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`block_id`) REFERENCES `block`(`block_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`occurrence_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `disease_id` INTEGER NOT NULL, `vineyard_id` INTEGER NOT NULL, `block_id` INTEGER, `observed_at` TEXT NOT NULL, `severity` INTEGER NOT NULL, `status` TEXT NOT NULL, `cured_at` TEXT, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `notes` TEXT, FOREIGN KEY(`disease_id`) REFERENCES `disease`(`disease_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`vineyard_id`) REFERENCES `vineyard`(`vineyard_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`block_id`) REFERENCES `block`(`block_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "occurrenceId",
@@ -538,13 +538,13 @@
           {
             "fieldPath": "createdAt",
             "columnName": "created_at",
-            "affinity": "TEXT",
+            "affinity": "INTEGER",
             "notNull": true
           },
           {
             "fieldPath": "updatedAt",
             "columnName": "updated_at",
-            "affinity": "TEXT",
+            "affinity": "INTEGER",
             "notNull": true
           },
           {
@@ -607,6 +607,398 @@
             ],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_disease_occurrence_vineyard_id_status_observed_at` ON `${TABLE_NAME}` (`vineyard_id`, `status`, `observed_at`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "disease",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "disease_id"
+            ],
+            "referencedColumns": [
+              "disease_id"
+            ]
+          },
+          {
+            "table": "vineyard",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "vineyard_id"
+            ],
+            "referencedColumns": [
+              "vineyard_id"
+            ]
+          },
+          {
+            "table": "block",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "block_id"
+            ],
+            "referencedColumns": [
+              "block_id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "disease_risk_monitoring_configuration",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`vineyard_id` INTEGER NOT NULL, `block_id` INTEGER NOT NULL, `disease_id` INTEGER NOT NULL, `model_type` TEXT NOT NULL, `monitoring_start_date` TEXT NOT NULL, `enabled` INTEGER NOT NULL, PRIMARY KEY(`vineyard_id`, `block_id`, `disease_id`, `model_type`), FOREIGN KEY(`vineyard_id`) REFERENCES `vineyard`(`vineyard_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`block_id`) REFERENCES `block`(`block_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`disease_id`) REFERENCES `disease`(`disease_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "vineyardId",
+            "columnName": "vineyard_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "blockId",
+            "columnName": "block_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "diseaseId",
+            "columnName": "disease_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "modelType",
+            "columnName": "model_type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "monitoringStartDate",
+            "columnName": "monitoring_start_date",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "enabled",
+            "columnName": "enabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "vineyard_id",
+            "block_id",
+            "disease_id",
+            "model_type"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_disease_risk_monitoring_configuration_block_id",
+            "unique": false,
+            "columnNames": [
+              "block_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_disease_risk_monitoring_configuration_block_id` ON `${TABLE_NAME}` (`block_id`)"
+          },
+          {
+            "name": "index_disease_risk_monitoring_configuration_disease_id",
+            "unique": false,
+            "columnNames": [
+              "disease_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_disease_risk_monitoring_configuration_disease_id` ON `${TABLE_NAME}` (`disease_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "vineyard",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "vineyard_id"
+            ],
+            "referencedColumns": [
+              "vineyard_id"
+            ]
+          },
+          {
+            "table": "block",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "block_id"
+            ],
+            "referencedColumns": [
+              "block_id"
+            ]
+          },
+          {
+            "table": "disease",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "disease_id"
+            ],
+            "referencedColumns": [
+              "disease_id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "disease_risk_evaluation",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`evaluation_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `disease_id` INTEGER NOT NULL, `vineyard_id` INTEGER NOT NULL, `block_id` INTEGER NOT NULL, `calculated_at` INTEGER NOT NULL, `model_type` TEXT NOT NULL, `model_version` TEXT NOT NULL, `evaluation_status` TEXT NOT NULL, `risk_level` TEXT NOT NULL, `confidence` TEXT NOT NULL, `event` TEXT, `native_risk_value` REAL, FOREIGN KEY(`disease_id`) REFERENCES `disease`(`disease_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`vineyard_id`) REFERENCES `vineyard`(`vineyard_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`block_id`) REFERENCES `block`(`block_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "evaluationId",
+            "columnName": "evaluation_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "diseaseId",
+            "columnName": "disease_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vineyardId",
+            "columnName": "vineyard_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "blockId",
+            "columnName": "block_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "calculatedAt",
+            "columnName": "calculated_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "modelType",
+            "columnName": "model_type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "modelVersion",
+            "columnName": "model_version",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "evaluationStatus",
+            "columnName": "evaluation_status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "riskLevel",
+            "columnName": "risk_level",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "confidence",
+            "columnName": "confidence",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "event",
+            "columnName": "event",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "nativeRiskValue",
+            "columnName": "native_risk_value",
+            "affinity": "REAL"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "evaluation_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_disease_risk_evaluation_disease_id",
+            "unique": false,
+            "columnNames": [
+              "disease_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_disease_risk_evaluation_disease_id` ON `${TABLE_NAME}` (`disease_id`)"
+          },
+          {
+            "name": "index_disease_risk_evaluation_vineyard_id",
+            "unique": false,
+            "columnNames": [
+              "vineyard_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_disease_risk_evaluation_vineyard_id` ON `${TABLE_NAME}` (`vineyard_id`)"
+          },
+          {
+            "name": "index_disease_risk_evaluation_block_id",
+            "unique": false,
+            "columnNames": [
+              "block_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_disease_risk_evaluation_block_id` ON `${TABLE_NAME}` (`block_id`)"
+          },
+          {
+            "name": "index_disease_risk_evaluation_vineyard_id_block_id_disease_id_model_type_calculated_at",
+            "unique": false,
+            "columnNames": [
+              "vineyard_id",
+              "block_id",
+              "disease_id",
+              "model_type",
+              "calculated_at"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_disease_risk_evaluation_vineyard_id_block_id_disease_id_model_type_calculated_at` ON `${TABLE_NAME}` (`vineyard_id`, `block_id`, `disease_id`, `model_type`, `calculated_at`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "disease",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "disease_id"
+            ],
+            "referencedColumns": [
+              "disease_id"
+            ]
+          },
+          {
+            "table": "vineyard",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "vineyard_id"
+            ],
+            "referencedColumns": [
+              "vineyard_id"
+            ]
+          },
+          {
+            "table": "block",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "block_id"
+            ],
+            "referencedColumns": [
+              "block_id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "disease_risk_model_state",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`vineyard_id` INTEGER NOT NULL, `block_id` INTEGER NOT NULL, `disease_id` INTEGER NOT NULL, `model_type` TEXT NOT NULL, `model_version` TEXT NOT NULL, `state_type` TEXT NOT NULL, `state_payload` TEXT NOT NULL, `updated_at` INTEGER NOT NULL, PRIMARY KEY(`vineyard_id`, `block_id`, `disease_id`, `model_type`), FOREIGN KEY(`disease_id`) REFERENCES `disease`(`disease_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`vineyard_id`) REFERENCES `vineyard`(`vineyard_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`block_id`) REFERENCES `block`(`block_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "vineyardId",
+            "columnName": "vineyard_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "blockId",
+            "columnName": "block_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "diseaseId",
+            "columnName": "disease_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "modelType",
+            "columnName": "model_type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "modelVersion",
+            "columnName": "model_version",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "stateType",
+            "columnName": "state_type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "statePayload",
+            "columnName": "state_payload",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updated_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "vineyard_id",
+            "block_id",
+            "disease_id",
+            "model_type"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_disease_risk_model_state_disease_id",
+            "unique": false,
+            "columnNames": [
+              "disease_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_disease_risk_model_state_disease_id` ON `${TABLE_NAME}` (`disease_id`)"
+          },
+          {
+            "name": "index_disease_risk_model_state_vineyard_id",
+            "unique": false,
+            "columnNames": [
+              "vineyard_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_disease_risk_model_state_vineyard_id` ON `${TABLE_NAME}` (`vineyard_id`)"
+          },
+          {
+            "name": "index_disease_risk_model_state_block_id",
+            "unique": false,
+            "columnNames": [
+              "block_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_disease_risk_model_state_block_id` ON `${TABLE_NAME}` (`block_id`)"
           }
         ],
         "foreignKeys": [
@@ -1781,7 +2173,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '66d41861a8fd2c54b1d5606656e02c9e')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7329925c2b1988d2de4d0d2def8dcc5f')"
     ]
   }
 }

@@ -21,6 +21,7 @@ class OpenMeteoApi(
             parameter("longitude", longitude)
             parameter("hourly", HOURLY_VARIABLES)
             parameter("timezone", "auto")
+            parameter("timeformat", "unixtime")
             parameter("past_days", 7)
             parameter("forecast_days", 1)
         }.body()
@@ -37,6 +38,7 @@ class OpenMeteoApi(
             parameter("longitude", longitude)
             parameter("hourly", HOURLY_VARIABLES)
             parameter("timezone", "auto")
+            parameter("timeformat", "unixtime")
             parameter("forecast_days", 7)
         }.body()
     }

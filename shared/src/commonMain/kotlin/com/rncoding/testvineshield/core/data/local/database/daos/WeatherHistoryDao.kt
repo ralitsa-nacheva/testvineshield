@@ -1,6 +1,8 @@
 package com.rncoding.testvineshield.core.data.local.database.daos
 
 import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Upsert
 import com.rncoding.testvineshield.core.data.local.database.entities.WeatherHistoryEntity
@@ -84,7 +86,7 @@ interface WeatherHistoryDao {
     FROM weather_history
     WHERE vineyard_id = :vineyardId
       AND timestamp >= :startTimestamp
-      AND timestamp <= :endTimestamp
+      AND timestamp < :endTimestamp
     ORDER BY timestamp ASC
     """
     )
@@ -100,4 +102,9 @@ interface WeatherHistoryDao {
         """
     )
     suspend fun deleteAllWeather()
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertMissingWeather(
+        weather: List<WeatherHistoryEntity>
+    )
 }

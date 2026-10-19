@@ -3,9 +3,6 @@ package com.rncoding.testvineshield.core.data.local.mappers
 import com.rncoding.testvineshield.core.data.local.database.entities.WeatherHistoryEntity
 import com.rncoding.testvineshield.core.data.remote.dto.WeatherDto
 import com.rncoding.testvineshield.core.domain.datamodels.WeatherDomainModel
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toInstant
 import kotlin.collections.List
 
 class WeatherMapper {
@@ -17,13 +14,11 @@ class WeatherMapper {
     ):List<WeatherHistoryEntity> {
 
         val weatherValues = mutableListOf<WeatherHistoryEntity>()
-        val timezone = weatherDto.timezone
+
 
         for (i in weatherDto.hourlyWeather.timestamp.indices) {
-            val timestamp = parseIsoTime(
-                weatherDto.hourlyWeather.timestamp[i],
-                TimeZone.of(timezone)
-            )
+            val timestamp =
+                weatherDto.hourlyWeather.timestamp[i] * 1_000L
             if (lastTimestamp != null && timestamp <= lastTimestamp) {
                 continue
             }
@@ -57,14 +52,6 @@ class WeatherMapper {
         return weatherValues
 
     }
-
-    private fun parseIsoTime(time: String, zone: TimeZone): Long {
-        return LocalDateTime
-            .parse(time)
-            .toInstant(zone)
-            .toEpochMilliseconds()
-    }
-
 
     fun entityToDomain(entity: WeatherHistoryEntity): WeatherDomainModel {
         return WeatherDomainModel(

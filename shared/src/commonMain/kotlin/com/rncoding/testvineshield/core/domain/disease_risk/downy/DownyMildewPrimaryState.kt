@@ -7,7 +7,8 @@ data class DownyMildewPrimaryState(
     val triggerStartedAt: Long? = null,
     val soilWetHours: Int = 0,
     val consecutiveDryHours: Int = 0,
-    val germinationCompletedAt: Long? = null
+    val germinationCompletedAt: Long? = null,
+    val lastProcessedWeatherTimestamp: Long? = null
 ) : DiseaseRiskModelState {
 
     enum class Phase {

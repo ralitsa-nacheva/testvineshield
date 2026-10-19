@@ -12,6 +12,7 @@ import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskModelEval
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskModelState
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskModelType
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskResult
+import com.rncoding.testvineshield.core.domain.disease_risk.IncrementalWeatherSelector
 
 class DownyMildewPrimaryDiseaseRiskModel(
     private val calculator:
@@ -55,6 +56,32 @@ class DownyMildewPrimaryDiseaseRiskModel(
                     )
             }
 
+        val selection = IncrementalWeatherSelector.select(
+            weather = input.hourlyWeather,
+            lastProcessedTimestamp =
+                state.lastProcessedWeatherTimestamp
+        )
+
+        val newWeather = when (selection) {
+
+            is IncrementalWeatherSelector.Selection.Ready ->
+                selection.weather
+
+            IncrementalWeatherSelector.Selection.NoNewWeather ->
+                return insufficientData(
+                    input = input,
+                    calculatedAt = calculatedAt,
+                    previousState = state
+                )
+
+            IncrementalWeatherSelector.Selection.InvalidTimeline ->
+                return insufficientData(
+                    input = input,
+                    calculatedAt = calculatedAt,
+                    previousState = state
+                )
+        }
+
         /*
          * IMPORTANT:
          *
@@ -73,8 +100,7 @@ class DownyMildewPrimaryDiseaseRiskModel(
         val evaluation =
             calculator.evaluate(
                 DownyMildewPrimaryInput(
-                    weather =
-                        input.hourlyWeather,
+                    weather = newWeather,
                     soilWetnessEvidence =
                         soilWetnessEvidence,
                     previousState =
@@ -86,7 +112,14 @@ class DownyMildewPrimaryDiseaseRiskModel(
             evaluation.result
 
         val nextState =
-            evaluation.state
+            if (soilWetnessEvidence == SoilWetnessEvidence.UNKNOWN) {
+                state
+            } else {
+                evaluation.state.copy(
+                    lastProcessedWeatherTimestamp =
+                        newWeather.last().timestamp
+                )
+            }
 
         val infectionConditions =
             result.infectionConditionsMet
