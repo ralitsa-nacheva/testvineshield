@@ -9,6 +9,7 @@ interface WeatherRepository {
         vineyardId: Long,
         latitude: Double,
         longitude: Double
+
     )
 
     fun observeLatestVineyardWeather(

@@ -216,4 +216,32 @@ class DefaultDiseaseRiskWeatherWindowPolicyTest {
             }
         )
     }
+
+    @Test
+    fun lordHoweDstChangesHourlyGridOffset() {
+        val zone = TimeZone.of("Australia/Lord_Howe")
+
+        val beforeTransition = LocalDate(2026, 10, 3)
+            .atStartOfDayIn(zone)
+            .toEpochMilliseconds()
+
+        val afterTransition = LocalDate(2026, 10, 5)
+            .atStartOfDayIn(zone)
+            .toEpochMilliseconds()
+
+        val beforeOffset = beforeTransition % oneHourMillis
+        val afterOffset = afterTransition % oneHourMillis
+
+        // Lord Howe advances its clocks by 30 minutes.
+        // Its local-midnight hourly grid changes relative to UTC.
+        assertEquals(
+            30L * 60_000L,
+            beforeOffset
+        )
+
+        assertEquals(
+            0L,
+            afterOffset
+        )
+    }
 }

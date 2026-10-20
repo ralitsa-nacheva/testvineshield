@@ -6,11 +6,13 @@ interface WeatherRemoteDataSource {
 
     suspend fun fetchWeather(
         latitude: Double,
-        longitude: Double
+        longitude: Double,
+        timeZone: String
     ): WeatherDto
 
     suspend fun fetchWeatherForecast(
         latitude: Double,
-        longitude: Double
+        longitude: Double,
+        timeZone: String
     ): WeatherDto
 }

@@ -9,21 +9,25 @@ class WeatherRemoteDataSourceImpl(
 
     override suspend fun fetchWeather(
         latitude: Double,
-        longitude: Double
+        longitude: Double,
+        timeZone: String
     ): WeatherDto {
         return weatherApi.getHourlyWeather(
             latitude = latitude,
-            longitude = longitude
+            longitude = longitude,
+            timeZone = timeZone
         )
     }
 
     override suspend fun fetchWeatherForecast(
         latitude: Double,
-        longitude: Double
+        longitude: Double,
+        timeZone: String
     ): WeatherDto {
         return weatherApi.getForecastWeather(
             latitude = latitude,
-            longitude = longitude
+            longitude = longitude,
+            timeZone = timeZone
         )
     }
 }

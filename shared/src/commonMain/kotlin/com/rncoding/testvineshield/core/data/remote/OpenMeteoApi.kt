@@ -12,7 +12,8 @@ class OpenMeteoApi(
 
     suspend fun getHourlyWeather(
         latitude: Double,
-        longitude: Double
+        longitude: Double,
+        timeZone: String
     ): WeatherDto {
         return client.get(
             "https://api.open-meteo.com/v1/forecast"
@@ -20,7 +21,7 @@ class OpenMeteoApi(
             parameter("latitude", latitude)
             parameter("longitude", longitude)
             parameter("hourly", HOURLY_VARIABLES)
-            parameter("timezone", "auto")
+            parameter("timezone", timeZone)
             parameter("timeformat", "unixtime")
             parameter("past_days", 7)
             parameter("forecast_days", 1)
@@ -29,7 +30,8 @@ class OpenMeteoApi(
 
     suspend fun getForecastWeather(
         latitude: Double,
-        longitude: Double
+        longitude: Double,
+        timeZone: String
     ): WeatherDto {
         return client.get(
             "https://api.open-meteo.com/v1/forecast"
@@ -37,7 +39,7 @@ class OpenMeteoApi(
             parameter("latitude", latitude)
             parameter("longitude", longitude)
             parameter("hourly", HOURLY_VARIABLES)
-            parameter("timezone", "auto")
+            parameter("timezone", timeZone)
             parameter("timeformat", "unixtime")
             parameter("forecast_days", 7)
         }.body()

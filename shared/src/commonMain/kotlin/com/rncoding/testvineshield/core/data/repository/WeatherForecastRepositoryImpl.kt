@@ -6,11 +6,13 @@ import com.rncoding.testvineshield.core.data.local.mappers.WeatherForecastMapper
 import com.rncoding.testvineshield.core.data.datasource.WeatherRemoteDataSource
 import com.rncoding.testvineshield.core.domain.datamodels.WeatherDomainModel
 import com.rncoding.testvineshield.core.domain.repositories.WeatherForecastRepository
+import com.rncoding.testvineshield.core.data.local.database.daos.VineyardDao
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 class WeatherForecastRepositoryImpl(
     private val remoteDataSource: WeatherRemoteDataSource,
+    private val vineyardDao: VineyardDao,
     private val forecastDao: WeatherForecastDao,
     private val forecastMapper: WeatherForecastMapper
 ) : WeatherForecastRepository {
@@ -57,10 +59,22 @@ class WeatherForecastRepositoryImpl(
             "Invalid vineyard longitude."
         }
 
+        val timeZone = requireNotNull(
+            vineyardDao.getVineyardTimeZone(vineyardId)
+        ) {
+            "Time zone not found for vineyard $vineyardId."
+        }
+
         val response = remoteDataSource.fetchWeatherForecast(
             latitude = latitude,
-            longitude = longitude
+            longitude = longitude,
+            timeZone = timeZone
         )
+
+        require(response.timezone == timeZone) {
+            "Open-Meteo returned time zone '${response.timezone}' " +
+                    "instead of '$timeZone'."
+        }
 
         val entities = forecastMapper.weatherDtoToEntities(
             weatherDto = response,

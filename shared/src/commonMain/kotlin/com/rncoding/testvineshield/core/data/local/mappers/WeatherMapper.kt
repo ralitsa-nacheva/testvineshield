@@ -10,47 +10,52 @@ class WeatherMapper {
     fun weatherDtoToEntity(
         weatherDto: WeatherDto,
         vineyardId: Long,
-        lastTimestamp: Long?
-    ):List<WeatherHistoryEntity> {
+        latestCompletedHourStart: Long
+    ): List<WeatherHistoryEntity> {
+
+        val hourly = weatherDto.hourlyWeather
 
         val weatherValues = mutableListOf<WeatherHistoryEntity>()
 
+        for (i in hourly.timestamp.indices) {
 
-        for (i in weatherDto.hourlyWeather.timestamp.indices) {
-            val timestamp =
-                weatherDto.hourlyWeather.timestamp[i] * 1_000L
-            if (lastTimestamp != null && timestamp <= lastTimestamp) {
+            // Open-Meteo returns Unix seconds.
+            // Preserve the exact timestamp without UTC-hour rounding.
+            val timestamp = hourly.timestamp[i] * 1_000L
+
+            // Exclude the current incomplete hour and future hours.
+            if (timestamp > latestCompletedHourStart) {
                 continue
             }
+
             weatherValues.add(
                 WeatherHistoryEntity(
-                     weatherId = 0L,
-                     vineyardId = vineyardId,
-                     timestamp = timestamp,
-                     hourlyTemp2m = weatherDto.hourlyWeather.hourlyTemp2m[i],
-                     relativeHumidity2m = weatherDto.hourlyWeather.relativeHumidity2m[i],
-                     dewPoint2m = weatherDto.hourlyWeather.dewPoint2m[i],
-                     cloudCover = weatherDto.hourlyWeather.cloudCover[i],
-                     windSpeed10m = weatherDto.hourlyWeather.windSpeed10m[i],
-                     precipitation = weatherDto.hourlyWeather.precipitation[i],
-                     rain = weatherDto.hourlyWeather.rain[i],
-                     showers = weatherDto.hourlyWeather.showers[i],
-                     snowfall = weatherDto.hourlyWeather.snowfall[i],
-                     snowDepth = weatherDto.hourlyWeather.snowDepth[i],
-                     weatherCode = weatherDto.hourlyWeather.weatherCode[i],
-                     freezingLevelHeight = weatherDto.hourlyWeather.freezingLevelHeight[i],
-                     visibility = weatherDto.hourlyWeather.visibility[i],
-                     soilTemperature0cm = weatherDto.hourlyWeather.soilTemperature0cm[i],
-                     soilTemperature6cm = weatherDto.hourlyWeather.soilTemperature6cm[i],
-                     soilMoisture0to1cm = weatherDto.hourlyWeather.soilMoisture0to1cm[i],
-                     soilMoisture1to3cm = weatherDto.hourlyWeather.soilMoisture1to3cm[i],
-                     isDay = weatherDto.hourlyWeather.isDay[i]
+                    weatherId = 0L,
+                    vineyardId = vineyardId,
+                    timestamp = timestamp,
+                    hourlyTemp2m = hourly.hourlyTemp2m[i],
+                    relativeHumidity2m = hourly.relativeHumidity2m[i],
+                    dewPoint2m = hourly.dewPoint2m[i],
+                    cloudCover = hourly.cloudCover[i],
+                    windSpeed10m = hourly.windSpeed10m[i],
+                    precipitation = hourly.precipitation[i],
+                    rain = hourly.rain[i],
+                    showers = hourly.showers[i],
+                    snowfall = hourly.snowfall[i],
+                    snowDepth = hourly.snowDepth[i],
+                    weatherCode = hourly.weatherCode[i],
+                    freezingLevelHeight = hourly.freezingLevelHeight[i],
+                    visibility = hourly.visibility[i],
+                    soilTemperature0cm = hourly.soilTemperature0cm[i],
+                    soilTemperature6cm = hourly.soilTemperature6cm[i],
+                    soilMoisture0to1cm = hourly.soilMoisture0to1cm[i],
+                    soilMoisture1to3cm = hourly.soilMoisture1to3cm[i],
+                    isDay = hourly.isDay[i]
                 )
             )
-
         }
-        return weatherValues
 
+        return weatherValues
     }
 
     fun entityToDomain(entity: WeatherHistoryEntity): WeatherDomainModel {

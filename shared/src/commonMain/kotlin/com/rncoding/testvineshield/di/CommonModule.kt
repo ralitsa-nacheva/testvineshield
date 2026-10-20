@@ -4,6 +4,10 @@ import com.rncoding.testvineshield.core.data.datasource.WeatherRemoteDataSource
 import com.rncoding.testvineshield.core.data.disease_risk.DefaultDiseaseRiskHostContextProvider
 import com.rncoding.testvineshield.core.data.disease_risk.DefaultDiseaseRiskPersistence
 import com.rncoding.testvineshield.core.data.disease_risk.DefaultDiseaseRiskVineyardContextProvider
+import com.rncoding.testvineshield.core.data.disease_risk.DiseaseRiskEngineImpl
+import com.rncoding.testvineshield.core.data.disease_risk.DiseaseRiskInputFactoryImpl
+import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskEngine
+import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskInputFactory
 import com.rncoding.testvineshield.core.data.local.database.VineshieldDatabase
 import com.rncoding.testvineshield.core.data.local.database.daos.ActivityDao
 import com.rncoding.testvineshield.core.data.local.database.daos.BlockDao
@@ -336,6 +340,7 @@ val commonModule =
         single<WeatherForecastRepository> {
             WeatherForecastRepositoryImpl(
                 remoteDataSource = get(),
+                vineyardDao = get(),
                 forecastDao = get(),
                 forecastMapper = get()
             )
@@ -354,6 +359,29 @@ val commonModule =
                     DownyMildewSecondaryDiseaseRiskModel(),
                     BotrytisDiseaseRiskModel()
                 )
+            )
+        }
+
+        /*
+ * Disease-risk orchestration
+ */
+
+        single<DiseaseRiskInputFactory> {
+            DiseaseRiskInputFactoryImpl(
+                monitoringRepository = get(),
+                vineyardContextProvider = get(),
+                weatherWindowPolicy = get(),
+                weatherProvider = get(),
+                hostContextProvider = get()
+            )
+        }
+
+        single<DiseaseRiskEngine> {
+            DiseaseRiskEngineImpl(
+                modelRegistry = get(),
+                inputFactory = get(),
+                persistence = get(),
+                coordinator = get()
             )
         }
 
