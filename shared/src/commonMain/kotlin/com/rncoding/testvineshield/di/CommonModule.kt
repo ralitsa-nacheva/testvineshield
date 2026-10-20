@@ -72,6 +72,7 @@ import com.rncoding.testvineshield.core.domain.usecases.vineyard.ObserveVineyard
 import com.rncoding.testvineshield.core.domain.usecases.vineyard.ObserveVineyardUseCase
 import com.rncoding.testvineshield.core.domain.usecases.vineyard.ReorderVineyardsUseCase
 import com.rncoding.testvineshield.core.domain.usecases.vineyard.UpdateVineyardUseCase
+import com.rncoding.testvineshield.core.domain.usecases.weather.RefreshWeatherHistoryAndEvaluateRiskUseCase
 import com.rncoding.testvineshield.core.domain.validation.VineyardValidator
 import com.rncoding.testvineshield.core.presentation.account.AccountViewModel
 import com.rncoding.testvineshield.core.presentation.security.SecuritySettingsViewModel
@@ -100,11 +101,15 @@ import com.rncoding.testvineshield.core.domain.disease_risk.downy.DownyMildewPri
 import com.rncoding.testvineshield.core.domain.disease_risk.downy.DownyMildewSecondaryDiseaseRiskModel
 import com.rncoding.testvineshield.core.domain.disease_risk.botrytis.BotrytisDiseaseRiskModel
 import com.rncoding.testvineshield.core.data.disease_risk.DefaultDiseaseRiskWeatherWindowPolicy
+import com.rncoding.testvineshield.core.data.disease_risk.VineyardDiseaseRiskEvaluatorImpl
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskWeatherWindowPolicy
 import com.rncoding.testvineshield.core.data.local.mappers.WeatherForecastMapper
 import com.rncoding.testvineshield.core.data.remote.WeatherRemoteDataSourceImpl
 import com.rncoding.testvineshield.core.data.repository.WeatherForecastRepositoryImpl
+import com.rncoding.testvineshield.core.data.repository.WeatherHistoryRepositoryImpl
+import com.rncoding.testvineshield.core.domain.disease_risk.VineyardDiseaseRiskEvaluator
 import com.rncoding.testvineshield.core.domain.repositories.WeatherForecastRepository
+import com.rncoding.testvineshield.core.domain.repository.WeatherHistoryRepository
 import kotlinx.serialization.json.Json
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -346,6 +351,15 @@ val commonModule =
             )
         }
 
+        single<WeatherHistoryRepository> {
+            WeatherHistoryRepositoryImpl(
+                remoteDataSource = get(),
+                vineyardDao = get(),
+                weatherHistoryDao = get(),
+                weatherHistoryMapper = get()
+            )
+        }
+
         /*
          * Disease risk registry
          */
@@ -384,6 +398,15 @@ val commonModule =
                 coordinator = get()
             )
         }
+
+
+        single<VineyardDiseaseRiskEvaluator> {
+            VineyardDiseaseRiskEvaluatorImpl(
+                monitoringRepository = get(),
+                diseaseRiskEngine = get()
+            )
+        }
+
 
 
         /*
@@ -617,6 +640,19 @@ val commonModule =
                 authenticatedUserProvider = get()
             )
         }
+
+        /*
+         * Weather use cases
+         */
+
+
+        factory {
+            RefreshWeatherHistoryAndEvaluateRiskUseCase(
+                weatherHistoryRepository = get(),
+                vineyardDiseaseRiskEvaluator = get()
+            )
+        }
+
 
         /*
          * View models

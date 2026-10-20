@@ -11,6 +11,7 @@ import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskEvaluatio
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskModelType
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskMonitoringConfiguration
 import com.rncoding.testvineshield.core.domain.disease_risk.*
+import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.LocalDate
 import org.junit.Test
@@ -405,6 +406,100 @@ class DiseaseRiskPersistenceIntegrationTest {
             )
 
             assertNull(deleted)
+
+        } finally {
+            database.close()
+        }
+    }
+
+
+    @Test
+    fun listsOnlyEnabledMonitoringConfigurationsForVineyard() = runBlocking {
+        val context = InstrumentationRegistry
+            .getInstrumentation()
+            .targetContext
+
+        val database =
+            Room.inMemoryDatabaseBuilder<VineshieldDatabase>(context)
+                .setDriver(BundledSQLiteDriver())
+                .build()
+
+        try {
+            val ids = database.insertDiseaseRiskTestData()
+
+            val repository =
+                DiseaseRiskMonitoringConfigurationRepositoryImpl(
+                    dao = database.diseaseRiskMonitoringConfigurationDao(),
+                    coordinator = DiseaseRiskEvaluationCoordinator()
+                )
+
+            val enabledConfiguration =
+                DiseaseRiskMonitoringConfiguration(
+                    vineyardId = ids.vineyardId,
+                    blockId = ids.blockId,
+                    diseaseId = ids.diseaseId,
+                    modelType =
+                        DiseaseRiskModelType.POWDERY_MILDEW_UC_DAVIS,
+                    monitoringStartDate = LocalDate(2026, 10, 1),
+                    enabled = true
+                )
+
+            val disabledConfiguration =
+                enabledConfiguration.copy(
+                    modelType =
+                        DiseaseRiskModelType.POWDERY_MILDEW_ASCOSPORE,
+                    enabled = false
+                )
+
+            val anotherEnabledConfiguration =
+                enabledConfiguration.copy(
+                    modelType = DiseaseRiskModelType.BOTRYTIS
+                )
+
+            repository.saveConfiguration(enabledConfiguration)
+            repository.saveConfiguration(disabledConfiguration)
+            repository.saveConfiguration(anotherEnabledConfiguration)
+
+            // Only the two enabled configurations should be returned.
+            val enabled = repository.getEnabledConfigurationsForVineyard(
+                ids.vineyardId
+            )
+
+            assertEquals(2, enabled.size)
+            assertEquals(
+                setOf(
+                    DiseaseRiskModelType.POWDERY_MILDEW_UC_DAVIS,
+                    DiseaseRiskModelType.BOTRYTIS
+                ),
+                enabled.map { it.modelType }.toSet()
+            )
+
+            assertTrue(enabled.all { it.enabled })
+            assertTrue(enabled.all { it.vineyardId == ids.vineyardId })
+
+            // A vineyard with no configurations returns an empty list.
+            val otherVineyardConfigurations =
+                repository.getEnabledConfigurationsForVineyard(
+                    ids.vineyardId + 999L
+                )
+
+            assertTrue(otherVineyardConfigurations.isEmpty())
+
+            // Disable one of the previously enabled configurations.
+            repository.saveConfiguration(
+                enabledConfiguration.copy(enabled = false)
+            )
+
+            val afterDisabling =
+                repository.getEnabledConfigurationsForVineyard(
+                    ids.vineyardId
+                )
+
+            assertEquals(1, afterDisabling.size)
+            assertEquals(
+                DiseaseRiskModelType.BOTRYTIS,
+                afterDisabling.single().modelType
+            )
 
         } finally {
             database.close()

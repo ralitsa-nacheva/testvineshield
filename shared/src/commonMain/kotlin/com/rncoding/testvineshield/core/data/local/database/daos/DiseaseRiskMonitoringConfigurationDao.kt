@@ -99,4 +99,19 @@ interface DiseaseRiskMonitoringConfigurationDao {
             modelType = modelType
         )
     }
+
+
+    @Query(
+        """
+    SELECT *
+    FROM disease_risk_monitoring_configuration
+    WHERE vineyard_id = :vineyardId
+      AND enabled = 1
+    ORDER BY block_id, disease_id, model_type
+    """
+    )
+    suspend fun getEnabledConfigurationsForVineyard(
+        vineyardId: Long
+    ): List<DiseaseRiskMonitoringConfigurationEntity>
+
 }

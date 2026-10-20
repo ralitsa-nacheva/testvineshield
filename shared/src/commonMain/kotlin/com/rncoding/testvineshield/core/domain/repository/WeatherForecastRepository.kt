@@ -1,6 +1,6 @@
 package com.rncoding.testvineshield.core.domain.repositories
 
-import com.rncoding.testvineshield.core.domain.datamodels.WeatherDomainModel
+import com.rncoding.testvineshield.core.domain.datamodels.WeatherHistoryDomainModel
 import kotlinx.coroutines.flow.Flow
 
 interface WeatherForecastRepository {
@@ -12,7 +12,7 @@ interface WeatherForecastRepository {
      */
     fun observeForecast(
         vineyardId: Long
-    ): Flow<List<WeatherDomainModel>>
+    ): Flow<List<WeatherHistoryDomainModel>>
 
     /**
      * Observe the next forecast observation at or after
@@ -21,7 +21,7 @@ interface WeatherForecastRepository {
     fun observeNextForecast(
         vineyardId: Long,
         fromTimestamp: Long
-    ): Flow<WeatherDomainModel?>
+    ): Flow<WeatherHistoryDomainModel?>
 
     /**
      * Fetch a fresh forecast and atomically replace

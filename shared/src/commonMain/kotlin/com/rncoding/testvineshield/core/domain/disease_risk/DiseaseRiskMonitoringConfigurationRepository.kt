@@ -19,4 +19,10 @@ interface DiseaseRiskMonitoringConfigurationRepository {
         diseaseId: Long,
         modelType: DiseaseRiskModelType
     )
+
+
+    suspend fun getEnabledConfigurationsForVineyard(
+        vineyardId: Long
+    ): List<DiseaseRiskMonitoringConfiguration>
+
 }

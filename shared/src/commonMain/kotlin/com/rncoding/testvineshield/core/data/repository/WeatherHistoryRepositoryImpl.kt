@@ -1,27 +1,29 @@
 package com.rncoding.testvineshield.core.data.repository
 
 import com.rncoding.testvineshield.core.data.local.database.daos.WeatherHistoryDao
-import com.rncoding.testvineshield.core.data.local.mappers.WeatherMapper
+import com.rncoding.testvineshield.core.data.local.mappers.WeatherHistoryMapper
 import com.rncoding.testvineshield.core.data.local.database.daos.VineyardDao
 import com.rncoding.testvineshield.core.data.datasource.WeatherRemoteDataSource
-import com.rncoding.testvineshield.core.domain.datamodels.WeatherDomainModel
-import com.rncoding.testvineshield.core.domain.repository.WeatherRepository
+import com.rncoding.testvineshield.core.domain.datamodels.WeatherHistoryDomainModel
+import com.rncoding.testvineshield.core.domain.repository.WeatherHistoryRepository
+import com.rncoding.testvineshield.core.domain.datamodels.WeatherHistoryRefreshResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlin.time.Clock
 
-class WeatherRepositoryImpl(
+class WeatherHistoryRepositoryImpl(
     private val remoteDataSource: WeatherRemoteDataSource,
     private val vineyardDao: VineyardDao,
     private val weatherHistoryDao: WeatherHistoryDao,
-    private val weatherMapper: WeatherMapper
-) : WeatherRepository {
+    private val weatherHistoryMapper: WeatherHistoryMapper
+) : WeatherHistoryRepository {
 
-    override suspend fun refreshWeather(
+
+    override suspend fun refreshWeatherHistory(
         vineyardId: Long,
         latitude: Double,
         longitude: Double
-    ) {
+    ): WeatherHistoryRefreshResult {
         require(vineyardId > 0L) {
             "Vineyard ID must be positive."
         }
@@ -48,25 +50,36 @@ class WeatherRepositoryImpl(
         val latestCompletedHourStart =
             fetchedAt - 3_600_000L
 
-        val entities = weatherMapper.weatherDtoToEntity(
+        val entities = weatherHistoryMapper.weatherDtoToEntity(
             weatherDto = response,
             vineyardId = vineyardId,
             latestCompletedHourStart = latestCompletedHourStart
         )
 
-        if (entities.isNotEmpty()) {
+        val insertedHours = if (entities.isEmpty()) {
+            0
+        } else {
             weatherHistoryDao.insertMissingWeather(entities)
+                .count { rowId -> rowId != -1L }
         }
+
+        return WeatherHistoryRefreshResult(
+            vineyardId = vineyardId,
+            fetchedAt = fetchedAt,
+            receivedCompletedHours = entities.size,
+            insertedHours = insertedHours
+        )
     }
+
 
     override fun observeLatestVineyardWeather(
         vineyardId: Long
-    ): Flow<WeatherDomainModel?> {
+    ): Flow<WeatherHistoryDomainModel?> {
         return weatherHistoryDao
             .observeLatestVineyardWeather(vineyardId)
             .map { entity ->
                 entity?.let(
-                    weatherMapper::entityToDomain
+                    weatherHistoryMapper::entityToDomain
                 )
             }
     }
@@ -74,7 +87,7 @@ class WeatherRepositoryImpl(
     override fun observeHistoricalVineyardWeather(
         vineyardId: Long,
         startTimestamp: Long
-    ): Flow<List<WeatherDomainModel>> {
+    ): Flow<List<WeatherHistoryDomainModel>> {
         return weatherHistoryDao
             .observeHistoricalVineyardWeather(
                 vineyardId = vineyardId,
@@ -82,7 +95,7 @@ class WeatherRepositoryImpl(
             )
             .map { entities ->
                 entities.map(
-                    weatherMapper::entityToDomain
+                    weatherHistoryMapper::entityToDomain
                 )
             }
     }

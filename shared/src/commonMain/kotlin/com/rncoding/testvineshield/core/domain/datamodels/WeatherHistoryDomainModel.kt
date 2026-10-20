@@ -1,7 +1,7 @@
 package com.rncoding.testvineshield.core.domain.datamodels
 
 
-data class WeatherDomainModel(
+data class WeatherHistoryDomainModel(
     val vineyardId: Long,
     val timestamp: Long,
     val hourlyTemp2m: Double,

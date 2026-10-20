@@ -182,4 +182,46 @@ class WeatherHistoryDaoTest {
             isDay = true
         )
     }
+
+
+    @Test
+    fun insertMissingWeatherReturnsActualInsertionResults(): Unit = runBlocking {
+        val firstHour = weatherAt(0, 10.0)
+        val secondHour = weatherAt(1, 11.0)
+        val thirdHour = weatherAt(2, 12.0)
+
+        val firstInsert = dao.insertMissingWeather(
+            listOf(firstHour, secondHour)
+        )
+
+        assertEquals(2, firstInsert.size)
+        assertEquals(2, firstInsert.count { it != -1L })
+
+        val overlappingInsert = dao.insertMissingWeather(
+            listOf(
+                firstHour.copy(hourlyTemp2m = 99.0),
+                secondHour.copy(hourlyTemp2m = 99.0),
+                thirdHour
+            )
+        )
+
+        assertEquals(3, overlappingInsert.size)
+        assertEquals(1, overlappingInsert.count { it != -1L })
+        assertEquals(2, overlappingInsert.count { it == -1L })
+
+        val stored = dao.getWeatherForRiskWindow(
+            vineyardId = vineyardId,
+            startTimestamp = firstTimestamp,
+            endTimestamp = firstTimestamp + 3 * hourMillis
+        )
+
+        assertEquals(3, stored.size)
+
+        // INSERT OR IGNORE must not overwrite existing weather.
+        assertEquals(
+            listOf(10.0, 11.0, 12.0),
+            stored.map { it.hourlyTemp2m }
+        )
+    }
+
 }

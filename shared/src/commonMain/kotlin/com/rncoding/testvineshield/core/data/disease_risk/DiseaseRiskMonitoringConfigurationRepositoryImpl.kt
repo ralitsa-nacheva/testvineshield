@@ -80,4 +80,13 @@ class DiseaseRiskMonitoringConfigurationRepositoryImpl(
             )
         }
     }
+
+
+    override suspend fun getEnabledConfigurationsForVineyard(
+        vineyardId: Long
+    ): List<DiseaseRiskMonitoringConfiguration> {
+        return dao.getEnabledConfigurationsForVineyard(vineyardId)
+            .map(DiseaseRiskMonitoringConfigurationMapper::toDomain)
+    }
+
 }

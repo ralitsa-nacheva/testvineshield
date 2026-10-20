@@ -2,10 +2,10 @@ package com.rncoding.testvineshield.core.data.local.mappers
 
 import com.rncoding.testvineshield.core.data.local.database.entities.WeatherHistoryEntity
 import com.rncoding.testvineshield.core.data.remote.dto.WeatherDto
-import com.rncoding.testvineshield.core.domain.datamodels.WeatherDomainModel
+import com.rncoding.testvineshield.core.domain.datamodels.WeatherHistoryDomainModel
 import kotlin.collections.List
 
-class WeatherMapper {
+class WeatherHistoryMapper {
 
     fun weatherDtoToEntity(
         weatherDto: WeatherDto,
@@ -58,8 +58,8 @@ class WeatherMapper {
         return weatherValues
     }
 
-    fun entityToDomain(entity: WeatherHistoryEntity): WeatherDomainModel {
-        return WeatherDomainModel(
+    fun entityToDomain(entity: WeatherHistoryEntity): WeatherHistoryDomainModel {
+        return WeatherHistoryDomainModel(
             vineyardId = entity.vineyardId,
             timestamp = entity.timestamp,
             hourlyTemp2m = entity.hourlyTemp2m,

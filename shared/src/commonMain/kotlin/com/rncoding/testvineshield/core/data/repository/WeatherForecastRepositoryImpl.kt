@@ -4,7 +4,7 @@ import com.rncoding.testvineshield.core.data.local.database.daos.WeatherForecast
 import com.rncoding.testvineshield.core.data.local.database.entities.WeatherForecastEntity
 import com.rncoding.testvineshield.core.data.local.mappers.WeatherForecastMapper
 import com.rncoding.testvineshield.core.data.datasource.WeatherRemoteDataSource
-import com.rncoding.testvineshield.core.domain.datamodels.WeatherDomainModel
+import com.rncoding.testvineshield.core.domain.datamodels.WeatherHistoryDomainModel
 import com.rncoding.testvineshield.core.domain.repositories.WeatherForecastRepository
 import com.rncoding.testvineshield.core.data.local.database.daos.VineyardDao
 import kotlinx.coroutines.flow.Flow
@@ -19,7 +19,7 @@ class WeatherForecastRepositoryImpl(
 
     override fun observeForecast(
         vineyardId: Long
-    ): Flow<List<WeatherDomainModel>> {
+    ): Flow<List<WeatherHistoryDomainModel>> {
         return forecastDao
             .observeForecastWeather(vineyardId)
             .map { entities ->
@@ -30,7 +30,7 @@ class WeatherForecastRepositoryImpl(
     override fun observeNextForecast(
         vineyardId: Long,
         fromTimestamp: Long
-    ): Flow<WeatherDomainModel?> {
+    ): Flow<WeatherHistoryDomainModel?> {
         return forecastDao
             .observeNextForecastWeather(
                 vineyardId = vineyardId,
@@ -111,8 +111,8 @@ class WeatherForecastRepositoryImpl(
 
     private fun entityToDomain(
         entity: WeatherForecastEntity
-    ): WeatherDomainModel {
-        return WeatherDomainModel(
+    ): WeatherHistoryDomainModel {
+        return WeatherHistoryDomainModel(
             vineyardId = entity.vineyardId,
             timestamp = entity.timestamp,
             hourlyTemp2m = entity.hourlyTemp2m,

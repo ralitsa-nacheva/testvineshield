@@ -7,9 +7,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class WeatherMapperTest {
+class WeatherHistoryMapperTest {
 
-    private val mapper = WeatherMapper()
+    private val mapper = WeatherHistoryMapper()
     private val hourMillis = 3_600_000L
 
     @Test

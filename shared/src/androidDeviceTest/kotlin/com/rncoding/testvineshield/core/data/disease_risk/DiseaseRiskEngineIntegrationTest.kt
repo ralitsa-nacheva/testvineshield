@@ -4,6 +4,7 @@ import com.rncoding.testvineshield.core.data.local.database.VineshieldDatabase
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskEngine
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskModelRegistry
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskPersistence
+import com.rncoding.testvineshield.core.domain.disease_risk.VineyardDiseaseRiskEvaluator
 import com.rncoding.testvineshield.di.commonModule
 import androidx.room.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
@@ -99,4 +100,54 @@ class DiseaseRiskEngineIntegrationTest {
             database.close()
         }
     }
+
+
+    @Test
+    fun vineyardDiseaseRiskEvaluatorResolvesThroughKoin(): Unit = runBlocking {
+        val context = InstrumentationRegistry
+            .getInstrumentation()
+            .targetContext
+
+        val database =
+            Room.inMemoryDatabaseBuilder<VineshieldDatabase>(context)
+                .setDriver(BundledSQLiteDriver())
+                .build()
+
+        val testDatabaseModule = module {
+            single<VineshieldDatabase> { database }
+        }
+
+        val app = koinApplication {
+            modules(commonModule, testDatabaseModule)
+        }
+
+        try {
+            val evaluator =
+                app.koin.get<VineyardDiseaseRiskEvaluator>()
+
+            assertSame(
+                evaluator,
+                app.koin.get<VineyardDiseaseRiskEvaluator>()
+            )
+
+            // No monitoring configurations exist in this database.
+            // The evaluator should return an empty summary.
+            val summary = evaluator.evaluateVineyard(
+                vineyardId = 1L,
+                calculatedAt = 1_792_000_000_000L
+            )
+
+            assertEquals(1L, summary.vineyardId)
+            assertEquals(0, summary.total)
+            assertEquals(0, summary.succeeded)
+            assertEquals(0, summary.skipped)
+            assertEquals(0, summary.failed)
+            assertTrue(summary.items.isEmpty())
+
+        } finally {
+            app.close()
+            database.close()
+        }
+    }
+
 }

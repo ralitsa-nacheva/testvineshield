@@ -103,8 +103,10 @@ interface WeatherHistoryDao {
     )
     suspend fun deleteAllWeather()
 
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertMissingWeather(
         weather: List<WeatherHistoryEntity>
-    )
+    ): List<Long>
+
 }
