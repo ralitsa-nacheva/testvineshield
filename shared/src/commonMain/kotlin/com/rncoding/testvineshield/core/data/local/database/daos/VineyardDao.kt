@@ -206,4 +206,21 @@ interface VineyardDao {
     suspend fun getVineyardTimeZone(
         vineyardId: Long
     ): String?
+
+
+
+    @Query(
+        """
+    SELECT *
+    FROM vineyard
+    WHERE vineyard_id = :vineyardId
+      AND user_id = :userId
+    LIMIT 1
+    """
+    )
+    suspend fun getVineyardForBackgroundWork(
+        userId: Long,
+        vineyardId: Long
+    ): VineyardEntity?
+
 }

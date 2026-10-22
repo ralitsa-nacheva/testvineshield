@@ -110,6 +110,9 @@ import com.rncoding.testvineshield.core.data.repository.WeatherHistoryRepository
 import com.rncoding.testvineshield.core.domain.disease_risk.VineyardDiseaseRiskEvaluator
 import com.rncoding.testvineshield.core.domain.repositories.WeatherForecastRepository
 import com.rncoding.testvineshield.core.domain.repository.WeatherHistoryRepository
+import com.rncoding.testvineshield.core.data.repository.VineyardWeatherLocationRepositoryImpl
+import com.rncoding.testvineshield.core.domain.repository.VineyardWeatherLocationRepository
+import com.rncoding.testvineshield.core.domain.usecases.weather.AuthorizeWeatherHistoryBackgroundWorkUseCase
 import kotlinx.serialization.json.Json
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -360,6 +363,14 @@ val commonModule =
             )
         }
 
+
+        single<VineyardWeatherLocationRepository> {
+            VineyardWeatherLocationRepositoryImpl(
+                vineyardDao = get()
+            )
+        }
+
+
         /*
          * Disease risk registry
          */
@@ -377,8 +388,8 @@ val commonModule =
         }
 
         /*
- * Disease-risk orchestration
- */
+         * Disease-risk orchestration
+         */
 
         single<DiseaseRiskInputFactory> {
             DiseaseRiskInputFactoryImpl(
@@ -406,8 +417,6 @@ val commonModule =
                 diseaseRiskEngine = get()
             )
         }
-
-
 
         /*
          * Session manager
@@ -555,6 +564,15 @@ val commonModule =
                 authSessionCoordinator = get()
             )
         }
+
+
+        factory {
+            AuthorizeWeatherHistoryBackgroundWorkUseCase(
+                sessionManager = get(),
+                locationRepository = get()
+            )
+        }
+
 
 
         /*

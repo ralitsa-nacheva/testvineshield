@@ -13,6 +13,12 @@ import com.rncoding.testvineshield.core.domain.security.LocalAuthenticator
 import com.rncoding.testvineshield.core.domain.security.PasswordHasher
 import com.rncoding.testvineshield.core.domain.security.SecureStorage
 import com.rncoding.testvineshield.core.platform.AndroidActivityProvider
+import android.content.Context
+import androidx.work.WorkManager
+import com.rncoding.testvineshield.core.domain.scheduler.WeatherHistoryRiskScheduler
+import com.rncoding.testvineshield.core.worker.WeatherHistoryRiskWorkScheduler
+import org.koin.android.ext.koin.androidContext
+
 import io.ktor.client.HttpClient
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
@@ -75,4 +81,23 @@ val androidModule =
                 activityProvider = get()
             )
         }
+
+        /*
+         * WorkManager
+         */
+        single<WorkManager> {
+            WorkManager.getInstance(
+                androidContext()
+            )
+        }
+
+        /*
+         * Weather-history and disease-risk scheduler
+         */
+        single<WeatherHistoryRiskScheduler> {
+            WeatherHistoryRiskWorkScheduler(
+                workManager = get()
+            )
+        }
+
     }

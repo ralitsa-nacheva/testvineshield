@@ -1,4 +1,3 @@
-
 package com.rncoding.testvineshield.core.domain.usecases.weather
 
 import com.rncoding.testvineshield.core.domain.datamodels.WeatherHistoryDomainModel
@@ -10,6 +9,9 @@ import com.rncoding.testvineshield.core.domain.disease_risk.VineyardDiseaseRiskE
 import com.rncoding.testvineshield.core.domain.disease_risk.VineyardDiseaseRiskEvaluationSummary
 import com.rncoding.testvineshield.core.domain.disease_risk.VineyardDiseaseRiskEvaluator
 import com.rncoding.testvineshield.core.domain.repository.WeatherHistoryRepository
+import com.rncoding.testvineshield.core.domain.error.AppError
+import com.rncoding.testvineshield.core.domain.error.Result
+import com.rncoding.testvineshield.core.domain.error.WeatherHistoryError
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -66,6 +68,7 @@ class RefreshWeatherHistoryAndEvaluateRiskUseCaseTest {
 
         lateinit var refreshResult: WeatherHistoryRefreshResult
 
+        var refreshError: AppError? = null
         var refreshException: Exception? = null
         var refreshCalls = 0
 
@@ -73,13 +76,14 @@ class RefreshWeatherHistoryAndEvaluateRiskUseCaseTest {
             vineyardId: Long,
             latitude: Double,
             longitude: Double
-        ): WeatherHistoryRefreshResult {
+        ): Result<WeatherHistoryRefreshResult, AppError> {
             refreshCalls++
             events += "weather"
 
             refreshException?.let { throw it }
 
-            return refreshResult
+            refreshError?.let { return Result.Error(it) }
+            return Result.Success(refreshResult)
         }
 
         override fun observeLatestVineyardWeather(
@@ -147,7 +151,7 @@ class RefreshWeatherHistoryAndEvaluateRiskUseCaseTest {
                 vineyardId = vineyardId,
                 latitude = 42.7,
                 longitude = 23.3
-            )
+            ).requireSuccess()
 
             assertEquals(
                 listOf("weather", "risk"),
@@ -180,7 +184,7 @@ class RefreshWeatherHistoryAndEvaluateRiskUseCaseTest {
                 vineyardId,
                 42.7,
                 23.3
-            )
+            ).requireSuccess()
 
             assertEquals(0, result.insertedWeatherHours)
             assertEquals(0, result.evaluatedConfigurations)
@@ -196,17 +200,15 @@ class RefreshWeatherHistoryAndEvaluateRiskUseCaseTest {
         runBlocking {
             val fixture = Fixture()
 
-            fixture.weather.refreshException =
-                IllegalStateException("Weather persistence failed")
-
-            val exception = assertFailsWith<IllegalStateException> {
-                fixture.useCase(vineyardId, 42.7, 23.3)
-            }
-
-            assertEquals(
-                "Weather persistence failed",
-                exception.message
+            val expectedError = WeatherHistoryError.InvalidInput(
+                "Weather refresh failed"
             )
+            fixture.weather.refreshError = expectedError
+
+            val result = fixture.useCase(vineyardId, 42.7, 23.3)
+            assertTrue(result is Result.Error)
+            assertEquals(expectedError, result.error)
+
             assertEquals(listOf("weather"), fixture.events)
             assertEquals(0, fixture.risk.evaluationCalls)
         }
@@ -237,7 +239,7 @@ class RefreshWeatherHistoryAndEvaluateRiskUseCaseTest {
                 vineyardId,
                 42.7,
                 23.3
-            )
+            ).requireSuccess()
 
             assertEquals(2, result.insertedWeatherHours)
             assertEquals(3, result.evaluatedConfigurations)
@@ -248,7 +250,7 @@ class RefreshWeatherHistoryAndEvaluateRiskUseCaseTest {
         }
 
     @Test
-    fun riskEvaluatorExceptionPropagatesAfterWeatherRefresh(): Unit =
+    fun riskEvaluatorExceptionIsReturnedAsTypedError(): Unit =
         runBlocking {
             val fixture = Fixture()
 
@@ -256,13 +258,13 @@ class RefreshWeatherHistoryAndEvaluateRiskUseCaseTest {
             fixture.risk.evaluationException =
                 IllegalStateException("Configuration database unavailable")
 
-            val exception = assertFailsWith<IllegalStateException> {
-                fixture.useCase(vineyardId, 42.7, 23.3)
-            }
-
+            val result = fixture.useCase(vineyardId, 42.7, 23.3)
+            assertTrue(result is Result.Error)
+            val error = result.error
+            assertTrue(error is WeatherHistoryError.EvaluationFailed)
             assertEquals(
                 "Configuration database unavailable",
-                exception.message
+                error.cause.message
             )
             assertEquals(
                 listOf("weather", "risk"),
@@ -319,22 +321,38 @@ class RefreshWeatherHistoryAndEvaluateRiskUseCaseTest {
                 42.7 to -181.0
             )
 
-            assertFailsWith<IllegalArgumentException> {
-                fixture.useCase(0L, 42.7, 23.3)
-            }
+
+            val invalidIdResult = fixture.useCase(
+                vineyardId = -1L,
+                latitude = 42.0,
+                longitude = 23.0
+            )
+            assertTrue(invalidIdResult is Result.Error)
+            assertTrue(invalidIdResult.error is WeatherHistoryError.InvalidInput)
 
             invalidCoordinates.forEach { (latitude, longitude) ->
-                assertFailsWith<IllegalArgumentException> {
-                    fixture.useCase(
-                        vineyardId,
-                        latitude,
-                        longitude
-                    )
-                }
+                val result = fixture.useCase(
+                    vineyardId = vineyardId,
+                    latitude = latitude,
+                    longitude = longitude
+                )
+                assertTrue(result is Result.Error)
+                assertTrue(result.error is WeatherHistoryError.InvalidInput)
             }
 
             assertTrue(fixture.events.isEmpty())
             assertEquals(0, fixture.weather.refreshCalls)
             assertEquals(0, fixture.risk.evaluationCalls)
         }
+
+
+    private fun <T> Result<T, AppError>.requireSuccess(): T {
+        return when (this) {
+            is Result.Success -> data
+            is Result.Error -> error(
+                "Expected success but received: ${this.error}"
+            )
+        }
+    }
+
 }

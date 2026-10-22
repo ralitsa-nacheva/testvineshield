@@ -131,6 +131,7 @@ kotlin {
             // Android Activity
             implementation(libs.androidx.activity.compose)
 
+
             // Koin
             implementation(libs.koin.android)
             implementation(libs.koin.androidx.compose)
@@ -170,6 +171,7 @@ kotlin {
                 implementation(libs.kotlin.test)
                 implementation(libs.androidx.test.junit)
                 implementation("androidx.test:runner:1.7.0")
+                implementation("androidx.work:work-testing:2.11.1")
             }
         }
     }
