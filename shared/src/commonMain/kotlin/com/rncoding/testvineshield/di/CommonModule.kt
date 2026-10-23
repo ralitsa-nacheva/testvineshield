@@ -116,6 +116,12 @@ import com.rncoding.testvineshield.core.domain.usecases.weather.AuthorizeWeather
 import com.rncoding.testvineshield.core.domain.scheduler.WeatherHistoryBackgroundWorkCoordinator
 import com.rncoding.testvineshield.core.data.scheduler.BackgroundWorkVineyardSourceImpl
 import com.rncoding.testvineshield.core.domain.scheduler.BackgroundWorkVineyardSource
+import com.rncoding.testvineshield.core.data.repository.ActivityRepositoryImpl
+import com.rncoding.testvineshield.core.domain.repository.ActivityRepository
+import com.rncoding.testvineshield.core.domain.usecases.activity.CreateActivityUseCase
+import com.rncoding.testvineshield.core.domain.usecases.activity.DeleteActivityUseCase
+import com.rncoding.testvineshield.core.domain.usecases.activity.GetActivityDetailsUseCase
+import com.rncoding.testvineshield.core.domain.usecases.activity.UpdateActivityUseCase
 import kotlinx.serialization.json.Json
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -326,6 +332,13 @@ val commonModule =
                 vineyardWeatherRiskSummaryMapper = get(),
                 diseaseOccurrenceSummaryMapper = get(),
                 diseaseAlertSummaryMapper = get()
+            )
+        }
+
+        single<ActivityRepository> {
+            ActivityRepositoryImpl(
+                activityDao = get(),
+                blockDao = get()
             )
         }
 
@@ -678,6 +691,42 @@ val commonModule =
                 authenticatedUserProvider = get()
             )
         }
+
+        /*
+         * Activity use cases
+         */
+        factory {
+            CreateActivityUseCase(
+                activityRepository = get(),
+                vineyardRepository = get(),
+                authenticatedUserProvider = get()
+            )
+        }
+
+        factory {
+            GetActivityDetailsUseCase(
+                activityRepository = get(),
+                vineyardRepository = get(),
+                authenticatedUserProvider = get()
+            )
+        }
+
+        factory {
+            UpdateActivityUseCase(
+                activityRepository = get(),
+                vineyardRepository = get(),
+                authenticatedUserProvider = get()
+            )
+        }
+
+        factory {
+            DeleteActivityUseCase(
+                activityRepository = get(),
+                vineyardRepository = get(),
+                authenticatedUserProvider = get()
+            )
+        }
+
 
         /*
          * Weather use cases

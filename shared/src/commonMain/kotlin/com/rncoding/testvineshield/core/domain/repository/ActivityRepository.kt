@@ -6,4 +6,26 @@ import kotlinx.coroutines.flow.Flow
 interface ActivityRepository {
     fun observeActivities(vineyardId: Long): Flow<List<ActivityDomainModel>>
     suspend fun addActivity(activity: ActivityDomainModel)
+
+    suspend fun belongsToVineyard(
+        vineyardId: Long,
+        blockId: Long
+    ): Boolean
+
+
+    suspend fun getActivity(
+        vineyardId: Long,
+        activityId: Long
+    ): ActivityDomainModel?
+
+    suspend fun updateActivity(
+        vineyardId: Long,
+        activity: ActivityDomainModel
+    ): Boolean
+
+    suspend fun deleteActivity(
+        vineyardId: Long,
+        activityId: Long
+    ): Boolean
+
 }

@@ -14,7 +14,7 @@ data class ActivityDomainModel(
     val priority: String,
     val status: String,
     val plannedAt: LocalDate,
-    val completedAt: LocalDate,
+    val completedAt: LocalDate?,
     val tool: String?,
     val notes: String?,
     val createdAt: Long,

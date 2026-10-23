@@ -3,6 +3,7 @@ package com.rncoding.testvineshield.core.data.local.database.daos
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Update
 import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 import com.rncoding.testvineshield.core.data.local.database.entities.ActivityEntity
@@ -77,6 +78,106 @@ interface ActivityDao {
 
     @Query("Select Count(activity_id) From activity Where block_id = :blockId")
     suspend fun countAllActivitiesForBlock(blockId: Long): Int
+
+    @Query(
+        """
+    SELECT *
+    FROM activity
+    WHERE vineyard_id = :vineyardId
+    ORDER BY updated_at DESC, activity_id DESC
+    """
+    )
+    fun observeActivitiesByVineyard(
+        vineyardId: Long
+    ): Flow<List<ActivityEntity>>
+
+
+    @Query(
+        """
+    SELECT *
+    FROM activity
+    WHERE vineyard_id = :vineyardId
+      AND activity_id = :activityId
+    LIMIT 1
+    """
+    )
+    suspend fun getActivityById(
+        vineyardId: Long,
+        activityId: Long
+    ): ActivityEntity?
+
+
+    @Update
+    suspend fun updateActivityEntity(
+        activity: ActivityEntity
+    ): Int
+
+    @Transaction
+    suspend fun updateActivityForVineyard(
+        vineyardId: Long,
+        activity: ActivityEntity
+    ): Boolean {
+        val existing = getActivityById(
+            vineyardId = vineyardId,
+            activityId = activity.activityId
+        ) ?: return false
+
+        if (activity.vineyardId != existing.vineyardId) {
+            return false
+        }
+
+        // An update must not silently move an activity
+        // to another vineyard or change its identity.
+        if (activity.activityId != existing.activityId) {
+            return false
+        }
+
+        // Validate block ownership within the same transaction.
+        val blockId = activity.blockId
+
+        if (blockId != null) {
+            val blockBelongsToVineyard =
+                blockExistsInVineyard(
+                    vineyardId = vineyardId,
+                    blockId = blockId
+                )
+
+            if (!blockBelongsToVineyard) {
+                return false
+            }
+        }
+
+        return updateActivityEntity(activity) == 1
+    }
+
+    @Query(
+        """
+    SELECT EXISTS(
+        SELECT 1
+        FROM block
+        WHERE vineyard_id = :vineyardId
+          AND block_id = :blockId
+    )
+    """
+    )
+    suspend fun blockExistsInVineyard(
+        vineyardId: Long,
+        blockId: Long
+    ): Boolean
+
+
+    @Query(
+        """
+    DELETE FROM activity
+    WHERE vineyard_id = :vineyardId
+      AND activity_id = :activityId
+    """
+    )
+    suspend fun deleteActivityForVineyard(
+        vineyardId: Long,
+        activityId: Long
+    ): Int
+
 
     // get/add/delete activities by name, by season, by block, by planned date, by phenological state, by status, by priority,
     // by date of completion, by tool, by treatment product, complete activity
