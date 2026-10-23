@@ -7,6 +7,8 @@ import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskMonitorin
 import com.rncoding.testvineshield.core.domain.disease_risk.VineyardDiseaseRiskEvaluationItem
 import com.rncoding.testvineshield.core.domain.disease_risk.VineyardDiseaseRiskEvaluationSummary
 import com.rncoding.testvineshield.core.domain.disease_risk.VineyardDiseaseRiskEvaluator
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.CancellationException
 
 class VineyardDiseaseRiskEvaluatorImpl(
@@ -14,6 +16,7 @@ class VineyardDiseaseRiskEvaluatorImpl(
     DiseaseRiskMonitoringConfigurationRepository,
     private val diseaseRiskEngine: DiseaseRiskEngine
 ) : VineyardDiseaseRiskEvaluator {
+
 
     override suspend fun evaluateVineyard(
         vineyardId: Long,
@@ -28,16 +31,22 @@ class VineyardDiseaseRiskEvaluatorImpl(
             "calculatedAt must be positive."
         }
 
-        // Repository failures propagate to the caller.
-        // An unavailable configuration list is not an empty list.
+        currentCoroutineContext().ensureActive()
+
         val configurations =
             monitoringRepository.getEnabledConfigurationsForVineyard(
                 vineyardId
             )
 
+        currentCoroutineContext().ensureActive()
+
         val items = mutableListOf<VineyardDiseaseRiskEvaluationItem>()
 
         for (configuration in configurations) {
+
+            // Stop before processing the next configuration
+            // if WorkManager has cancelled this worker.
+            currentCoroutineContext().ensureActive()
 
             val result = try {
                 diseaseRiskEngine.evaluate(
@@ -56,6 +65,8 @@ class VineyardDiseaseRiskEvaluatorImpl(
                 )
             }
 
+            currentCoroutineContext().ensureActive()
+
             items += VineyardDiseaseRiskEvaluationItem(
                 configuration = configuration,
                 result = result
@@ -68,4 +79,5 @@ class VineyardDiseaseRiskEvaluatorImpl(
             items = items
         )
     }
+
 }

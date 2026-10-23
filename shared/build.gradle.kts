@@ -166,6 +166,15 @@ kotlin {
             implementation(libs.kotlin.test)
         }
 
+            val androidHostTest by getting {
+                dependencies {
+                    implementation(libs.kotlin.test)
+                    implementation(libs.kotlin.test.junit)
+                    implementation(libs.mockk)
+                }
+            }
+
+
         val androidDeviceTest by getting {
             dependencies {
                 implementation(libs.kotlin.test)

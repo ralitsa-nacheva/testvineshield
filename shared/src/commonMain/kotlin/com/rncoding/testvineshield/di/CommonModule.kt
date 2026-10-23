@@ -113,6 +113,9 @@ import com.rncoding.testvineshield.core.domain.repository.WeatherHistoryReposito
 import com.rncoding.testvineshield.core.data.repository.VineyardWeatherLocationRepositoryImpl
 import com.rncoding.testvineshield.core.domain.repository.VineyardWeatherLocationRepository
 import com.rncoding.testvineshield.core.domain.usecases.weather.AuthorizeWeatherHistoryBackgroundWorkUseCase
+import com.rncoding.testvineshield.core.domain.scheduler.WeatherHistoryBackgroundWorkCoordinator
+import com.rncoding.testvineshield.core.data.scheduler.BackgroundWorkVineyardSourceImpl
+import com.rncoding.testvineshield.core.domain.scheduler.BackgroundWorkVineyardSource
 import kotlinx.serialization.json.Json
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -587,12 +590,27 @@ val commonModule =
                 registerUserUseCase = get(),
                 logoutUserUseCase = get(),
                 updateUserUseCase = get(),
-                deleteUserUseCase = get()
+                deleteUserUseCase = get(),
+                backgroundWorkCoordinator = get(),
+                weatherHistoryRiskScheduler = get()
             )
         }
 
         single {
             DiseaseRiskEvaluationCoordinator()
+        }
+
+        single {
+            WeatherHistoryBackgroundWorkCoordinator(
+                vineyardSource = get(),
+                scheduler = get()
+            )
+        }
+
+        single<BackgroundWorkVineyardSource> {
+            BackgroundWorkVineyardSourceImpl(
+                vineyardRepository = get()
+            )
         }
 
 
@@ -616,7 +634,8 @@ val commonModule =
         factory {
             DeleteVineyardUseCase(
                 repository = get(),
-                authenticatedUserProvider = get()
+                authenticatedUserProvider = get(),
+                weatherHistoryRiskScheduler = get()
             )
         }
 
@@ -632,7 +651,8 @@ val commonModule =
                 repository = get(),
                 authenticatedUserProvider = get(),
                 validator = get(),
-                clock = get()
+                clock = get(),
+                weatherHistoryRiskScheduler = get()
             )
         }
 

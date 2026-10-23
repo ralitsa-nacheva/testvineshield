@@ -13,6 +13,8 @@ import com.rncoding.testvineshield.core.domain.error.AppError
 import com.rncoding.testvineshield.core.domain.error.DatabaseError
 import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.error.WeatherHistoryError
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.CancellationException
 
 import kotlinx.coroutines.flow.Flow
@@ -58,6 +60,8 @@ class WeatherHistoryRepositoryImpl(
             )
         }
 
+        currentCoroutineContext().ensureActive()
+
         val timeZone = try {
             vineyardDao.getVineyardTimeZone(vineyardId)
         } catch (exception: CancellationException) {
@@ -75,6 +79,8 @@ class WeatherHistoryRepositoryImpl(
             )
         )
 
+        currentCoroutineContext().ensureActive()
+
         val response = try {
             remoteDataSource.fetchWeather(
                 latitude = latitude,
@@ -88,6 +94,8 @@ class WeatherHistoryRepositoryImpl(
                 WeatherNetworkErrorMapper.map(exception)
             )
         }
+
+        currentCoroutineContext().ensureActive()
 
         if (response.timezone != timeZone) {
             return Result.Error(
@@ -103,6 +111,8 @@ class WeatherHistoryRepositoryImpl(
         val latestCompletedHourStart =
             fetchedAt - 3_600_000L
 
+        currentCoroutineContext().ensureActive()
+
         val entities = try {
             weatherHistoryMapper.weatherDtoToEntity(
                 weatherDto = response,
@@ -117,6 +127,8 @@ class WeatherHistoryRepositoryImpl(
                     .NetworkError.SerializationError(exception)
             )
         }
+
+        currentCoroutineContext().ensureActive()
 
         val insertedHours = try {
             if (entities.isEmpty()) {
@@ -135,6 +147,8 @@ class WeatherHistoryRepositoryImpl(
                 )
             )
         }
+
+        currentCoroutineContext().ensureActive()
 
         return Result.Success(
             WeatherHistoryRefreshResult(

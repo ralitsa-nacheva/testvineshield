@@ -8,12 +8,15 @@ import com.rncoding.testvineshield.core.domain.usecases.user.LogoutUserUseCase
 import com.rncoding.testvineshield.core.domain.usecases.user.RegisterUserUseCase
 import com.rncoding.testvineshield.core.domain.usecases.user.RestoreSessionUseCase
 import com.rncoding.testvineshield.core.domain.usecases.user.UnlockSessionUseCase
+import com.rncoding.testvineshield.core.domain.scheduler.WeatherHistoryBackgroundWorkCoordinator
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.usecases.user.DeleteUserUseCase
 import com.rncoding.testvineshield.core.domain.usecases.user.UpdateUserUseCase
+import com.rncoding.testvineshield.core.domain.scheduler.WeatherHistoryRiskScheduler
 
 class AuthSessionCoordinator(
 
@@ -24,6 +27,8 @@ class AuthSessionCoordinator(
     private val logoutUserUseCase: LogoutUserUseCase,
     private val updateUserUseCase: UpdateUserUseCase,
     private val deleteUserUseCase: DeleteUserUseCase,
+    private val backgroundWorkCoordinator: WeatherHistoryBackgroundWorkCoordinator,
+    private val weatherHistoryRiskScheduler: WeatherHistoryRiskScheduler
 ) {
 
     private val _authState =
@@ -41,6 +46,12 @@ class AuthSessionCoordinator(
 
             is Result.Success -> {
                 _authState.value = result.data
+
+                val state = result.data
+
+                if (state is AuthState.Authenticated) {
+                    scheduleBackgroundWork(state.user.userId)
+                }
             }
 
             is Result.Error -> {
@@ -66,6 +77,8 @@ class AuthSessionCoordinator(
             is Result.Success -> {
                 _authState.value =
                     AuthState.Authenticated(result.data)
+
+                scheduleBackgroundWork(result.data.userId)
             }
 
             is Result.Error -> {
@@ -103,6 +116,12 @@ class AuthSessionCoordinator(
 
             is Result.Success -> {
                 _authState.value = result.data
+
+                val state = result.data
+
+                if (state is AuthState.Authenticated) {
+                    scheduleBackgroundWork(state.user.userId)
+                }
             }
 
             is Result.Error -> {
@@ -121,33 +140,52 @@ class AuthSessionCoordinator(
         return result
     }
 
+
     suspend fun logout(): Result<Unit, AppError> {
 
-        val result =
-            logoutUserUseCase()
+        // Capture the authenticated user before clearing the session.
+        val userId = (
+                _authState.value as? AuthState.Authenticated
+                )?.user?.userId
+
+        val result = logoutUserUseCase()
 
         when (result) {
 
             is Result.Success -> {
+
                 _authState.value =
                     AuthState.Unauthenticated(
                         reason =
                             AuthState.Unauthenticated.Reason.LoggedOut
                     )
+
+                // Cancellation is best-effort.
+                // A successfully cleared session must remain logged out.
+                if (userId != null) {
+                    try {
+                        weatherHistoryRiskScheduler.cancelAllForUser(
+                            userId = userId
+                        )
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        // Logout already succeeded.
+                        // Diagnostic logging/recovery will be added later.
+                    }
+                }
             }
 
             is Result.Error -> {
-                /*
-                 * The session could not be cleared.
-                 *
-                 * Keep the current authentication state
-                 * unchanged and return the error to the caller.
-                 */
+                // The session could not be cleared.
+                // Preserve the current authentication state.
+                // Do not cancel scheduled work.
             }
         }
 
         return result
     }
+
 
     suspend fun updateAccount(
         currentPassword: String,
@@ -180,32 +218,71 @@ class AuthSessionCoordinator(
         return result
     }
 
+
     suspend fun deleteAccount(
         currentPassword: String
     ): Result<Unit, AppError> {
 
         val currentState = _authState.value
 
-        val authenticatedState = currentState as? AuthState.Authenticated
-            ?: return Result.Error(AuthError.NoActiveSession)
+        val authenticatedState =
+            currentState as? AuthState.Authenticated
+                ?: return Result.Error(AuthError.NoActiveSession)
+
+        // Capture the user ID before deleting the account.
+        val userId = authenticatedState.user.userId
 
         val result = deleteUserUseCase(
-            userId = authenticatedState.user.userId,
+            userId = userId,
             currentPassword = currentPassword
         )
 
         when (result) {
+
             is Result.Success -> {
-                _authState.value = AuthState.Unauthenticated(
-                    reason = AuthState.Unauthenticated.Reason.LoggedOut
-                )
+
+                _authState.value =
+                    AuthState.Unauthenticated(
+                        reason =
+                            AuthState.Unauthenticated.Reason.LoggedOut
+                    )
+
+                // Account deletion has already succeeded.
+                // WorkManager cancellation must not change that result.
+                try {
+                    weatherHistoryRiskScheduler.cancelAllForUser(
+                        userId = userId
+                    )
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    // Background cancellation is best-effort.
+                    // Add diagnostic logging/recovery later.
+                }
             }
 
             is Result.Error -> {
-                // Keep the current authenticated state.
+                // Account deletion failed.
+                // Preserve the current authenticated state.
+                // Do not cancel scheduled work.
             }
         }
 
         return result
+    }
+
+
+    private suspend fun scheduleBackgroundWork(userId: Long) {
+        try {
+            backgroundWorkCoordinator.scheduleForUser(userId)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            // Background scheduling must not turn a successful
+            // authentication operation into a login failure.
+            //
+            // We will introduce proper diagnostic logging
+            // and recovery in a later checkpoint.
+        }
     }
 }
