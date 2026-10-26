@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "7329925c2b1988d2de4d0d2def8dcc5f",
+    "identityHash": "10f7f6ab79f22f8a7646c56abb3f79a5",
     "entities": [
       {
         "tableName": "activity",
@@ -193,7 +193,7 @@
       },
       {
         "tableName": "block",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`block_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `vineyard_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `area` INTEGER NOT NULL, `vine_variety` TEXT NOT NULL, `color` TEXT NOT NULL, `root_stock` TEXT NOT NULL, `rows` TEXT NOT NULL, `row_spacing` INTEGER NOT NULL, `planted_at` TEXT NOT NULL, `phenological_stage` TEXT, FOREIGN KEY(`vineyard_id`) REFERENCES `vineyard`(`vineyard_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`block_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `vineyard_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `area` INTEGER NOT NULL, `vine_variety` TEXT NOT NULL, `color` TEXT NOT NULL, `root_stock` TEXT NOT NULL, `row_count` INTEGER NOT NULL, `row_spacing` INTEGER NOT NULL, `planted_at` TEXT NOT NULL, `phenological_stage` TEXT, FOREIGN KEY(`vineyard_id`) REFERENCES `vineyard`(`vineyard_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "blockId",
@@ -238,9 +238,9 @@
             "notNull": true
           },
           {
-            "fieldPath": "rows",
-            "columnName": "rows",
-            "affinity": "TEXT",
+            "fieldPath": "rowCount",
+            "columnName": "row_count",
+            "affinity": "INTEGER",
             "notNull": true
           },
           {
@@ -2173,7 +2173,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7329925c2b1988d2de4d0d2def8dcc5f')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '10f7f6ab79f22f8a7646c56abb3f79a5')"
     ]
   }
 }

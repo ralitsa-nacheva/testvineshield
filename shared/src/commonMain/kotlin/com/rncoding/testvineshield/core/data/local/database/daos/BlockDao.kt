@@ -1,6 +1,7 @@
 package com.rncoding.testvineshield.core.data.local.database.daos
 
 import androidx.room.Dao
+import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
@@ -129,5 +130,53 @@ interface BlockDao {
         vineyardId: Long,
         blockId: Long
     ): BlockEntity?
+
+
+    @Insert
+    suspend fun insertBlock(block: BlockEntity): Long
+
+    @Query(
+        """
+    UPDATE block
+    SET
+        name = :name,
+        area = :area,
+        vine_variety = :vineVariety,
+        color = :color,
+        root_stock = :rootStock,
+        row_count = :rowCount,
+        row_spacing = :rowSpacing,
+        planted_at = :plantedAt,
+        phenological_stage = :phenologicalStage
+    WHERE block_id = :blockId
+      AND vineyard_id = :vineyardId
+    """
+    )
+    suspend fun updateBlockFields(
+        vineyardId: Long,
+        blockId: Long,
+        name: String,
+        area: Int,
+        vineVariety: String,
+        color: String,
+        rootStock: String,
+        rowCount: Int,
+        rowSpacing: Int,
+        plantedAt: kotlinx.datetime.LocalDate,
+        phenologicalStage: com.rncoding.testvineshield.core.domain.datamodels.enums.PhenologicalStage?
+    ): Int
+
+    @Query(
+        """
+    DELETE FROM block
+    WHERE block_id = :blockId
+      AND vineyard_id = :vineyardId
+    """
+    )
+    suspend fun deleteBlockById(
+        vineyardId: Long,
+        blockId: Long
+    ): Int
+
 
 }

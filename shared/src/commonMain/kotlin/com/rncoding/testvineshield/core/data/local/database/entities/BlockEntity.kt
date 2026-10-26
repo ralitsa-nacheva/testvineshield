@@ -27,7 +27,8 @@ data class BlockEntity(
     val color: String,
     @ColumnInfo(name = "root_stock")
     val rootStock: String,
-    val rows: String,
+    @ColumnInfo(name = "row_count")
+    val rowCount: Int,
     @ColumnInfo(name = "row_spacing")
     val rowSpacing: Int,
     @ColumnInfo(name = "planted_at")

@@ -42,6 +42,8 @@ import com.rncoding.testvineshield.core.data.repository.SecuritySettingsReposito
 import com.rncoding.testvineshield.core.data.repository.SessionRepositoryImpl
 import com.rncoding.testvineshield.core.data.repository.UserRepositoryImpl
 import com.rncoding.testvineshield.core.data.repository.VineyardRepositoryImpl
+import com.rncoding.testvineshield.core.data.repository.BlockRepositoryImpl
+import com.rncoding.testvineshield.core.domain.repository.BlockRepository
 import com.rncoding.testvineshield.core.data.time.SystemAppClock
 import com.rncoding.testvineshield.core.domain.auth.AuthSessionCoordinator
 import com.rncoding.testvineshield.core.domain.auth.AuthenticatedUserProvider
@@ -56,6 +58,7 @@ import com.rncoding.testvineshield.core.domain.security.PasswordHasher
 import com.rncoding.testvineshield.core.domain.security.SessionManager
 import com.rncoding.testvineshield.core.domain.validation.ValidateEmail
 import com.rncoding.testvineshield.core.domain.validation.ValidatePassword
+import com.rncoding.testvineshield.core.domain.validation.ActivityValidator
 import com.rncoding.testvineshield.core.domain.time.AppClock
 import com.rncoding.testvineshield.core.domain.usecases.user.DeleteUserUseCase
 import com.rncoding.testvineshield.core.domain.usecases.user.LoginUserUseCase
@@ -122,6 +125,11 @@ import com.rncoding.testvineshield.core.domain.usecases.activity.CreateActivityU
 import com.rncoding.testvineshield.core.domain.usecases.activity.DeleteActivityUseCase
 import com.rncoding.testvineshield.core.domain.usecases.activity.GetActivityDetailsUseCase
 import com.rncoding.testvineshield.core.domain.usecases.activity.UpdateActivityUseCase
+import com.rncoding.testvineshield.core.domain.usecases.block.CreateBlockUseCase
+import com.rncoding.testvineshield.core.domain.usecases.block.DeleteBlockUseCase
+import com.rncoding.testvineshield.core.domain.usecases.block.GetBlockDetailsUseCase
+import com.rncoding.testvineshield.core.domain.usecases.block.UpdateBlockUseCase
+import com.rncoding.testvineshield.core.domain.validation.BlockValidator
 import kotlinx.serialization.json.Json
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -292,6 +300,13 @@ val commonModule =
         /*
          * Repositories
          */
+
+        single<BlockRepository> {
+            BlockRepositoryImpl(
+                blockDao = get(),
+                blockMapper = get()
+            )
+        }
 
         single<UserRepository> {
             UserRepositoryImpl(
@@ -515,6 +530,10 @@ val commonModule =
             VineyardValidator()
         }
 
+        single { ActivityValidator() }
+
+        single { BlockValidator()}
+
 
         /*
          * Auth use cases
@@ -627,6 +646,43 @@ val commonModule =
         }
 
 
+        /*
+         * Block use cases
+         */
+        factory {
+            CreateBlockUseCase(
+                blockRepository = get(),
+                vineyardRepository = get(),
+                authenticatedUserProvider = get(),
+                validator = get()
+            )
+        }
+
+        factory {
+            GetBlockDetailsUseCase(
+                blockRepository = get(),
+                vineyardRepository = get(),
+                authenticatedUserProvider = get()
+            )
+        }
+
+        factory {
+            UpdateBlockUseCase(
+                blockRepository = get(),
+                vineyardRepository = get(),
+                authenticatedUserProvider = get(),
+                validator = get()
+            )
+        }
+
+        factory {
+            DeleteBlockUseCase(
+                blockRepository = get(),
+                vineyardRepository = get(),
+                authenticatedUserProvider = get()
+            )
+        }
+
          /*
          * Vineyard use cases
          */
@@ -699,7 +755,9 @@ val commonModule =
             CreateActivityUseCase(
                 activityRepository = get(),
                 vineyardRepository = get(),
-                authenticatedUserProvider = get()
+                authenticatedUserProvider = get(),
+                clock = get(),
+                validator = get()
             )
         }
 
@@ -715,7 +773,9 @@ val commonModule =
             UpdateActivityUseCase(
                 activityRepository = get(),
                 vineyardRepository = get(),
-                authenticatedUserProvider = get()
+                authenticatedUserProvider = get(),
+                clock = get(),
+                validator = get()
             )
         }
 

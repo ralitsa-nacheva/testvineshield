@@ -4,6 +4,7 @@ package com.rncoding.testvineshield.core.data.repository
 import com.rncoding.testvineshield.core.data.local.database.daos.ActivityDao
 import com.rncoding.testvineshield.core.data.local.database.daos.BlockDao
 import com.rncoding.testvineshield.core.data.local.database.entities.ActivityEntity
+import com.rncoding.testvineshield.core.domain.datamodels.ActivityDeletionOutcome
 import com.rncoding.testvineshield.core.domain.datamodels.ActivityDomainModel
 import com.rncoding.testvineshield.core.domain.datamodels.enums.ActivityPriority
 import com.rncoding.testvineshield.core.domain.datamodels.enums.ActivityStatus
@@ -28,15 +29,31 @@ class ActivityRepositoryImpl(
             }
     }
 
+
+
     override suspend fun addActivity(
         activity: ActivityDomainModel
-    ) {
-        require(activity.vineyardId > 0L)
-        require(activity.activityId >= 0L)
-        require(activity.blockId == null || activity.blockId > 0L)
+    ): Long? {
+        require(activity.activityId == 0L) {
+            "A new activity must have ID 0."
+        }
 
-        activityDao.upsertActivity(activity.toEntity())
+        require(activity.vineyardId > 0L) {
+            "Vineyard ID must be positive."
+        }
+
+        require(
+            activity.blockId == null || activity.blockId > 0L
+        ) {
+            "Block ID must be positive when provided."
+        }
+
+        return activityDao.insertActivityForVineyard(
+            activity.toEntity()
+        )
     }
+
+
 
     private fun ActivityEntity.toDomain(): ActivityDomainModel =
         ActivityDomainModel(
@@ -144,23 +161,27 @@ class ActivityRepositoryImpl(
     }
 
 
+
     override suspend fun deleteActivity(
         vineyardId: Long,
         activityId: Long
-    ): Boolean {
-        require(vineyardId > 0L) {
-            "Vineyard ID must be positive."
-        }
+    ): ActivityDeletionOutcome {
+        require(vineyardId > 0L)
+        require(activityId > 0L)
 
-        require(activityId > 0L) {
-            "Activity ID must be positive."
+        return when (
+            activityDao.deleteActivitySafely(
+                vineyardId = vineyardId,
+                activityId = activityId
+            )
+        ) {
+            0 -> ActivityDeletionOutcome.NOT_FOUND
+            1 -> ActivityDeletionOutcome.DELETED
+            2 -> ActivityDeletionOutcome.LINKED_TO_DISEASE
+            else -> error("Unexpected activity deletion result.")
         }
-
-        return activityDao.deleteActivityForVineyard(
-            vineyardId = vineyardId,
-            activityId = activityId
-        ) == 1
     }
+
 
 
 }

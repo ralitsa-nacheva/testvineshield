@@ -1,6 +1,5 @@
 package com.rncoding.testvineshield.core.domain.datamodels
 
-import androidx.room.ColumnInfo
 import com.rncoding.testvineshield.core.domain.datamodels.enums.PhenologicalStage
 import kotlinx.datetime.LocalDate
 
@@ -12,7 +11,7 @@ data class BlockDomainModel(
     val vineVariety: String,
     val color: String,
     val rootStock: String,
-    val rows: String,
+    val rowCount: Int,
     val rowSpacing: Int,
     val plantedAt: LocalDate,
     val phenologicalStage: PhenologicalStage?

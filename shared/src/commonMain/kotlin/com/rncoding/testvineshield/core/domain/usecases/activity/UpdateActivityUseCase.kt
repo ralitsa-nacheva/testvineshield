@@ -10,12 +10,16 @@ import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.error.UnexpectedError
 import com.rncoding.testvineshield.core.domain.repository.ActivityRepository
 import com.rncoding.testvineshield.core.domain.repository.VineyardRepository
+import com.rncoding.testvineshield.core.domain.validation.ActivityValidator
+import com.rncoding.testvineshield.core.domain.time.AppClock
 import kotlinx.coroutines.CancellationException
 
 class UpdateActivityUseCase(
     private val activityRepository: ActivityRepository,
     private val vineyardRepository: VineyardRepository,
-    private val authenticatedUserProvider: AuthenticatedUserProvider
+    private val authenticatedUserProvider: AuthenticatedUserProvider,
+    private val clock: AppClock,
+    private val validator: ActivityValidator
 ) {
 
     suspend operator fun invoke(
@@ -25,37 +29,16 @@ class UpdateActivityUseCase(
         val user = authenticatedUserProvider.currentUserOrNull()
             ?: return Result.Error(AuthError.NoActiveSession)
 
+        val validationError = validator.validate(activity)
+
+        if (validationError != null) {
+            return Result.Error(validationError)
+        }
+
         if (activity.activityId <= 0L || activity.vineyardId <= 0L) {
             return Result.Error(
                 ActivityError.InvalidInput(
                     "Invalid activity or vineyard ID."
-                )
-            )
-        }
-
-        if (activity.activityType.isBlank()) {
-            return Result.Error(
-                ActivityError.InvalidInput(
-                    "Activity type is required."
-                )
-            )
-        }
-
-        if (activity.season.isBlank()) {
-            return Result.Error(
-                ActivityError.InvalidInput(
-                    "Season is required."
-                )
-            )
-        }
-
-        if (
-            activity.completedAt != null &&
-            activity.completedAt < activity.plannedAt
-        ) {
-            return Result.Error(
-                ActivityError.InvalidInput(
-                    "Completion date cannot precede the planned date."
                 )
             )
         }
@@ -87,7 +70,10 @@ class UpdateActivityUseCase(
                 activityDescription = activity.activityDescription.trim(),
                 season = activity.season.trim(),
                 createdAt = existing.createdAt,
-                updatedAt = existing.updatedAt
+                updatedAt = maxOf(
+                    clock.nowMillis(),
+                    existing.updatedAt + 1L
+                )
             )
 
             val success = activityRepository.updateActivity(

@@ -56,7 +56,7 @@ internal suspend fun VineshieldDatabase.insertDiseaseRiskTestData():
             vineVariety = "Merlot",
             color = "Red",
             rootStock = "SO4",
-            rows = "10",
+            rowCount = 10,
             rowSpacing = 2,
             plantedAt = date,
             phenologicalStage = null

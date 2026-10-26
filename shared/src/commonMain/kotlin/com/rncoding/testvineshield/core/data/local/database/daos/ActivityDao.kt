@@ -5,6 +5,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import androidx.room.Upsert
+import androidx.room.Insert
 import kotlinx.coroutines.flow.Flow
 import com.rncoding.testvineshield.core.data.local.database.entities.ActivityEntity
 import com.rncoding.testvineshield.core.data.local.database.relations.ActivityWithOccurrences
@@ -14,6 +15,12 @@ interface ActivityDao {
     @Upsert
     @Transaction
     suspend fun upsertActivity(activity: ActivityEntity)
+
+    @Insert
+    suspend fun insertActivity(
+        activity: ActivityEntity
+    ): Long
+
 
     @Query("Select * From activity")
     fun observeActivities(): Flow<List<ActivityEntity>>// should it return just activity_ids instead of complete entities
@@ -177,6 +184,77 @@ interface ActivityDao {
         vineyardId: Long,
         activityId: Long
     ): Int
+
+
+    @Transaction
+    suspend fun insertActivityForVineyard(
+        activity: ActivityEntity
+    ): Long? {
+        if (activity.activityId != 0L ||
+            activity.vineyardId <= 0L
+        ) {
+            return null
+        }
+
+        val blockId = activity.blockId
+
+        if (blockId != null) {
+            if (blockId <= 0L) {
+                return null
+            }
+
+            val validBlock = blockExistsInVineyard(
+                vineyardId = activity.vineyardId,
+                blockId = blockId
+            )
+
+            if (!validBlock) {
+                return null
+            }
+        }
+
+        return insertActivity(activity)
+    }
+
+    @Query(
+        """
+    SELECT EXISTS(
+        SELECT 1
+        FROM OccurrenceActivityCrossRef
+        WHERE activity_id = :activityId
+    )
+    """
+    )
+    suspend fun hasDiseaseOccurrenceLinks(
+        activityId: Long
+    ): Boolean
+
+    @Transaction
+    suspend fun deleteActivitySafely(
+        vineyardId: Long,
+        activityId: Long
+    ): Int {
+        val existing = getActivityById(
+            vineyardId = vineyardId,
+            activityId = activityId
+        ) ?: return 0
+
+        if (hasDiseaseOccurrenceLinks(existing.activityId)) {
+            return 2
+        }
+
+        return if (
+            deleteActivityForVineyard(
+                vineyardId = vineyardId,
+                activityId = activityId
+            ) == 1
+        ) {
+            1
+        } else {
+            0
+        }
+    }
+
 
 
     // get/add/delete activities by name, by season, by block, by planned date, by phenological state, by status, by priority,

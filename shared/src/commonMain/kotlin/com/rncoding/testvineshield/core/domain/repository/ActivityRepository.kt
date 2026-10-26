@@ -1,11 +1,12 @@
 package com.rncoding.testvineshield.core.domain.repository
 
+import com.rncoding.testvineshield.core.domain.datamodels.ActivityDeletionOutcome
 import com.rncoding.testvineshield.core.domain.datamodels.ActivityDomainModel
 import kotlinx.coroutines.flow.Flow
 
 interface ActivityRepository {
     fun observeActivities(vineyardId: Long): Flow<List<ActivityDomainModel>>
-    suspend fun addActivity(activity: ActivityDomainModel)
+    suspend fun addActivity(activity: ActivityDomainModel): Long?
 
     suspend fun belongsToVineyard(
         vineyardId: Long,
@@ -26,6 +27,6 @@ interface ActivityRepository {
     suspend fun deleteActivity(
         vineyardId: Long,
         activityId: Long
-    ): Boolean
+    ): ActivityDeletionOutcome
 
 }

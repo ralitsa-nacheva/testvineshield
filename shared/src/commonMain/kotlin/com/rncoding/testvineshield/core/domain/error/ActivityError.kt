@@ -27,4 +27,17 @@ sealed interface ActivityError : AppError {
 
         override val cause: Throwable? = null
     }
+
+    data object LinkedToDisease : ActivityError {
+        override val userMessage =
+            "This activity is linked to a disease observation " +
+                    "and cannot be deleted."
+
+        override val debugMessage =
+            "Activity deletion rejected: disease occurrence " +
+                    "association exists."
+
+        override val cause: Throwable? = null
+    }
+
 }

@@ -2,6 +2,7 @@
 package com.rncoding.testvineshield.core.domain.usecases.activity
 
 import com.rncoding.testvineshield.core.domain.auth.AuthenticatedUserProvider
+import com.rncoding.testvineshield.core.domain.datamodels.ActivityDeletionOutcome
 import com.rncoding.testvineshield.core.domain.error.ActivityError
 import com.rncoding.testvineshield.core.domain.error.AppError
 import com.rncoding.testvineshield.core.domain.error.AuthError
@@ -50,16 +51,23 @@ class DeleteActivityUseCase(
             }
 
             // The database deletion is scoped to the vineyard.
-            val deleted = activityRepository.deleteActivity(
-                vineyardId = vineyardId,
-                activityId = activityId
-            )
 
-            if (deleted) {
-                Result.Success(Unit)
-            } else {
-                Result.Error(ActivityError.NotFound)
+            return when (
+                activityRepository.deleteActivity(
+                    vineyardId = vineyardId,
+                    activityId = activityId
+                )
+            ) {
+                ActivityDeletionOutcome.DELETED ->
+                    Result.Success(Unit)
+
+                ActivityDeletionOutcome.NOT_FOUND ->
+                    Result.Error(ActivityError.NotFound)
+
+                ActivityDeletionOutcome.LINKED_TO_DISEASE ->
+                    Result.Error(ActivityError.LinkedToDisease)
             }
+
 
         } catch (e: CancellationException) {
             throw e

@@ -16,7 +16,7 @@ class BlockMapper {
             vineVariety = entity.vineVariety,
             color = entity.color,
             rootStock = entity.rootStock,
-            rows = entity.rows,
+            rowCount = entity.rowCount,
             rowSpacing = entity.rowSpacing,
             plantedAt = entity.plantedAt,
             phenologicalStage = entity.phenologicalStage
@@ -34,7 +34,7 @@ class BlockMapper {
             vineVariety = domain.vineVariety,
             color = domain.color,
             rootStock = domain.rootStock,
-            rows = domain.rows,
+            rowCount = domain.rowCount,
             rowSpacing = domain.rowSpacing,
             plantedAt = domain.plantedAt,
             phenologicalStage = domain.phenologicalStage
