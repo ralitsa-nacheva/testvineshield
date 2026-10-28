@@ -15,7 +15,8 @@ class DiseaseMapper {
             description = entity.description,
             vectors = entity.vectors,
             factors = entity.factors,
-            treatmentSuggestion = entity.treatmentSuggestion
+            treatmentSuggestion = entity.treatmentSuggestion,
+            isPredefined = entity.isPredefined
         )
     }
 
@@ -29,7 +30,8 @@ class DiseaseMapper {
             description = domain.description,
             vectors = domain.vectors,
             factors = domain.factors,
-            treatmentSuggestion = domain.treatmentSuggestion
+            treatmentSuggestion = domain.treatmentSuggestion,
+            isPredefined = domain.isPredefined
         )
     }
 }

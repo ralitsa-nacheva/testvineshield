@@ -65,7 +65,7 @@ internal suspend fun VineshieldDatabase.insertDiseaseRiskTestData():
 
     val diseaseId = 201L
 
-    diseaseDao().upsertDisease(
+    diseaseDao().insertDisease(
         DiseaseEntity(
             diseaseId = diseaseId,
             code = "POWDERY_MILDEW",

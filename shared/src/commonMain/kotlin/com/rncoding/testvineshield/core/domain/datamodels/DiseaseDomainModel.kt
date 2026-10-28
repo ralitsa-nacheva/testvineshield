@@ -8,5 +8,6 @@ data class DiseaseDomainModel(
     val description: String,
     val vectors: String,
     val factors: String,
-    val treatmentSuggestion: String
+    val treatmentSuggestion: String,
+    val isPredefined: Boolean = false
 )

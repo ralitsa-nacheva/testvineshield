@@ -105,6 +105,7 @@ import com.rncoding.testvineshield.core.domain.disease_risk.downy.DownyMildewSec
 import com.rncoding.testvineshield.core.domain.disease_risk.botrytis.BotrytisDiseaseRiskModel
 import com.rncoding.testvineshield.core.data.disease_risk.DefaultDiseaseRiskWeatherWindowPolicy
 import com.rncoding.testvineshield.core.data.disease_risk.VineyardDiseaseRiskEvaluatorImpl
+import com.rncoding.testvineshield.core.data.local.database.seed.DiseaseCatalogueSeeder
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskWeatherWindowPolicy
 import com.rncoding.testvineshield.core.data.local.mappers.WeatherForecastMapper
 import com.rncoding.testvineshield.core.data.remote.WeatherRemoteDataSourceImpl
@@ -130,6 +131,18 @@ import com.rncoding.testvineshield.core.domain.usecases.block.DeleteBlockUseCase
 import com.rncoding.testvineshield.core.domain.usecases.block.GetBlockDetailsUseCase
 import com.rncoding.testvineshield.core.domain.usecases.block.UpdateBlockUseCase
 import com.rncoding.testvineshield.core.domain.validation.BlockValidator
+import com.rncoding.testvineshield.core.data.local.mappers.HarvestMapper
+import com.rncoding.testvineshield.core.data.repository.HarvestRepositoryImpl
+import com.rncoding.testvineshield.core.domain.repository.HarvestRepository
+import com.rncoding.testvineshield.core.domain.usecases.disease.CreateDiseaseUseCase
+import com.rncoding.testvineshield.core.domain.usecases.disease.DeleteDiseaseUseCase
+import com.rncoding.testvineshield.core.domain.usecases.disease.UpdateDiseaseUseCase
+import com.rncoding.testvineshield.core.domain.validation.HarvestValidator
+import com.rncoding.testvineshield.core.domain.usecases.harvest.CreateHarvestUseCase
+import com.rncoding.testvineshield.core.domain.usecases.harvest.UpdateHarvestUseCase
+import com.rncoding.testvineshield.core.domain.usecases.harvest.DeleteHarvestUseCase
+import com.rncoding.testvineshield.core.domain.validation.DiseaseValidator
+
 import kotlinx.serialization.json.Json
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -295,6 +308,8 @@ val commonModule =
         single { DiseaseOccurrenceMapper() }
         single { DiseaseAlertMapper() }
         single { WeatherForecastMapper() }
+        single { HarvestMapper()
+        }
 
 
         /*
@@ -305,6 +320,13 @@ val commonModule =
             BlockRepositoryImpl(
                 blockDao = get(),
                 blockMapper = get()
+            )
+        }
+
+        single<HarvestRepository> {
+            HarvestRepositoryImpl(
+                harvestDao = get(),
+                harvestMapper = get()
             )
         }
 
@@ -466,6 +488,7 @@ val commonModule =
 
         single { BlockMapper() }
 
+
         /*
          * Providers
          */
@@ -514,6 +537,7 @@ val commonModule =
             DiseaseRiskStateCodec()
         }
 
+
         /*
          * Validators
          */
@@ -533,11 +557,62 @@ val commonModule =
         single { ActivityValidator() }
 
         single { BlockValidator()}
+        single {
+            HarvestValidator()
+        }
+
+        single {
+            DiseaseValidator()
+        }
 
 
         /*
-         * Auth use cases
+         * Coordinators
          */
+
+        single {
+            AuthSessionCoordinator(
+                restoreSessionUseCase = get(),
+                unlockSessionUseCase = get(),
+                loginUserUseCase = get(),
+                registerUserUseCase = get(),
+                logoutUserUseCase = get(),
+                updateUserUseCase = get(),
+                deleteUserUseCase = get(),
+                backgroundWorkCoordinator = get(),
+                weatherHistoryRiskScheduler = get()
+            )
+        }
+
+        single {
+            DiseaseRiskEvaluationCoordinator()
+        }
+
+        single {
+            WeatherHistoryBackgroundWorkCoordinator(
+                vineyardSource = get(),
+                scheduler = get()
+            )
+        }
+
+        single<BackgroundWorkVineyardSource> {
+            BackgroundWorkVineyardSourceImpl(
+                vineyardRepository = get()
+            )
+        }
+
+        /*
+         * Seeder
+         */
+
+        single {
+            DiseaseCatalogueSeeder(
+                database = get()
+            )
+        }
+        /*
+        * Auth use cases
+        */
 
         factory {
             LoginUserUseCase(
@@ -611,42 +686,6 @@ val commonModule =
 
 
         /*
-         * Coordinators
-         */
-
-        single {
-            AuthSessionCoordinator(
-                restoreSessionUseCase = get(),
-                unlockSessionUseCase = get(),
-                loginUserUseCase = get(),
-                registerUserUseCase = get(),
-                logoutUserUseCase = get(),
-                updateUserUseCase = get(),
-                deleteUserUseCase = get(),
-                backgroundWorkCoordinator = get(),
-                weatherHistoryRiskScheduler = get()
-            )
-        }
-
-        single {
-            DiseaseRiskEvaluationCoordinator()
-        }
-
-        single {
-            WeatherHistoryBackgroundWorkCoordinator(
-                vineyardSource = get(),
-                scheduler = get()
-            )
-        }
-
-        single<BackgroundWorkVineyardSource> {
-            BackgroundWorkVineyardSourceImpl(
-                vineyardRepository = get()
-            )
-        }
-
-
-        /*
          * Block use cases
          */
         factory {
@@ -683,9 +722,70 @@ val commonModule =
             )
         }
 
-         /*
-         * Vineyard use cases
+
+        /*
+         * Harvest use cases
          */
+
+        factory {
+            CreateHarvestUseCase(
+                harvestRepository = get(),
+                blockRepository = get(),
+                vineyardRepository = get(),
+                authenticatedUserProvider = get(),
+                validator = get()
+            )
+        }
+
+        factory {
+            UpdateHarvestUseCase(
+                harvestRepository = get(),
+                blockRepository = get(),
+                vineyardRepository = get(),
+                authenticatedUserProvider = get(),
+                validator = get()
+            )
+        }
+
+        factory {
+            DeleteHarvestUseCase(
+                harvestRepository = get(),
+                blockRepository = get(),
+                vineyardRepository = get(),
+                authenticatedUserProvider = get()
+            )
+        }
+
+
+        /*
+         * Disease use cases
+         */
+        factory {
+            CreateDiseaseUseCase(
+                diseaseRepository = get(),
+                authenticatedUserProvider = get(),
+                validator = get()
+            )
+        }
+
+        factory {
+            UpdateDiseaseUseCase(
+                diseaseRepository = get(),
+                authenticatedUserProvider = get(),
+                validator = get()
+            )
+        }
+
+        factory {
+            DeleteDiseaseUseCase(
+                diseaseRepository = get(),
+                authenticatedUserProvider = get()
+            )
+        }
+
+        /*
+        * Vineyard use cases
+        */
         factory {
             ObserveVineyardSummariesUseCase(
                 repository = get(),

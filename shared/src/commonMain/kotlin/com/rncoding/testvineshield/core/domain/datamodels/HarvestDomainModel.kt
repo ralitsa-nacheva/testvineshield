@@ -1,6 +1,6 @@
 package com.rncoding.testvineshield.core.domain.datamodels
 
-import androidx.room.ColumnInfo
+
 import kotlinx.datetime.LocalDate
 
 data class HarvestDomainModel(
@@ -9,6 +9,6 @@ data class HarvestDomainModel(
     val season: String,
     val harvestDate: LocalDate,
     val units: String,
-    val quantity: Int,
-    val brixSugarContent: Int
+    val quantity: Double,
+    val brixSugarContent: Double
 )

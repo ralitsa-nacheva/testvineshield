@@ -344,7 +344,7 @@ class ActivityDaoTest {
         val diseaseId = 9001L
         val occurrenceId = 9002L
 
-        database.diseaseDao().upsertDisease(
+        database.diseaseDao().insertDisease(
             DiseaseEntity(
                 diseaseId = diseaseId,
                 code = "test-disease",

@@ -87,4 +87,80 @@ class DiseaseRepositoryImpl(
         diseaseOccurrenceDao
             .deleteDiseaseOccurrenceById(occurrenceId)
     }
+
+
+    override suspend fun getDisease(
+        diseaseId: Long
+    ): DiseaseDomainModel? {
+        require(diseaseId > 0L) {
+            "Disease ID must be positive."
+        }
+
+        return diseaseDao
+            .getDiseaseById(diseaseId)
+            ?.let(diseaseMapper::toDomain)
+    }
+
+    override suspend fun createDisease(
+        disease: DiseaseDomainModel
+    ): Long {
+        require(disease.diseaseId == 0L) {
+            "New disease must have ID 0."
+        }
+
+        val entity = diseaseMapper.toEntity(
+            disease.copy(
+                isPredefined = false
+            )
+        )
+
+        return diseaseDao.insertDisease(entity)
+    }
+
+    override suspend fun updateDisease(
+        disease: DiseaseDomainModel
+    ): Boolean {
+        require(disease.diseaseId > 0L) {
+            "Disease ID must be positive."
+        }
+
+        val updatedRows = diseaseDao.updateCustomDisease(
+            diseaseId = disease.diseaseId,
+            code = disease.code,
+            name = disease.name,
+            description = disease.description,
+            vectors = disease.vectors,
+            factors = disease.factors,
+            treatmentSuggestion = disease.treatmentSuggestion
+        )
+
+        return updatedRows == 1
+    }
+
+    override suspend fun deleteDisease(
+        diseaseId: Long
+    ): Boolean {
+        require(diseaseId > 0L) {
+            "Disease ID must be positive."
+        }
+
+        val deletedRows =
+            diseaseDao.deleteUnreferencedCustomDisease(
+                diseaseId = diseaseId
+            )
+
+        return deletedRows == 1
+    }
+
+
+    override suspend fun isDiseaseReferenced(
+        diseaseId: Long
+    ): Boolean {
+        require(diseaseId > 0L) {
+            "Disease ID must be positive."
+        }
+
+        return diseaseDao.isDiseaseReferenced(diseaseId)
+    }
+
 }

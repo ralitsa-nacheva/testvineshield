@@ -29,4 +29,24 @@ interface DiseaseRepository {
     suspend fun deleteDiseaseOccurrence(
         occurrenceId: Long
     )
+
+
+    suspend fun getDisease(
+        diseaseId: Long
+    ): DiseaseDomainModel?
+
+    suspend fun createDisease(
+        disease: DiseaseDomainModel
+    ): Long
+
+    suspend fun updateDisease(
+        disease: DiseaseDomainModel
+    ): Boolean
+
+    suspend fun deleteDisease(
+        diseaseId: Long
+    ): Boolean
+
+    suspend fun isDiseaseReferenced(diseaseId: Long): Boolean
+
 }
