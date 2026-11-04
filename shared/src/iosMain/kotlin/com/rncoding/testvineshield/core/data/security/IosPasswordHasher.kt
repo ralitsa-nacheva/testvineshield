@@ -3,11 +3,11 @@ package com.rncoding.testvineshield.core.data.security
 import com.rncoding.testvineshield.core.domain.security.PasswordHashParameters
 import com.rncoding.testvineshield.core.domain.security.PasswordHasher
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.convert
+import kotlinx.cinterop.reinterpret
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.usePinned
 import platform.CommonCrypto.CCKeyDerivationPBKDF
-import platform.CommonCrypto.CCPBKDFAlgorithm
-import platform.CommonCrypto.CCPseudoRandomAlgorithm
 import platform.CommonCrypto.kCCPBKDF2
 import platform.CommonCrypto.kCCPRFHmacAlgSHA256
 import platform.Security.SecRandomCopyBytes
@@ -74,24 +74,22 @@ class IosPasswordHasher : PasswordHasher {
                 derivedKey.usePinned { keyPinned ->
 
                     val status =
-                        CCKeyDerivationPBKDF( // don't change these as Kotlin's official KMP documentation confirms that Apple SDK dependencies can be used from the iOS source set and that platform-specific implementations can consume those APIs
-                            CCPBKDFAlgorithm(kCCPBKDF2),
+                        CCKeyDerivationPBKDF(
+                            kCCPBKDF2.convert(),
 
-                            passwordPinned.addressOf(0),
+                            if (passwordBytes.isEmpty()) null else passwordPinned.addressOf(0),
                             passwordBytes.size.toULong(),
 
-                            saltPinned.addressOf(0),
+                            saltPinned.addressOf(0).reinterpret(),
                             saltBytes.size.toULong(),
 
-                            CCPseudoRandomAlgorithm(
-                                kCCPRFHmacAlgSHA256
-                            ),
+                            kCCPRFHmacAlgSHA256.convert(),
 
                             PasswordHashParameters
                                 .ITERATIONS
                                 .toUInt(),
 
-                            keyPinned.addressOf(0),
+                            keyPinned.addressOf(0).reinterpret(),
                             derivedKey.size.toULong()
                         )
 

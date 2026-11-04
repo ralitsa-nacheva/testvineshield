@@ -1,154 +1,79 @@
 package com.rncoding.testvineshield.core.data.security
 
-import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.error.AppError
+import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.error.SecurityError
 import com.rncoding.testvineshield.core.domain.security.LocalAuthenticator
-import kotlinx.cinterop.ExperimentalForeignApi
-import platform.LocalAuthentication.LAContext
-import platform.LocalAuthentication.LAPolicy
-import platform.LocalAuthentication.LAError
+import kotlinx.cinterop.*
+import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Mutex
 import platform.Foundation.NSError
-import kotlinx.coroutines.suspendCancellableCoroutine
+import platform.LocalAuthentication.*
 import kotlin.coroutines.resume
 
-@OptIn(ExperimentalForeignApi::class)
-class IosLocalAuthenticator :
-    LocalAuthenticator {
+@OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
+class IosLocalAuthenticator : LocalAuthenticator {
+    private val promptLock = Mutex()
+    private var pendingContext: LAContext? = null
 
-    override suspend fun isAvailable():
-            Result<Boolean, AppError> {
-
-        val context =
-            LAContext()
-
-        var error: NSError? = null
-
-        val available =
-            context.canEvaluatePolicy(
-                policy =
-                    LAPolicy
-                        .deviceOwnerAuthenticationWithBiometrics,
-                error = error
-            )
-
-        if (available) {
-            return Result.Success(true)
-        }
-
-        return when (
-            error?.code?.toInt()
-        ) {
-
-            LAError.LAErrorBiometryNotAvailable.toLong()
-                .toInt() ->
-                Result.Success(false)
-
-            LAError.LAErrorBiometryNotEnrolled.toLong()
-                .toInt() ->
-                Result.Success(false)
-
-            LAError.LAErrorPasscodeNotSet.toLong()
-                .toInt() ->
-                Result.Error(
-                    SecurityError.PasscodeNotSet
-                )
-
-            else ->
-                Result.Success(false)
-        }
+    override suspend fun isAvailable(): Result<Boolean, AppError> = withContext(Dispatchers.Main.immediate) {
+        val context = LAContext()
+        try {
+            memScoped {
+                val error = alloc<ObjCObjectVar<NSError?>>()
+                error.value = null
+                if (context.canEvaluatePolicy(LAPolicyDeviceOwnerAuthenticationWithBiometrics, error.ptr)) {
+                    Result.Success(true)
+                } else when (error.value?.code) {
+                    LAErrorPasscodeNotSet -> Result.Error(SecurityError.PasscodeNotSet)
+                    else -> Result.Success(false)
+                }
+            }
+        } finally { context.invalidate() }
     }
 
-    override suspend fun authenticate(
-        reason: String
-    ): Result<Unit, AppError> {
-
-        return suspendCancellableCoroutine { continuation ->
-
-            val context =
-                LAContext()
-
-            context.evaluatePolicy(
-                policy =
-                    LAPolicy
-                        .deviceOwnerAuthenticationWithBiometrics,
-
-                localizedReason =
-                    reason
-            ) { success, error ->
-
-                if (
-                    !continuation.isActive
-                ) {
-                    return@evaluatePolicy
+    override suspend fun authenticate(reason: String): Result<Unit, AppError> =
+        withContext(Dispatchers.Main.immediate) {
+            if (!promptLock.tryLock()) return@withContext Result.Error(SecurityError.AuthenticationInProgress)
+            val context = LAContext()
+            pendingContext = context
+            try {
+                suspendCancellableCoroutine { continuation ->
+                    continuation.invokeOnCancellation { context.invalidate() }
+                    context.evaluatePolicy(
+                        LAPolicyDeviceOwnerAuthenticationWithBiometrics,
+                        localizedReason = reason
+                    ) { success, error ->
+                        // LA callbacks use an unspecified queue. Only Main may resume/inspect state.
+                        launch(Dispatchers.Main.immediate) {
+                            if (continuation.isActive) continuation.resume(
+                                if (success) Result.Success(Unit)
+                                else Result.Error(mapError(error))
+                            )
+                        }
+                    }
                 }
-
-                if (success) {
-
-                    continuation.resume(
-                        Result.Success(Unit)
-                    )
-
-                    return@evaluatePolicy
-                }
-
-                continuation.resume(
-                    Result.Error(
-                        mapAuthenticationError(
-                            error
-                        )
-                    )
-                )
+            } finally {
+                if (pendingContext === context) pendingContext = null
+                context.invalidate()
+                promptLock.unlock()
             }
         }
-    }
 
-    private fun mapAuthenticationError(
-        error: NSError?
-    ): SecurityError {
+    /** Background only: an inactive biometric overlay must not cancel its own prompt. */
+    fun cancelPendingAuthentication() { pendingContext?.invalidate() }
 
-        return when (
-            error?.code?.toInt()
-        ) {
-
-            LAError.LAErrorUserCancel.toLong()
-                .toInt() ->
-                SecurityError.AuthenticationCancelled
-
-            LAError.LAErrorSystemCancel.toLong()
-                .toInt() ->
-                SecurityError.AuthenticationCancelled
-
-            LAError.LAErrorAppCancel.toLong()
-                .toInt() ->
-                SecurityError.AuthenticationCancelled
-
-            LAError.LAErrorAuthenticationFailed.toLong()
-                .toInt() ->
-                SecurityError.AuthenticationFailed
-
-            LAError.LAErrorBiometryNotAvailable.toLong()
-                .toInt() ->
-                SecurityError.BiometricNotAvailable
-
-            LAError.LAErrorBiometryNotEnrolled.toLong()
-                .toInt() ->
-                SecurityError.BiometricNotEnrolled
-
-            LAError.LAErrorBiometryLockout.toLong()
-                .toInt() ->
-                SecurityError.AuthenticationLockedOut
-
-            LAError.LAErrorPasscodeNotSet.toLong()
-                .toInt() ->
-                SecurityError.PasscodeNotSet
-
-            LAError.LAErrorUserFallback.toLong()
-                .toInt() ->
-                SecurityError.UserFallback
-
-            else ->
-                SecurityError.Unknown
+    private fun mapError(error: NSError?): SecurityError {
+        if (error?.domain != LAErrorDomain) return SecurityError.Unknown()
+        return when (error.code) {
+            LAErrorUserCancel, LAErrorSystemCancel, LAErrorAppCancel -> SecurityError.AuthenticationCancelled
+            LAErrorAuthenticationFailed -> SecurityError.AuthenticationFailed
+            LAErrorBiometryNotAvailable -> SecurityError.BiometricNotAvailable
+            LAErrorBiometryNotEnrolled -> SecurityError.BiometricNotEnrolled
+            LAErrorBiometryLockout -> SecurityError.AuthenticationLockedOut
+            LAErrorPasscodeNotSet -> SecurityError.PasscodeNotSet
+            LAErrorUserFallback -> SecurityError.UserFallback
+            else -> SecurityError.Unknown()
         }
     }
 }

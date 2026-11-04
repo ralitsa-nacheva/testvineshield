@@ -1,195 +1,113 @@
 package com.rncoding.testvineshield.core.data.security
 
-import com.rncoding.testvineshield.core.data.security.toCFDictionary
 import com.rncoding.testvineshield.core.domain.security.SecureStorage
-import kotlinx.cinterop.ExperimentalForeignApi
-import kotlinx.cinterop.ObjCAction
-import kotlinx.cinterop.addressOf
-import kotlinx.cinterop.ptr
-import kotlinx.cinterop.usePinned
-import kotlinx.cinterop.value
-import platform.CoreFoundation.CFTypeRefVar
-import platform.Foundation.NSData
-import platform.Foundation.create
-import platform.Security.SecItemAdd
-import platform.Security.SecItemCopyMatching
-import platform.Security.SecItemDelete
-import platform.Security.SecItemUpdate
-import platform.Security.errSecDuplicateItem
-import platform.Security.errSecItemNotFound
-import platform.Security.kSecAttrAccount
-import platform.Security.kSecAttrService
-import platform.Security.kSecClass
-import platform.Security.kSecClassGenericPassword
-import platform.Security.kSecMatchLimit
-import platform.Security.kSecMatchLimitOne
-import platform.Security.kSecReturnData
-import platform.Security.kSecValueData
-import platform.CoreFoundation.kCFBooleanTrue
-import platform.CoreFoundation.kCFBooleanFalse
-import platform.CoreFoundation.CFDictionaryRef
+import kotlinx.cinterop.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import platform.CoreFoundation.*
+import platform.Security.*
 
+/** Keychain generic-password items; preserves the existing service/account/UTF-8 format.
+ * Every Create/Copy result is released, including failure paths. No secret is logged.
+ */
 @OptIn(ExperimentalForeignApi::class)
-class IosSecureStorage : SecureStorage {
+class IosSecureStorage(
+    private val service: String = "com.rncoding.testvineshield.vineyard.secure-storage"
+) : SecureStorage {
+    private val lock = Mutex()
 
-    override suspend fun get(
-        key: String
-    ): String? {
-
-        val query =
-            baseQuery(key).toMutableMap().apply {
-                this[kSecReturnData] =
-                    kCFBooleanTrue
-                this[kSecMatchLimit] =
-                    kSecMatchLimitOne
-            }
-
-        val result =
-            CFTypeRefVar()
-
-        val status =
-            SecItemCopyMatching(
-                query.toCFDictionary(),
-                result.ptr
-            )
-
-        return when (status) {
-
-            0 -> {
-                val data =
-                    result.value as? NSData
-                        ?: error(
-                            "Keychain returned invalid data."
-                        )
-
-                data.toByteArray()
-                    .decodeToString()
-            }
-
-            errSecItemNotFound ->
-                null
-
-            else ->
-                error(
-                    "Keychain read failed. " +
-                            "status=$status"
-                )
-        }
-    }
-
-    override suspend fun save(
-        key: String,
-        value: String
-    ) {
-
-        val data =
-            value
-                .encodeToByteArray()
-                .toNSData()
-
-        val attributes =
-            baseQuery(key).toMutableMap().apply {
-                this[kSecValueData] = data
-            }
-
-        val addStatus =
-            SecItemAdd(
-                attributes.toCFDictionary(),
-                null
-            )
-
-        if (
-            addStatus == errSecDuplicateItem
-        ) {
-
-            val updateAttributes =
-                mapOf(
-                    kSecValueData to data
-                )
-
-            val updateStatus =
-                SecItemUpdate(
-                    baseQuery(key)
-                        .toCFDictionary(),
-                    updateAttributes
-                        .toCFDictionary()
-                )
-
-            check(updateStatus == 0) {
-                "Keychain update failed. " +
-                        "status=$updateStatus"
-            }
-
-        } else {
-
-            check(addStatus == 0) {
-                "Keychain insert failed. " +
-                        "status=$addStatus"
+    override suspend fun get(key: String): String? = withContext(Dispatchers.Default) {
+        lock.withLock {
+            withQuery(key) { query ->
+                CFDictionarySetValue(query, kSecReturnData, kCFBooleanTrue)
+                CFDictionarySetValue(query, kSecMatchLimit, kSecMatchLimitOne)
+                memScoped {
+                    val output = alloc<CFTypeRefVar>()
+                    output.value = null
+                    val status = SecItemCopyMatching(query, output.ptr)
+                    try {
+                        when (status) {
+                            errSecItemNotFound -> null
+                            errSecSuccess -> {
+                                val raw = checkNotNull(output.value) { "Keychain returned no data." }
+                                check(CFGetTypeID(raw) == CFDataGetTypeID()) { "Invalid Keychain data type." }
+                                val data: CFDataRef = raw.reinterpret()
+                                val count = CFDataGetLength(data)
+                                check(count in 0..Int.MAX_VALUE.toLong()) { "Invalid Keychain data length." }
+                                val bytes = CFDataGetBytePtr(data)
+                                ByteArray(count.toInt()) { checkNotNull(bytes)[it].toByte() }
+                                    .decodeToString(throwOnInvalidSequence = true)
+                            }
+                            else -> error("Keychain read failed: $status")
+                        }
+                    } finally { output.value?.let { CFRelease(it) } }
+                }
             }
         }
     }
 
-    override suspend fun delete(
-        key: String
-    ) {
-
-        val status =
-            SecItemDelete(
-                baseQuery(key)
-                    .toCFDictionary()
-            )
-
-        check(
-            status == 0 ||
-                    status == errSecItemNotFound
-        ) {
-            "Keychain delete failed. " +
-                    "status=$status"
+    override suspend fun save(key: String, value: String) = withContext(Dispatchers.Default) {
+        lock.withLock {
+            val bytes = value.encodeToByteArray()
+            val data = bytes.usePinned {
+                CFDataCreate(null, if (bytes.isEmpty()) null else it.addressOf(0).reinterpret(), bytes.size.convert())
+            } ?: error("Unable to allocate Keychain data.")
+            try {
+                withQuery(key) { query ->
+                    withDictionary { attributes ->
+                        CFDictionarySetValue(attributes, kSecValueData, data)
+                        var status = SecItemUpdate(query, attributes)
+                        if (status == errSecItemNotFound) {
+                            CFDictionarySetValue(query, kSecValueData, data)
+                            status = SecItemAdd(query, null)
+                            if (status == errSecDuplicateItem) {
+                                // A different storage instance/process inserted between update and add.
+                                CFDictionaryRemoveValue(query, kSecValueData)
+                                status = SecItemUpdate(query, attributes)
+                            }
+                        }
+                        check(status == errSecSuccess) { "Keychain save failed: $status" }
+                    }
+                }
+            } finally { CFRelease(data) }
         }
     }
 
-    override suspend fun clear() {
-
-        val query =
-            mapOf(
-                kSecClass to
-                        kSecClassGenericPassword,
-
-                kSecAttrService to
-                        SERVICE
-            )
-
-        val status =
-            SecItemDelete(
-                query.toCFDictionary()
-            )
-
-        check(
-            status == 0 ||
-                    status == errSecItemNotFound
-        ) {
-            "Keychain clear failed. " +
-                    "status=$status"
-        }
+    override suspend fun delete(key: String) = withContext(Dispatchers.Default) {
+        lock.withLock { withQuery(key) { checkDelete(SecItemDelete(it)) } }
     }
 
-    private fun baseQuery(
-        key: String
-    ): Map<Any?, Any?> =
-        mapOf(
-            kSecClass to
-                    kSecClassGenericPassword,
+    override suspend fun clear() = withContext(Dispatchers.Default) {
+        // Scope clear to this application's service; never delete unrelated Keychain entries.
+        lock.withLock { withQuery(null) { checkDelete(SecItemDelete(it)) } }
+    }
 
-            kSecAttrService to
-                    SERVICE,
+    private fun checkDelete(status: Int) {
+        check(status == errSecSuccess || status == errSecItemNotFound) { "Keychain delete failed: $status" }
+    }
 
-            kSecAttrAccount to
-                    key
-        )
+    private inline fun <T> withQuery(key: String?, block: (CFMutableDictionaryRef) -> T): T =
+        withDictionary { query ->
+            CFDictionarySetValue(query, kSecClass, kSecClassGenericPassword)
+            withString(service) { CFDictionarySetValue(query, kSecAttrService, it) }
+            if (key != null) withString(key) { CFDictionarySetValue(query, kSecAttrAccount, it) }
+            block(query)
+        }
 
-    private companion object {
+    private inline fun <T> withDictionary(block: (CFMutableDictionaryRef) -> T): T {
+        val dictionary = CFDictionaryCreateMutable(
+            null, 0, kCFTypeDictionaryKeyCallBacks.ptr, kCFTypeDictionaryValueCallBacks.ptr
+        ) ?: error("Unable to allocate Keychain query.")
+        try { return block(dictionary) } finally { CFRelease(dictionary) }
+    }
 
-        const val SERVICE =
-            "com.rncoding.testvineshield.vineyard.secure-storage"
+    private inline fun <T> withString(value: String, block: (CFStringRef) -> T): T {
+        // CString conversion cannot represent embedded NULs; keys/service are identifiers.
+        require('\u0000' !in value) { "Keychain identifiers cannot contain NUL." }
+        val string = CFStringCreateWithCString(null, value, kCFStringEncodingUTF8)
+            ?: error("Unable to allocate Keychain identifier.")
+        try { return block(string) } finally { CFRelease(string) }
     }
 }
