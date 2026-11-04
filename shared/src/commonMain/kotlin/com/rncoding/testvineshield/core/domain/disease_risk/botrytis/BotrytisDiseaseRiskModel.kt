@@ -29,6 +29,15 @@ class BotrytisDiseaseRiskModel(
         calculatedAt: Long
     ): DiseaseRiskModelEvaluation {
 
+        // Missing evidence is different from a known stage outside this model's scope.
+        // Check it before tissue mapping, which maps both cases to UNSUPPORTED.
+        if (input.hostContext.phenologicalStage == null) {
+            return insufficientData(
+                input = input,
+                calculatedAt = calculatedAt
+            )
+        }
+
         val hostTissue =
             BotrytisHostTissueMapper.map(
                 input.hostContext
@@ -257,6 +266,6 @@ class BotrytisDiseaseRiskModel(
 
     companion object {
         const val MODEL_VERSION =
-            "NAIR_ALLEN_FLOWER_BERRY_V1"
+            "NAIR_ALLEN_FLOWER_BERRY_V2"
     }
 }

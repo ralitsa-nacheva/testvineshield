@@ -7,6 +7,7 @@ import com.rncoding.testvineshield.core.domain.error.DatabaseError
 import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.repository.SecuritySettingsRepository
 import com.rncoding.testvineshield.core.domain.security.SecuritySettings
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -48,6 +49,8 @@ class SecuritySettingsRepositoryImpl(
                     )
             )
 
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
 
             Result.Error(
@@ -75,6 +78,8 @@ class SecuritySettingsRepositoryImpl(
 
             Result.Success(Unit)
 
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
 
             Result.Error(
@@ -127,6 +132,8 @@ class SecuritySettingsRepositoryImpl(
 
             Result.Success(Unit)
 
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
 
             Result.Error(
@@ -175,6 +182,8 @@ class SecuritySettingsRepositoryImpl(
 
             Result.Success(Unit)
 
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
 
             Result.Error(

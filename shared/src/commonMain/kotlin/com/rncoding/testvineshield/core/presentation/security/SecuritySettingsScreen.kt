@@ -21,6 +21,7 @@ fun SecuritySettingsScreen(
     onBack: () -> Unit,
     onBiometricChanged: (Boolean) -> Unit,
     onPinChanged: (Boolean) -> Unit,
+    onReload: () -> Unit,
     onClearError: () -> Unit
 ) {
     Scaffold(
@@ -47,7 +48,7 @@ fun SecuritySettingsScreen(
                 .padding(16.dp)
         ) {
 
-            if (state.biometricAvailable) {
+            if (state.biometricAvailable || state.biometricEnabled) {
                 Row(
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -70,7 +71,7 @@ fun SecuritySettingsScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "PIN fallback",
+                    text = "App PIN (setup not available yet)",
                     modifier = Modifier.weight(1f)
                 )
 
@@ -78,7 +79,8 @@ fun SecuritySettingsScreen(
                     checked = state.pinEnabled,
                     onCheckedChange = onPinChanged,
                     enabled =
-                        !state.isLoading &&
+                        state.pinEnabled &&
+                                !state.isLoading &&
                                 !state.isUpdating
                 )
             }
@@ -93,6 +95,12 @@ fun SecuritySettingsScreen(
                     onClick = onClearError
                 ) {
                     Text("Dismiss")
+                }
+                TextButton(
+                    onClick = onReload,
+                    enabled = !state.isLoading && !state.isUpdating
+                ) {
+                    Text("Reload settings")
                 }
             }
         }

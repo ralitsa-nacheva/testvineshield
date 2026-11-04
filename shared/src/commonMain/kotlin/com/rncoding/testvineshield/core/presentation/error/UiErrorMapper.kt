@@ -155,6 +155,7 @@ class UiErrorMapper {
             SecurityError.BiometricNotAvailable,
             SecurityError.BiometricNotEnrolled,
             SecurityError.AuthenticationFailed,
+            SecurityError.AuthenticationInProgress,
             SecurityError.AuthenticationCancelled,
             SecurityError.AuthenticationLockedOut,
             SecurityError.AuthenticationPermanentlyLockedOut,

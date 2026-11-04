@@ -1,7 +1,8 @@
 package com.rncoding.testvineshield.core.presentation.security
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.compose.viewmodel.koinViewModel
@@ -20,7 +21,7 @@ fun SecuritySettingsScreenRoot(
 
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    LaunchedEffect(viewModel) {
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         viewModel.load()
     }
 
@@ -29,6 +30,7 @@ fun SecuritySettingsScreenRoot(
         onBack = onBack,
         onBiometricChanged = viewModel::setBiometricEnabled,
         onPinChanged = viewModel::setPinEnabled,
+        onReload = viewModel::load,
         onClearError = viewModel::clearError
     )
 }

@@ -39,6 +39,7 @@ android {
 dependencies {
     implementation(project(":shared"))
     implementation(libs.androidx.activity.compose)
+    implementation("androidx.fragment:fragment:1.9.1")
     implementation(libs.koin.android)
     implementation(libs.androidx.startup.runtime)
     implementation(libs.worker.runtime.ktx)

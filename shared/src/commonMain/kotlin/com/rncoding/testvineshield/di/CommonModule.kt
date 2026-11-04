@@ -932,7 +932,7 @@ val commonModule =
             SecuritySettingsViewModel(
                 userId = userId,
                 repository = get(),
-                biometricAuthenticator = get()
+                localAuthenticator = get()
             )
         }
 

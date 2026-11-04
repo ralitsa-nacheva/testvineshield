@@ -2,6 +2,12 @@ package com.rncoding.testvineshield.core.domain.error
 
 sealed interface SecurityError : AppError {
 
+    data object AuthenticationInProgress : SecurityError {
+        override val userMessage = "Authentication is already in progress. Finish or cancel it before trying again."
+        override val debugMessage = "A local authentication request was rejected because another request owns the prompt."
+        override val cause: Throwable? = null
+    }
+
     data object BiometricNotAvailable : SecurityError {
 
         override val userMessage =
@@ -49,7 +55,7 @@ sealed interface SecurityError : AppError {
     data object AuthenticationLockedOut : SecurityError {
 
         override val userMessage =
-            "Biometric authentication is temporarily locked. Try again later or use your PIN."
+            "Biometric authentication is temporarily locked. Try again later."
 
         override val debugMessage =
             "Android biometric authentication entered temporary lockout."
