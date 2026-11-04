@@ -9,11 +9,16 @@ import com.rncoding.testvineshield.core.domain.usecases.weather.RefreshWeatherHi
 import com.rncoding.testvineshield.core.domain.usecases.weather.WeatherHistoryWorkAuthorization
 import com.rncoding.testvineshield.core.domain.usecases.weather.WeatherHistoryRetryPolicy
 import com.rncoding.testvineshield.core.domain.error.Result as AppResult
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.CancellationException
+import com.rncoding.testvineshield.core.domain.startup.AppInitializer
+import com.rncoding.testvineshield.core.domain.startup.AppInitializationRetryPolicy
 
 class WeatherHistoryRiskWorker(
     appContext: Context,
     workerParameters: WorkerParameters,
+    private val appInitializer: AppInitializer,
     private val authorizeBackgroundWork:
     AuthorizeWeatherHistoryBackgroundWorkUseCase,
     private val refreshWeatherHistoryAndEvaluateRisk:
@@ -26,6 +31,24 @@ class WeatherHistoryRiskWorker(
 
         if (userId <= 0L || vineyardId <= 0L) {
             return Result.failure()
+        }
+
+        // WorkManager may launch this process without ever opening AppRoot.
+        try {
+            appInitializer.ensureInitialized()
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            currentCoroutineContext().ensureActive()
+            android.util.Log.e(
+                "WeatherHistoryRiskWorker",
+                "Application initialization failed (${exception::class.simpleName})."
+            )
+            return if (AppInitializationRetryPolicy.shouldRetry(runAttemptCount, exception)) {
+                Result.retry()
+            } else {
+                Result.failure()
+            }
         }
 
         return try {

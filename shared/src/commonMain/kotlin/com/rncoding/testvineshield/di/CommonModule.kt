@@ -143,6 +143,9 @@ import com.rncoding.testvineshield.core.domain.usecases.harvest.UpdateHarvestUse
 import com.rncoding.testvineshield.core.domain.usecases.harvest.DeleteHarvestUseCase
 import com.rncoding.testvineshield.core.domain.validation.DiseaseValidator
 
+import com.rncoding.testvineshield.core.data.startup.DefaultAppInitializer
+import com.rncoding.testvineshield.core.domain.startup.AppInitializer
+import com.rncoding.testvineshield.core.presentation.root.AppStartupViewModel
 import kotlinx.serialization.json.Json
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -154,6 +157,10 @@ val commonModule =
         /*
          * Core infrastructure
          */
+
+        single<AppInitializer> {
+            DefaultAppInitializer(diseaseCatalogueSeeder = get())
+        }
 
         single<AppClock> {
             SystemAppClock()
@@ -904,6 +911,8 @@ val commonModule =
         /*
          * View models
          */
+
+        viewModel { AppStartupViewModel(appInitializer = get()) }
 
         viewModel {
             AuthViewModel(

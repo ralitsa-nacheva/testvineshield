@@ -26,6 +26,7 @@ class WeatherHistoryWorkerFactory(
         return WeatherHistoryRiskWorker(
             appContext = appContext,
             workerParameters = workerParameters,
+            appInitializer = koin.get(),
             authorizeBackgroundWork = koin.get<
                     AuthorizeWeatherHistoryBackgroundWorkUseCase
                     >(),
