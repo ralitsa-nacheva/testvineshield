@@ -60,6 +60,7 @@ fun VineyardEditorScreenRoot(
             viewModel::onNameChange,
         onSizeChange =
             viewModel::onSizeChange,
+        onSizeUnitChange = viewModel::onSizeUnitChange,
         onCountryChange =
             viewModel::onCountryChange,
         onCityChange =

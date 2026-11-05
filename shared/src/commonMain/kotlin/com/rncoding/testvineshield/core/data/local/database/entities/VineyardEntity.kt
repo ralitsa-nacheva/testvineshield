@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.data.local.database.entities
 
+import com.rncoding.testvineshield.core.domain.datamodels.units.AreaUnit
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -35,5 +36,7 @@ data class VineyardEntity(
     @ColumnInfo(name = "created_at")
     val createdAt: LocalDate,
     @ColumnInfo(name = "updated_at")
-    val updatedAt: LocalDate
+    val updatedAt: LocalDate,
+    @ColumnInfo(name = "size_unit", defaultValue = "NULL")
+    val sizeUnit: AreaUnit? = null
 )

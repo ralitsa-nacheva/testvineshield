@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.domain.datamodels
 
+import com.rncoding.testvineshield.core.domain.datamodels.units.AreaUnit
 import kotlinx.datetime.LocalDate
 
 data class VineyardDomainModel(
@@ -15,5 +16,6 @@ data class VineyardDomainModel(
     val elevation: Int,
     val sortOrder: Int,
     val createdAt: LocalDate,
-    val updatedAt: LocalDate
+    val updatedAt: LocalDate,
+    val sizeUnit: AreaUnit? = null
 )

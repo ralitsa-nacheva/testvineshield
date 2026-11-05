@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.data.local.database
 
+import com.rncoding.testvineshield.core.data.local.database.converters.MeasurementUnitRoomConverters
 import androidx.room.ConstructedBy
 import androidx.room.Database
 import androidx.room.RoomDatabase
@@ -49,8 +50,8 @@ import com.rncoding.testvineshield.core.data.local.database.entities.DiseaseRisk
     HarvestEntity::class, ObservedSymptomEntity::class, OccurrenceActivityCrossRef::class,
     OccurrenceSymptomCrossRef::class, SecuritySettingsEntity::class, SymptomEntity::class, UserEntity::class,
     VineyardEntity::class, WeatherCalculationEntity::class, WeatherHistoryEntity::class, WeatherForecastEntity::class],
-    version = 1)
-@TypeConverters(LocalDateRoomConverters::class, DomainEnumRoomConverters::class)
+    version = 2)
+@TypeConverters(LocalDateRoomConverters::class, DomainEnumRoomConverters::class, MeasurementUnitRoomConverters::class)
 @ConstructedBy(VineshieldConstructor::class)
 
 abstract class VineshieldDatabase: RoomDatabase() {

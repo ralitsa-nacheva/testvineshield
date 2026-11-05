@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.data.local.database.projections
 
+import com.rncoding.testvineshield.core.domain.datamodels.units.AreaUnit
 import androidx.room.ColumnInfo
 import com.rncoding.testvineshield.core.domain.datamodels.enums.ActivityPriority
 import com.rncoding.testvineshield.core.domain.datamodels.enums.ActivityStatus
@@ -32,5 +33,7 @@ data class BlockSummaryProjection(
     val activeDiseaseCount: Int,
 
     @ColumnInfo(name = "active_alert_count")
-    val activeAlertCount: Int
+    val activeAlertCount: Int,
+    @ColumnInfo(name = "area_unit")
+    val areaUnit: AreaUnit? = null
 )

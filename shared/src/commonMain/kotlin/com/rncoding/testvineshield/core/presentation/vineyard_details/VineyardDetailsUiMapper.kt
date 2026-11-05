@@ -11,6 +11,7 @@ class VineyardDetailsUiMapper {
             vineyardId = summary.vineyard.vineyardId,
             name = summary.vineyard.name,
             size = summary.vineyard.size,
+            sizeUnit = summary.vineyard.sizeUnit,
             country = summary.vineyard.country,
             city = summary.vineyard.city,
             elevation = summary.vineyard.elevation,
@@ -48,6 +49,7 @@ class VineyardDetailsUiMapper {
                     blockId = block.blockId,
                     name = block.name,
                     area = block.area,
+                    areaUnit = block.areaUnit,
                     vineVariety = block.vineVariety,
                     phenologicalStage =
                         block.phenologicalStage,

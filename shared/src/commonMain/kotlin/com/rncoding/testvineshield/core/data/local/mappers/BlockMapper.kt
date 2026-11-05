@@ -19,7 +19,9 @@ class BlockMapper {
             rowCount = entity.rowCount,
             rowSpacing = entity.rowSpacing,
             plantedAt = entity.plantedAt,
-            phenologicalStage = entity.phenologicalStage
+            phenologicalStage = entity.phenologicalStage,
+            areaUnit = entity.areaUnit,
+            rowSpacingUnit = entity.rowSpacingUnit
         )
     }
 
@@ -37,7 +39,9 @@ class BlockMapper {
             rowCount = domain.rowCount,
             rowSpacing = domain.rowSpacing,
             plantedAt = domain.plantedAt,
-            phenologicalStage = domain.phenologicalStage
+            phenologicalStage = domain.phenologicalStage,
+            areaUnit = domain.areaUnit,
+            rowSpacingUnit = domain.rowSpacingUnit
         )
     }
 }

@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.presentation.vineyard_details
 
+import com.rncoding.testvineshield.core.domain.datamodels.units.AreaUnit
 import com.rncoding.testvineshield.core.domain.datamodels.enums.ActivityPriority
 import com.rncoding.testvineshield.core.domain.datamodels.enums.ActivityStatus
 import com.rncoding.testvineshield.core.domain.datamodels.enums.AlertSeverity
@@ -20,7 +21,8 @@ data class VineyardDetailsUiModel(
     val weatherRisk: WeatherRiskUiModel?,
     val blocks: List<BlockUiModel>,
     val activeDiseases: List<DiseaseUiModel>,
-    val activeAlerts: List<AlertUiModel>
+    val activeAlerts: List<AlertUiModel>,
+    val sizeUnit: AreaUnit? = null
 )
 
 data class WeatherUiModel(
@@ -51,7 +53,8 @@ data class BlockUiModel(
     val latestActivityPriority: ActivityPriority?,
     val latestActivityStatus: ActivityStatus?,
     val activeDiseaseCount: Int,
-    val activeAlertCount: Int
+    val activeAlertCount: Int,
+    val areaUnit: AreaUnit? = null
 )
 
 data class DiseaseUiModel(

@@ -71,7 +71,9 @@ class BlockRepositoryImpl(
             rowCount = block.rowCount,
             rowSpacing = block.rowSpacing,
             plantedAt = block.plantedAt,
-            phenologicalStage = block.phenologicalStage
+            phenologicalStage = block.phenologicalStage,
+            areaUnit = block.areaUnit,
+            rowSpacingUnit = block.rowSpacingUnit
         )
 
         return affectedRows > 0

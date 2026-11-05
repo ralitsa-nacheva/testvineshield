@@ -1,5 +1,7 @@
 package com.rncoding.testvineshield.core.data.local.database.daos
 
+import com.rncoding.testvineshield.core.domain.datamodels.units.LengthUnit
+import com.rncoding.testvineshield.core.domain.datamodels.units.AreaUnit
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
@@ -67,6 +69,7 @@ interface BlockDao {
         b.block_id AS block_id,
         b.name AS name,
         b.area AS area,
+        b.area_unit AS area_unit,
         b.vine_variety AS vine_variety,
         b.phenological_stage AS phenological_stage,
 
@@ -147,7 +150,9 @@ interface BlockDao {
         row_count = :rowCount,
         row_spacing = :rowSpacing,
         planted_at = :plantedAt,
-        phenological_stage = :phenologicalStage
+        phenological_stage = :phenologicalStage,
+        area_unit = :areaUnit,
+        row_spacing_unit = :rowSpacingUnit
     WHERE block_id = :blockId
       AND vineyard_id = :vineyardId
     """
@@ -163,7 +168,9 @@ interface BlockDao {
         rowCount: Int,
         rowSpacing: Int,
         plantedAt: kotlinx.datetime.LocalDate,
-        phenologicalStage: com.rncoding.testvineshield.core.domain.datamodels.enums.PhenologicalStage?
+        phenologicalStage: com.rncoding.testvineshield.core.domain.datamodels.enums.PhenologicalStage?,
+        areaUnit: AreaUnit? = null,
+        rowSpacingUnit: LengthUnit? = null
     ): Int
 
     @Query(

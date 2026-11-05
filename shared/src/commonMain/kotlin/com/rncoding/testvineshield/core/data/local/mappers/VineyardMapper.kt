@@ -20,7 +20,8 @@ class VineyardMapper {
             elevation = domainVineyard.elevation,
             sortOrder = domainVineyard.sortOrder,
             createdAt = domainVineyard.createdAt,
-            updatedAt = domainVineyard.updatedAt
+            updatedAt = domainVineyard.updatedAt,
+            sizeUnit = domainVineyard.sizeUnit
         )
     }
     fun entityToDomain(entityVineyard: VineyardEntity): VineyardDomainModel {
@@ -37,7 +38,8 @@ class VineyardMapper {
             elevation = entityVineyard.elevation,
             sortOrder = entityVineyard.sortOrder,
             createdAt = entityVineyard.createdAt,
-            updatedAt = entityVineyard.updatedAt
+            updatedAt = entityVineyard.updatedAt,
+            sizeUnit = entityVineyard.sizeUnit
         )
     }
 

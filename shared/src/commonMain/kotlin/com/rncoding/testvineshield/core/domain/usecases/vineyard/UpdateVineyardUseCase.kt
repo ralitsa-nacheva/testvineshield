@@ -74,6 +74,7 @@ class UpdateVineyardUseCase(
             existing.copy(
                 name = normalizedInput.name,
                 size = normalizedInput.size,
+            sizeUnit = normalizedInput.sizeUnit,
                 country = normalizedInput.country,
                 city = normalizedInput.city,
                 latitude = normalizedInput.latitude,

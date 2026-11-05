@@ -1,5 +1,7 @@
 package com.rncoding.testvineshield.core.data.local.database.entities
 
+import com.rncoding.testvineshield.core.domain.datamodels.units.LengthUnit
+import com.rncoding.testvineshield.core.domain.datamodels.units.AreaUnit
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -34,6 +36,10 @@ data class BlockEntity(
     @ColumnInfo(name = "planted_at")
     val plantedAt: LocalDate,
     @ColumnInfo(name = "phenological_stage")
-    val phenologicalStage: PhenologicalStage?
+    val phenologicalStage: PhenologicalStage?,
+    @ColumnInfo(name = "area_unit", defaultValue = "NULL")
+    val areaUnit: AreaUnit? = null,
+    @ColumnInfo(name = "row_spacing_unit", defaultValue = "NULL")
+    val rowSpacingUnit: LengthUnit? = null
 
 )

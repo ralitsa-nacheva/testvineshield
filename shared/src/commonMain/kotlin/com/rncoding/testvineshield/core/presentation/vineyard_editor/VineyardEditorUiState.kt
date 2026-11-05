@@ -1,10 +1,12 @@
 package com.rncoding.testvineshield.core.presentation.vineyard_editor
 
+import com.rncoding.testvineshield.core.domain.datamodels.units.AreaUnit
 data class VineyardEditorUiState(
     val mode: VineyardEditorMode,
 
     val name: String = "",
     val size: String = "",
+    val sizeUnit: AreaUnit? = null,
     val country: String = "",
     val city: String = "",
     val latitude: String = "",

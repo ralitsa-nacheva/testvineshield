@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.domain.datamodels
 
+import com.rncoding.testvineshield.core.domain.datamodels.units.AreaUnit
 import com.rncoding.testvineshield.core.domain.datamodels.enums.ActivityPriority
 import com.rncoding.testvineshield.core.domain.datamodels.enums.ActivityStatus
 import com.rncoding.testvineshield.core.domain.datamodels.enums.PhenologicalStage
@@ -14,5 +15,6 @@ data class BlockSummary(
     val latestActivityPriority: ActivityPriority?,
     val latestActivityStatus: ActivityStatus?,
     val activeDiseaseCount: Int,
-    val activeAlertCount: Int
+    val activeAlertCount: Int,
+    val areaUnit: AreaUnit? = null
 )

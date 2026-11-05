@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.data.local.database.daos
 
+import com.rncoding.testvineshield.core.domain.datamodels.units.AreaUnit
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -32,7 +33,8 @@ interface VineyardDao {
         longitude = :longitude,
         time_zone = :timeZone,
         elevation = :elevation,
-        updated_at = :updatedAt
+        updated_at = :updatedAt,
+        size_unit = :sizeUnit
     WHERE vineyard_id = :vineyardId
       AND user_id = :userId
     """
@@ -48,7 +50,8 @@ interface VineyardDao {
         longitude: Double,
         timeZone: String,
         elevation: Int,
-        updatedAt: LocalDate
+        updatedAt: LocalDate,
+        sizeUnit: AreaUnit? = null
     ): Int
     @Query(
         """

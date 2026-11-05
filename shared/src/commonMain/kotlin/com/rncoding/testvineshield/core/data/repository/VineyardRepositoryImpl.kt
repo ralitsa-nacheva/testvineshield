@@ -163,7 +163,8 @@ class VineyardRepositoryImpl(
                     longitude = vineyard.longitude,
                     timeZone = vineyard.timeZone,
                     elevation = vineyard.elevation,
-                    updatedAt = vineyard.updatedAt
+                    updatedAt = vineyard.updatedAt,
+                    sizeUnit = vineyard.sizeUnit
                 )
 
             if (rowsUpdated == 0) {

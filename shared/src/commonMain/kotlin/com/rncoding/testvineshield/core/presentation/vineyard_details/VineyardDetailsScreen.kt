@@ -260,7 +260,7 @@ fun VineyardDetailsScreen(
                     .joinToString(", ")
             )
 
-            Text("Size: ${details.size}")
+            Text("Size: ${details.size} ${details.sizeUnit?.symbol ?: "(unit unknown)"}")
 
             Text(
                 "Elevation: ${details.elevation} m"
@@ -365,7 +365,7 @@ private fun BlockSummaryCard(
             )
 
             Text(
-                "Area: ${block.area}"
+                "Area: ${block.area} ${block.areaUnit?.symbol ?: "(unit unknown)"}"
             )
 
             block.phenologicalStage?.let {

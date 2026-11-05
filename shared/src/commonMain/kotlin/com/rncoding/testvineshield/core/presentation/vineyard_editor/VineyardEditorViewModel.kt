@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.presentation.vineyard_editor
 
+import com.rncoding.testvineshield.core.domain.datamodels.units.AreaUnit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rncoding.testvineshield.core.domain.datamodels.VineyardDomainModel
@@ -208,6 +209,11 @@ class VineyardEditorViewModel(
         }
     }
 
+    fun onSizeUnitChange(unit: AreaUnit?) {
+        if (!_state.value.canEdit) return
+        _state.update { it.copy(sizeUnit = unit) }
+    }
+
     private fun populate(
         vineyard: VineyardDomainModel
     ) {
@@ -215,6 +221,7 @@ class VineyardEditorViewModel(
             it.copy(
                 name = vineyard.name,
                 size = vineyard.size.toString(),
+                sizeUnit = vineyard.sizeUnit,
                 country = vineyard.country,
                 city = vineyard.city,
                 latitude =
@@ -289,6 +296,7 @@ class VineyardEditorViewModel(
         return VineyardInput(
             name = state.name,
             size = size,
+            sizeUnit = state.sizeUnit,
             country = state.country,
             city = state.city,
             latitude = latitude,

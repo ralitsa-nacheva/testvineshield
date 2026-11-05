@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.domain.datamodels
 
+import com.rncoding.testvineshield.core.domain.datamodels.units.AreaUnit
 data class VineyardInput(
     val name: String,
     val size: Double,
@@ -8,5 +9,6 @@ data class VineyardInput(
     val latitude: Double,
     val longitude: Double,
     val timeZone: String,
-    val elevation: Int
+    val elevation: Int,
+    val sizeUnit: AreaUnit? = null
 )

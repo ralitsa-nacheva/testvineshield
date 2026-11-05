@@ -18,7 +18,8 @@ class BlockSummaryMapper {
             latestActivityPriority = projection.latestActivityPriority,
             latestActivityStatus = projection.latestActivityStatus,
             activeDiseaseCount = projection.activeDiseaseCount,
-            activeAlertCount = projection.activeAlertCount
+            activeAlertCount = projection.activeAlertCount,
+            areaUnit = projection.areaUnit
         )
     }
 }

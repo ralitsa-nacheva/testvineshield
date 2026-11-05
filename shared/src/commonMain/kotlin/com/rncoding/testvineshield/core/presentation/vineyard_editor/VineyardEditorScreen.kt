@@ -1,10 +1,14 @@
 package com.rncoding.testvineshield.core.presentation.vineyard_editor
 
+import com.rncoding.testvineshield.core.domain.datamodels.units.AreaUnit
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -39,7 +43,8 @@ fun VineyardEditorScreen(
     onLongitudeChange: (String) -> Unit,
     onTimeZoneChange: (String) -> Unit,
     onElevationChange: (String) -> Unit,
-    onSave: () -> Unit
+    onSave: () -> Unit,
+    onSizeUnitChange: (AreaUnit?) -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -126,7 +131,8 @@ fun VineyardEditorScreen(
                         onTimeZoneChange,
                     onElevationChange =
                         onElevationChange,
-                    onSave = onSave
+                    onSave = onSave,
+                    onSizeUnitChange = onSizeUnitChange
                 )
             }
         }
@@ -145,7 +151,8 @@ private fun VineyardEditorForm(
     onLongitudeChange: (String) -> Unit,
     onTimeZoneChange: (String) -> Unit,
     onElevationChange: (String) -> Unit,
-    onSave: () -> Unit
+    onSave: () -> Unit,
+    onSizeUnitChange: (AreaUnit?) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -173,11 +180,34 @@ private fun VineyardEditorForm(
             VineyardTextField(
                 value = state.size,
                 onValueChange = onSizeChange,
-                label = "Size",
+                label = "Size (in the selected unit)",
                 error = state.sizeError,
                 keyboardType =
                     KeyboardType.Decimal
             )
+        }
+
+        item {
+            Column(modifier = Modifier.selectableGroup()) {
+                Text("Area unit")
+                (listOf<AreaUnit?>(null) + AreaUnit.entries).forEach { unit ->
+                    androidx.compose.foundation.layout.Row(
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).selectable(
+                            selected = state.sizeUnit == unit,
+                            enabled = state.canEdit,
+                            role = androidx.compose.ui.semantics.Role.RadioButton,
+                            onClick = { onSizeUnitChange(unit) }
+                        ),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        androidx.compose.material3.RadioButton(
+                            selected = state.sizeUnit == unit, onClick = null, enabled = state.canEdit
+                        )
+                        Text(unit?.symbol ?: "Unit not specified")
+                    }
+                }
+                Text("Changing the unit does not convert the entered number.")
+            }
         }
 
         item {
