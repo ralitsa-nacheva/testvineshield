@@ -44,6 +44,9 @@ interface VineyardRepository {
         vineyardId: Long
     ): Result<Unit, AppError>
 
+    /** Complete permutation of the current owner's vineyards; atomic or no changes.
+     * Empty is valid only when that owner has no vineyards. Refresh after a stale-order error.
+     */
     suspend fun reorderVineyards(
         userId: Long,
         vineyardIds: List<Long>

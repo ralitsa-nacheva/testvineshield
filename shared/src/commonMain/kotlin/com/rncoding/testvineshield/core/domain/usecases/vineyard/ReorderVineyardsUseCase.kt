@@ -21,10 +21,6 @@ class ReorderVineyardsUseCase(
                     AuthError.NoActiveSession
                 )
 
-        if (vineyardIds.isEmpty()) {
-            return Result.Success(Unit)
-        }
-
         return repository.reorderVineyards(
             userId = user.userId,
             vineyardIds = vineyardIds

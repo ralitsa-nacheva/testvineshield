@@ -3,6 +3,7 @@ package com.rncoding.testvineshield.core.data.repository
 import com.rncoding.testvineshield.core.data.local.database.daos.BlockDao
 import com.rncoding.testvineshield.core.data.local.database.daos.DiseaseAlertDao
 import com.rncoding.testvineshield.core.data.local.database.daos.DiseaseOccurrenceDao
+import com.rncoding.testvineshield.core.data.local.database.daos.InvalidVineyardOrderException
 import com.rncoding.testvineshield.core.data.local.database.daos.VineyardDao
 import com.rncoding.testvineshield.core.data.local.database.daos.WeatherCalculationsDao
 import com.rncoding.testvineshield.core.data.local.database.daos.WeatherHistoryDao
@@ -24,6 +25,7 @@ import com.rncoding.testvineshield.core.domain.error.AppError
 import com.rncoding.testvineshield.core.domain.error.DatabaseError
 import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.repository.VineyardRepository
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -98,13 +100,12 @@ class VineyardRepositoryImpl(
                 vineyardDao.getVineyard(
                     userId = userId,
                     vineyardId = vineyardId
-                )
+                ) ?: return Result.Error(DatabaseError.NotFound(entity = "Vineyard"))
 
-            Result.Success(
-                vineyardMapper.entityToDomain(entity)
+            Result.Success(vineyardMapper.entityToDomain(entity))
 
-            )
-
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
 
             Result.Error(
@@ -131,6 +132,8 @@ class VineyardRepositoryImpl(
 
             Result.Success(vineyardId)
 
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
 
             Result.Error(
@@ -173,6 +176,8 @@ class VineyardRepositoryImpl(
                 Result.Success(Unit)
             }
 
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
 
             Result.Error(
@@ -207,6 +212,8 @@ class VineyardRepositoryImpl(
                 Result.Success(Unit)
             }
 
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
 
             Result.Error(
@@ -225,17 +232,19 @@ class VineyardRepositoryImpl(
 
         return try {
 
-            vineyardIds.forEachIndexed { index, vineyardId ->
-
-                vineyardDao.updateSortOrder(
-                    userId = userId,
-                    vineyardId = vineyardId,
-                    sortOrder = index
-                )
-            }
+            vineyardDao.reorderVineyards(userId, vineyardIds.toList())
 
             Result.Success(Unit)
 
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: InvalidVineyardOrderException) {
+            Result.Error(
+                DatabaseError.ConstraintViolation(
+                    operation = DatabaseError.Operation.UPDATE,
+                    debugMessage = "Vineyard order must contain each currently owned vineyard exactly once."
+                )
+            )
         } catch (e: Exception) {
 
             Result.Error(
@@ -255,6 +264,8 @@ class VineyardRepositoryImpl(
             Result.Success(
                 vineyardDao.getNextSortOrder(userId)
             )
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.Error(
                 DatabaseError.Unknown(

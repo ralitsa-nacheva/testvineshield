@@ -1,11 +1,9 @@
 package com.rncoding.testvineshield.core.domain.usecases.vineyard
 
 import com.rncoding.testvineshield.core.domain.auth.AuthenticatedUserProvider
-import com.rncoding.testvineshield.core.domain.datamodels.VineyardDomainModel
 import com.rncoding.testvineshield.core.domain.datamodels.VineyardInput
 import com.rncoding.testvineshield.core.domain.error.AppError
 import com.rncoding.testvineshield.core.domain.error.AuthError
-import com.rncoding.testvineshield.core.domain.error.DatabaseError
 import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.error.VineyardField
 import com.rncoding.testvineshield.core.domain.error.VineyardValidationError
@@ -67,28 +65,9 @@ class UpdateVineyardUseCase(
                 vineyardId = vineyardId
             )
 
-        val existing =
-            when (existingResult) {
-
-                is Result.Success<*> -> {
-                    existingResult.data as VineyardDomainModel?
-                }
-
-                is Result.Error<*> -> {
-                    return Result.Error(
-                        existingResult.error
-                    )
-                }
-
-                else -> null
-            }
-
-        if (existing == null) {
-            return Result.Error(
-                DatabaseError.NotFound(
-                    entity = "Vineyard"
-                )
-            )
+        val existing = when (existingResult) {
+            is Result.Success -> existingResult.data
+            is Result.Error -> return Result.Error(existingResult.error)
         }
 
         val updated =

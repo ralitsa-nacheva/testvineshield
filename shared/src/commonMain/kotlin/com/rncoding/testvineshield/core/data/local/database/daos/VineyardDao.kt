@@ -4,7 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Update
+import androidx.room.Transaction
 import com.rncoding.testvineshield.core.data.local.database.entities.VineyardEntity
 import com.rncoding.testvineshield.core.data.local.database.projections.VineyardSummaryProjection
 import kotlinx.coroutines.flow.Flow
@@ -88,7 +88,7 @@ interface VineyardDao {
     suspend fun getVineyard(
         userId: Long,
         vineyardId: Long
-    ): VineyardEntity
+    ): VineyardEntity?
 
     @Query(
         """
@@ -126,6 +126,30 @@ interface VineyardDao {
         vineyardId: Long,
         sortOrder: Int
     ): Int
+
+    @Query("SELECT vineyard_id FROM vineyard WHERE user_id = :userId ORDER BY sort_order, vineyard_id")
+    suspend fun getVineyardIdsForUser(userId: Long): List<Long>
+
+    /** A reorder replaces the complete owned order. Validation and writes share one transaction.
+     * A stale/filtered/cross-owner list is rejected rather than partially persisted.
+     */
+    @Transaction
+    suspend fun reorderVineyards(userId: Long, vineyardIds: List<Long>) {
+        val requested = vineyardIds.toList()
+        if (userId <= 0 || requested.any { it <= 0 } || requested.distinct().size != requested.size) {
+            throw InvalidVineyardOrderException()
+        }
+        val owned = getVineyardIdsForUser(userId)
+        if (owned.size != requested.size || owned.toSet() != requested.toSet()) {
+            throw InvalidVineyardOrderException()
+        }
+        requested.forEachIndexed { index, vineyardId ->
+            if (updateSortOrder(userId, vineyardId, index) != 1) {
+                // Throwing is essential: returning an error here would commit earlier updates.
+                throw InvalidVineyardOrderException()
+            }
+        }
+    }
 
     @Query(
         """
@@ -224,3 +248,5 @@ interface VineyardDao {
     ): VineyardEntity?
 
 }
+/** Internal persistence validation signal, mapped to a domain error by the repository. */
+internal class InvalidVineyardOrderException : IllegalArgumentException("Invalid or stale owned vineyard order.")
