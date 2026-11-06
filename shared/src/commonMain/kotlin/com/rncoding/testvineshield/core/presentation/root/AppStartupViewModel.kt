@@ -26,20 +26,15 @@ class AppStartupViewModel(
         if (initializationJob?.isActive == true || _uiState.value == AppStartupUiState.Ready) {
             return
         }
-        traceStartup("INITIALIZER launch requested")
         _uiState.value = AppStartupUiState.Loading
         initializationJob = viewModelScope.launch {
             try {
-                traceStartup("INITIALIZER begin")
                 appInitializer.ensureInitialized()
-                traceStartup("INITIALIZER returned")
                 currentCoroutineContext().ensureActive()
                 _uiState.value = AppStartupUiState.Ready
             } catch (exception: CancellationException) {
-                traceStartup("INITIALIZER cancelled")
                 throw exception
-            } catch (exception: Exception) {
-                traceStartup("INITIALIZER failed type=" + (exception::class.simpleName ?: "Exception"))
+            } catch (_: Exception) {
                 currentCoroutineContext().ensureActive()
                 // Display a safe message; never expose database exception text.
                 _uiState.value = AppStartupUiState.Failed
