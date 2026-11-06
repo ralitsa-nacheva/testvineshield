@@ -1,0 +1,58 @@
+package com.rncoding.testvineshield.core.presentation.vineyard_editor
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import com.rncoding.testvineshield.core.domain.time.VineyardTimeZoneCatalog
+
+@Composable
+internal fun VineyardTimeZonePicker(
+    selectedId: String,
+    errorMessage: String?,
+    enabled: Boolean,
+    onSelect: (String) -> Unit
+) {
+    val catalog = remember { VineyardTimeZoneCatalog() }
+    var open by rememberSaveable { mutableStateOf(false) }
+    var query by rememberSaveable { mutableStateOf("") }
+    LaunchedEffect(enabled) { if (!enabled) open = false }
+    Column {
+        OutlinedButton(
+            modifier = Modifier.fillMaxWidth(), enabled = enabled,
+            onClick = { query = ""; open = true }
+        ) { Text("Time zone: " + selectedId.ifBlank { "Choose time zone" }) }
+        if (errorMessage != null) Text(errorMessage, color = MaterialTheme.colorScheme.error)
+    }
+    if (open && enabled) {
+        val matches = remember(query, catalog) { catalog.search(query) }
+        Dialog(onDismissRequest = { open = false }) {
+            Surface(shape = MaterialTheme.shapes.large) {
+                Column(Modifier.fillMaxWidth().heightIn(max = 560.dp).padding(16.dp)) {
+                    Text("Choose vineyard time zone", style = MaterialTheme.typography.titleLarge)
+                    if (selectedId.isNotBlank()) Text("Current: $selectedId")
+                    OutlinedTextField(
+                        value = query, onValueChange = { query = it }, singleLine = true,
+                        label = { Text("Search city or zone, e.g. Sofia") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    if (matches.isEmpty()) Text("No matching time zones.")
+                    LazyColumn(modifier = Modifier.weight(1f, fill = false)) {
+                        items(matches, key = { it }) { id ->
+                            TextButton(
+                                modifier = Modifier.fillMaxWidth(),
+                                onClick = { if (enabled) { onSelect(id); open = false } }
+                            ) { Text(if (id == selectedId) "$id (selected)" else id) }
+                        }
+                    }
+                    TextButton(onClick = { open = false }) { Text("Cancel") }
+                }
+            }
+        }
+    }
+}

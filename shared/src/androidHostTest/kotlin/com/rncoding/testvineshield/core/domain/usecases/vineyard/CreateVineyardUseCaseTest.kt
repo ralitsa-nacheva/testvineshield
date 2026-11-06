@@ -64,7 +64,7 @@ class CreateVineyardUseCaseTest {
         latitude = 42.1354,
         longitude = 24.7453,
         timeZone = "Europe/Sofia",
-        elevation = 160
+        elevation = 160.0
     )
 
     private fun prepareAuthenticatedUser() {

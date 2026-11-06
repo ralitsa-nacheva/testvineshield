@@ -28,6 +28,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -169,6 +171,7 @@ private fun VineyardEditorForm(
     ) {
         item {
             VineyardTextField(
+                enabled = state.canEdit,
                 value = state.name,
                 onValueChange = onNameChange,
                 label = "Vineyard name",
@@ -178,6 +181,7 @@ private fun VineyardEditorForm(
 
         item {
             VineyardTextField(
+                enabled = state.canEdit,
                 value = state.size,
                 onValueChange = onSizeChange,
                 label = "Size (in the selected unit)",
@@ -212,6 +216,7 @@ private fun VineyardEditorForm(
 
         item {
             VineyardTextField(
+                enabled = state.canEdit,
                 value = state.country,
                 onValueChange = onCountryChange,
                 label = "Country",
@@ -221,6 +226,7 @@ private fun VineyardEditorForm(
 
         item {
             VineyardTextField(
+                enabled = state.canEdit,
                 value = state.city,
                 onValueChange = onCityChange,
                 label = "City",
@@ -230,6 +236,7 @@ private fun VineyardEditorForm(
 
         item {
             VineyardTextField(
+                enabled = state.canEdit,
                 value = state.latitude,
                 onValueChange =
                     onLatitudeChange,
@@ -242,6 +249,7 @@ private fun VineyardEditorForm(
 
         item {
             VineyardTextField(
+                enabled = state.canEdit,
                 value = state.longitude,
                 onValueChange =
                     onLongitudeChange,
@@ -253,26 +261,31 @@ private fun VineyardEditorForm(
         }
 
         item {
-            VineyardTextField(
-                value = state.timeZone,
-                onValueChange =
-                    onTimeZoneChange,
-                label = "Time zone",
-                error = state.timeZoneError,
-                supportingText =
-                    "Example: Europe/Sofia"
+            VineyardTimeZonePicker(
+                selectedId = state.timeZone,
+                errorMessage = state.timeZoneError,
+                enabled = state.canEdit,
+                onSelect = onTimeZoneChange
             )
         }
 
         item {
             VineyardTextField(
+                enabled = state.canEdit,
                 value = state.elevation,
                 onValueChange =
                     onElevationChange,
-                label = "Elevation (m)",
+                label = "Elevation (m, optional)",
                 error = state.elevationError,
-                keyboardType =
-                    KeyboardType.Number
+                trailingIcon = {
+                    TextButton(
+                        enabled = state.canEdit,
+                        modifier = Modifier.semantics { contentDescription = "Change elevation sign" },
+                        onClick = { onElevationChange(toggleElevationSign(state.elevation)) }
+                    ) { Text("±") }
+                },
+                supportingText = "Blank means unknown. Decimal dot or comma; no grouping separators.",
+                keyboardType = KeyboardType.Decimal
             )
         }
 
@@ -310,7 +323,9 @@ private fun VineyardTextField(
     error: String?,
     keyboardType: KeyboardType =
         KeyboardType.Text,
-    supportingText: String? = null
+    supportingText: String? = null,
+    enabled: Boolean = true,
+    trailingIcon: @Composable (() -> Unit)? = null
 ) {
     OutlinedTextField(
         value = value,
@@ -321,6 +336,8 @@ private fun VineyardTextField(
         modifier =
             Modifier.fillMaxWidth(),
         singleLine = true,
+        enabled = enabled,
+        trailingIcon = trailingIcon,
         isError = error != null,
         keyboardOptions =
             KeyboardOptions(

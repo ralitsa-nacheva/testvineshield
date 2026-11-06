@@ -1,6 +1,8 @@
 package com.rncoding.testvineshield.core.presentation.vineyard_editor
 
 import com.rncoding.testvineshield.core.domain.datamodels.units.AreaUnit
+import com.rncoding.testvineshield.core.domain.time.VineyardTimeZoneCatalog
+import com.rncoding.testvineshield.core.presentation.formatting.formatPlainDecimal
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rncoding.testvineshield.core.domain.datamodels.VineyardDomainModel
@@ -23,7 +25,8 @@ class VineyardEditorViewModel(
     private val mode: VineyardEditorMode,
     private val createVineyardUseCase: CreateVineyardUseCase,
     private val updateVineyardUseCase: UpdateVineyardUseCase,
-    private val getVineyardUseCase: GetVineyardUseCase
+    private val getVineyardUseCase: GetVineyardUseCase,
+    private val timeZoneCatalog: VineyardTimeZoneCatalog = VineyardTimeZoneCatalog()
 ) : ViewModel() {
 
     private val _state =
@@ -105,6 +108,7 @@ class VineyardEditorViewModel(
     }
 
     fun onTimeZoneChange(value: String) {
+        if (!_state.value.canEdit || !timeZoneCatalog.contains(value)) return
         _state.update {
             it.copy(
                 timeZone = value,
@@ -114,6 +118,7 @@ class VineyardEditorViewModel(
     }
 
     fun onElevationChange(value: String) {
+        if (!_state.value.canEdit) return
         _state.update {
             it.copy(
                 elevation = value,
@@ -230,7 +235,7 @@ class VineyardEditorViewModel(
                     vineyard.longitude.toString(),
                 timeZone = vineyard.timeZone,
                 elevation =
-                    vineyard.elevation.toString(),
+                    vineyard.elevation?.let(::formatPlainDecimal).orEmpty(),
                 isLoading = false,
                 loadErrorMessage = null
             )
@@ -274,21 +279,20 @@ class VineyardEditorViewModel(
             )
         }
 
-        val elevation =
-            state.elevation.trim().toIntOrNull()
-
-        if (elevation == null) {
-            setFieldError(
-                field = VineyardField.ELEVATION,
-                message =
-                    "Enter a valid elevation."
-            )
+        val elevation = when (val result = ElevationInputParser.parse(state.elevation)) {
+            is ElevationParseResult.Valid -> result.metres
+            ElevationParseResult.Invalid -> {
+                setFieldError(
+                    field = VineyardField.ELEVATION,
+                    message = "Enter decimal metres using a dot or comma, without grouping separators, or leave blank."
+                )
+                return null
+            }
         }
 
         if (size == null ||
             latitude == null ||
-            longitude == null ||
-            elevation == null
+            longitude == null
         ) {
             return null
         }

@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.presentation.vineyard_details
 
+import com.rncoding.testvineshield.core.presentation.formatting.formatPlainDecimal
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -263,7 +264,7 @@ fun VineyardDetailsScreen(
             Text("Size: ${details.size} ${details.sizeUnit?.symbol ?: "(unit unknown)"}")
 
             Text(
-                "Elevation: ${details.elevation} m"
+                "Elevation: " + (details.elevation?.let { "${formatPlainDecimal(it)} m" } ?: "Unknown")
             )
 
             Text(

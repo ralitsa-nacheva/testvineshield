@@ -20,7 +20,7 @@ class VineyardUnitUseCaseTest {
     private val scheduler = mockk<WeatherHistoryRiskScheduler>(relaxed = true)
     private val date = LocalDate(2026, 11, 5)
     private val input = VineyardInput("Vineyard", 1.25, "BG", "Plovdiv", 42.1, 24.7,
-        "Europe/Sofia", 200, AreaUnit.HECTARE)
+        "Europe/Sofia", 200.0, AreaUnit.HECTARE)
     private fun authenticated() {
         every { user.currentUserOrNull() } returns UserDomainModel(1, "test@example.test")
         every { clock.today("Europe/Sofia") } returns date
@@ -36,7 +36,7 @@ class VineyardUnitUseCaseTest {
     @Test fun updateCarriesUnitWithoutRewritingValueOrCreationDate(): Unit = runBlocking {
         authenticated()
         val original = VineyardDomainModel(10, 1, "Old", 1.25, "BG", "Plovdiv", 42.1, 24.7,
-            "Europe/Sofia", 200, 3, LocalDate(2020, 1, 1), date, null)
+            "Europe/Sofia", 200.0, 3, LocalDate(2020, 1, 1), date, null)
         coEvery { repository.getVineyard(1, 10) } returns Result.Success(original)
         coEvery { repository.updateVineyard(any()) } returns Result.Success(Unit)
         val useCase = UpdateVineyardUseCase(repository, user, VineyardValidator(), clock)

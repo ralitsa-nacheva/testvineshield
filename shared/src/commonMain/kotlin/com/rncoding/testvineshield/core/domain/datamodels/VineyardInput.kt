@@ -9,6 +9,6 @@ data class VineyardInput(
     val latitude: Double,
     val longitude: Double,
     val timeZone: String,
-    val elevation: Int,
+    val elevation: Double?,
     val sizeUnit: AreaUnit? = null
 )

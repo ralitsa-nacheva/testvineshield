@@ -73,7 +73,7 @@ class WeatherHistoryDaoIntegrationTest {
                 latitude = 42.7,
                 longitude = 23.3,
                 timeZone = "Europe/Sofia",
-                elevation = 550,
+                elevation = 550.0,
                 sortOrder = sortOrder,
                 createdAt = LocalDate(2026, 10, 23),
                 updatedAt = LocalDate(2026, 10, 23)

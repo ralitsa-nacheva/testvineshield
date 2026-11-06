@@ -38,7 +38,7 @@ internal suspend fun VineshieldDatabase.insertDiseaseRiskTestData():
             latitude = 42.14,
             longitude = 24.75,
             timeZone = "Europe/Sofia",
-            elevation = 160,
+            elevation = 160.0,
             sortOrder = 0,
             createdAt = date,
             updatedAt = date

@@ -49,7 +49,7 @@ interface VineyardDao {
         latitude: Double,
         longitude: Double,
         timeZone: String,
-        elevation: Int,
+        elevation: Double?,
         updatedAt: LocalDate,
         sizeUnit: AreaUnit? = null
     ): Int

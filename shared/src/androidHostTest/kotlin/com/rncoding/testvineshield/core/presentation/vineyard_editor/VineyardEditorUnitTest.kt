@@ -18,7 +18,7 @@ class VineyardEditorUnitTest {
     private val get = mockk<GetVineyardUseCase>()
     private val date = LocalDate(2026, 11, 5)
     private val vineyard = VineyardDomainModel(10, 1, "Vineyard", 1.25, "BG", "Plovdiv", 42.1, 24.7,
-        "Europe/Sofia", 200, 0, date, date, AreaUnit.HECTARE)
+        "Europe/Sofia", 200.0, 0, date, date, AreaUnit.HECTARE)
     @BeforeTest fun setup() { Dispatchers.setMain(dispatcher) }
     @AfterTest fun tearDown() { Dispatchers.resetMain() }
 

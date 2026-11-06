@@ -82,10 +82,11 @@ class VineyardValidator {
             )
         }
 
-        if (input.elevation < -500 || input.elevation > 9000) {
+        val elevation = input.elevation
+        if (elevation != null && (!elevation.isFinite() || elevation !in -500.0..9000.0)) {
             return VineyardValidationError(
                 field = VineyardField.ELEVATION,
-                userMessage = "Enter a valid elevation."
+                userMessage = "Enter an elevation between -500 and 9000 metres, or leave it unknown."
             )
         }
 

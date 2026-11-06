@@ -15,7 +15,7 @@ data class VineyardDetailsUiModel(
     val size: Double,
     val country: String,
     val city: String,
-    val elevation: Int,
+    val elevation: Double?,
     val timeZone: String,
     val weather: WeatherUiModel?,
     val weatherRisk: WeatherRiskUiModel?,

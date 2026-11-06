@@ -26,7 +26,7 @@ class MeasurementUnitMigrationTest {
     private val context get() = InstrumentationRegistry.getInstrumentation().targetContext
     private fun snapshot(connection: SQLiteConnection): Map<String, List<List<String>>> =
         SchemaV1Fixture.columns.mapValues { (table, columns) ->
-            val query = "SELECT " + columns.joinToString { "quote(`$it`)" } + " FROM `$table`"
+            val query = "SELECT " + columns.joinToString { if (table == "vineyard" && it == "elevation") "quote(CAST(elevation AS REAL))" else "quote(`$it`)" } + " FROM `$table`"
             val statement = connection.prepare(query)
             try {
                 buildList {
@@ -59,7 +59,7 @@ class MeasurementUnitMigrationTest {
             try {
                 assertEquals(before, snapshot(upgraded))
                 val version = upgraded.prepare("PRAGMA user_version")
-                try { assertTrue(version.step()); assertEquals(2L, version.getLong(0)) } finally { version.close() }
+                try { assertTrue(version.step()); assertEquals(3L, version.getLong(0)) } finally { version.close() }
                 val foreignKeys = upgraded.prepare("PRAGMA foreign_key_check")
                 try { assertFalse(foreignKeys.step()) } finally { foreignKeys.close() }
             } finally { upgraded.close() }

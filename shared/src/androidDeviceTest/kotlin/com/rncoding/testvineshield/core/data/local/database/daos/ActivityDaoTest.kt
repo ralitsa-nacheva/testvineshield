@@ -96,7 +96,7 @@ class ActivityDaoTest {
                 latitude = 42.1,
                 longitude = 24.7,
                 timeZone = "Europe/Sofia",
-                elevation = 200,
+                elevation = 200.0,
                 sortOrder = sortOrder,
                 createdAt = testDate,
                 updatedAt = testDate

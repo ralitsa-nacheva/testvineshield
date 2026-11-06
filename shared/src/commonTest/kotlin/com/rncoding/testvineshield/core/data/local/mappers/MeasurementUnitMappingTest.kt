@@ -25,7 +25,7 @@ class MeasurementUnitMappingTest {
     @Test fun vineyardRoundTripPreservesNumberAndUnitIndependently() {
         val date = LocalDate(2026, 11, 5)
         val original = VineyardEntity(1, 2, "Vineyard", 1.25, "BG", "Plovdiv", 42.1, 24.7,
-            "Europe/Sofia", 200, 0, date, date, AreaUnit.HECTARE)
+            "Europe/Sofia", 200.0, 0, date, date, AreaUnit.HECTARE)
         val mapper = VineyardMapper()
         assertEquals(original, mapper.domainToEntity(mapper.entityToDomain(original)))
         assertEquals(original.copy(sizeUnit = null), mapper.domainToEntity(mapper.entityToDomain(original.copy(sizeUnit = null))))

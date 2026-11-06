@@ -13,7 +13,7 @@ data class VineyardDomainModel(
     val latitude: Double,
     val longitude: Double,
     val timeZone: String,
-    val elevation: Int,
+    val elevation: Double?,
     val sortOrder: Int,
     val createdAt: LocalDate,
     val updatedAt: LocalDate,

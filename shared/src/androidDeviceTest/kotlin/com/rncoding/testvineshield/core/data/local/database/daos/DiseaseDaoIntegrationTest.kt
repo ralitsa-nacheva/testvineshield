@@ -685,7 +685,7 @@ class DiseaseDaoIntegrationTest {
                 latitude = 42.1,
                 longitude = 24.7,
                 timeZone = "Europe/Sofia",
-                elevation = 200,
+                elevation = 200.0,
                 sortOrder = 0,
                 createdAt = LocalDate(2026, 10, 1),
                 updatedAt = LocalDate(2026, 10, 1)

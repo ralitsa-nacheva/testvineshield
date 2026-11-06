@@ -30,7 +30,7 @@ data class VineyardEntity(
     val longitude: Double,
     @ColumnInfo(name = "time_zone")
     val timeZone: String,
-    val elevation: Int,
+    val elevation: Double?,
     @ColumnInfo(name = "sort_order")
     val sortOrder: Int,
     @ColumnInfo(name = "created_at")

@@ -93,7 +93,7 @@ class WeatherHistoryDaoTest {
                 latitude = 28.6,
                 longitude = 77.2,
                 timeZone = "Asia/Kolkata",
-                elevation = 200,
+                elevation = 200.0,
                 sortOrder = sortOrder,
                 createdAt = LocalDate(2026, 10, 1),
                 updatedAt = LocalDate(2026, 10, 1)

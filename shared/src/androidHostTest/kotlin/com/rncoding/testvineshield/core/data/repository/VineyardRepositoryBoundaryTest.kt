@@ -24,7 +24,7 @@ class VineyardRepositoryBoundaryTest {
     )
     private val entity = VineyardEntity(
         vineyardId = 10, userId = 1, name = "Vineyard", size = 1.5, country = "Bulgaria", city = "Plovdiv",
-        latitude = 42.1, longitude = 24.7, timeZone = "Europe/Sofia", elevation = 200,
+        latitude = 42.1, longitude = 24.7, timeZone = "Europe/Sofia", elevation = 200.0,
         sortOrder = 0, createdAt = LocalDate(2026, 11, 4), updatedAt = LocalDate(2026, 11, 4)
     )
     private val vineyard = mapper.entityToDomain(entity)

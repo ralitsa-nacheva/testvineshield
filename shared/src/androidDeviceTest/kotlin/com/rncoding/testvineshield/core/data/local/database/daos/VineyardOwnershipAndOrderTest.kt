@@ -41,7 +41,7 @@ class VineyardOwnershipAndOrderTest {
     )
     private fun vineyard(userId: Long, name: String, order: Int) = VineyardEntity(
         userId = userId, name = name, size = 1.5, country = "Bulgaria", city = "Plovdiv",
-        latitude = 42.1, longitude = 24.7, timeZone = "Europe/Sofia", elevation = 200,
+        latitude = 42.1, longitude = 24.7, timeZone = "Europe/Sofia", elevation = 200.0,
         sortOrder = order, createdAt = date, updatedAt = date
     )
 

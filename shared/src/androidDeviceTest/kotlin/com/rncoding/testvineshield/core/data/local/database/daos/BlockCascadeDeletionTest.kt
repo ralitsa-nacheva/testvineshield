@@ -82,7 +82,7 @@ class BlockCascadeDeletionTest {
                 latitude = 42.1,
                 longitude = 24.7,
                 timeZone = "Europe/Sofia",
-                elevation = 200,
+                elevation = 200.0,
                 sortOrder = 0,
                 createdAt = testDate,
                 updatedAt = testDate
