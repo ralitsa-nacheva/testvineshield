@@ -1,6 +1,9 @@
 package com.rncoding.testvineshield.core.presentation.root
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rncoding.testvineshield.core.domain.error.AppInitializationError
@@ -18,12 +21,23 @@ import org.koin.compose.viewmodel.koinViewModel
 fun AppRoot(
     modifier: Modifier = Modifier
 ) {
+    traceStartup("ROOT resolving startup ViewModel")
     val startupViewModel = koinViewModel<AppStartupViewModel>()
     val startupState by startupViewModel.uiState.collectAsStateWithLifecycle()
 
-    Box(modifier = modifier) {
+    LaunchedEffect(startupState) {
+        val stage = when (startupState) {
+            AppStartupUiState.Loading -> "STARTUP state Loading"
+            AppStartupUiState.Ready -> "STARTUP state Ready"
+            AppStartupUiState.Failed -> "STARTUP state Failed"
+        }
+        traceStartup(stage)
+    }
+    SideEffect { traceStartup("ROOT composition committed") }
+
+    Box(modifier = modifier.fillMaxSize()) {
         when (startupState) {
-            AppStartupUiState.Loading -> LoadingScreen()
+            AppStartupUiState.Loading -> LoadingScreen("Preparing your local records…")
             AppStartupUiState.Failed -> AuthStartupErrorScreen(
                 error = AppInitializationError,
                 onRetry = startupViewModel::retry
@@ -36,14 +50,25 @@ fun AppRoot(
 @Composable
 private fun SessionRoot() {
     // AuthViewModel restores the session in init. Create it only after readiness.
+    traceStartup("SESSION resolving auth ViewModel")
     val authViewModel = koinViewModel<AuthViewModel>()
 
     val authState by authViewModel.authState.collectAsState()
 
+    LaunchedEffect(authState) {
+        val stage = when (authState) {
+            AuthState.Loading -> "SESSION state Loading"
+            is AuthState.Unauthenticated -> "SESSION state Unauthenticated"
+            is AuthState.Locked -> "SESSION state Locked"
+            is AuthState.Authenticated -> "SESSION state Authenticated"
+            is AuthState.Error -> "SESSION state Error"
+        }
+        traceStartup(stage)
+    }
     when (val state = authState) {
 
         AuthState.Loading -> {
-            LoadingScreen()
+            LoadingScreen("Restoring your session…")
         }
 
         is AuthState.Unauthenticated -> {
