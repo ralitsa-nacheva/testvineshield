@@ -485,7 +485,8 @@ val commonModule =
         single {
             SessionManager(
                 sessionRepository = get(),
-                clock = get()
+                clock = get(),
+                securitySettingsRepository = get()
             )
         }
 
@@ -666,7 +667,8 @@ val commonModule =
             UnlockSessionUseCase(
                 sessionManager = get(),
                 userRepository = get(),
-                localAuthenticator = get()
+                localAuthenticator = get(),
+                securitySettingsRepository = get()
             )
         }
 
@@ -917,7 +919,9 @@ val commonModule =
         viewModel {
             AuthViewModel(
                 authSessionCoordinator = get(),
-                observeAuthStateUseCase = get()
+                observeAuthStateUseCase = get(),
+                sessionManager = get(), securitySettingsRepository = get(), clock = get(),
+                localAuthenticator = get()
             )
         }
 

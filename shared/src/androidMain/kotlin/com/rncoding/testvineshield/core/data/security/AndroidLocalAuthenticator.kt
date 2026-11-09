@@ -1,6 +1,10 @@
 package com.rncoding.testvineshield.core.data.security
 
 import android.os.Looper
+import android.os.Build
+import android.app.KeyguardManager
+import android.content.Context
+import com.rncoding.testvineshield.core.domain.security.LocalUnlockMethod
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
@@ -25,6 +29,18 @@ class AndroidLocalAuthenticator(
 ) : LocalAuthenticator {
     // The platform binding is a singleton: all local-auth callers share this gate.
     private val promptMutex = Mutex()
+
+    override suspend fun isAvailable(method: LocalUnlockMethod): Result<Boolean, AppError> {
+        if (method == LocalUnlockMethod.Biometric) return isAvailable()
+        return withContext(Dispatchers.Main.immediate) {
+            val activity = activityProvider.getActivity() ?: return@withContext Result.Success(false)
+            val keyguard = activity.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+            Result.Success(!activity.isFinishing && !activity.isDestroyed && keyguard.isDeviceSecure)
+        }
+    }
+
+    override suspend fun authenticate(reason: String, method: LocalUnlockMethod): Result<Unit, AppError> =
+        authenticateWithMethod(reason, method)
 
     override suspend fun isAvailable(): Result<Boolean, AppError> =
         withContext(Dispatchers.Main.immediate) {
@@ -51,6 +67,9 @@ class AndroidLocalAuthenticator(
         }
 
     override suspend fun authenticate(reason: String): Result<Unit, AppError> =
+        authenticateWithMethod(reason, LocalUnlockMethod.Biometric)
+
+    private suspend fun authenticateWithMethod(reason: String, method: LocalUnlockMethod): Result<Unit, AppError> =
         withContext(Dispatchers.Main.immediate) {
             // Reject a second request; do not queue a surprise prompt for later.
             if (!promptMutex.tryLock()) {
@@ -61,7 +80,15 @@ class AndroidLocalAuthenticator(
                 if (activity == null || !canPresentPrompt(activity)) {
                     return@withContext Result.Error(SecurityError.BiometricNotAvailable)
                 }
-                awaitPrompt(activity, reason)
+                when (val availability = isAvailable(method)) {
+                    is Result.Error -> return@withContext Result.Error(availability.error)
+                    is Result.Success -> if (!availability.data) return@withContext Result.Error(
+                        if (method == LocalUnlockMethod.Biometric) SecurityError.BiometricNotAvailable
+                        else SecurityError.DeviceCredentialNotAvailable)
+                }
+                if (method == LocalUnlockMethod.DeviceCredential && Build.VERSION.SDK_INT < 30)
+                    awaitLegacyCredential(activity, reason)
+                else awaitPrompt(activity, reason, method)
             } catch (exception: CancellationException) {
                 throw exception
             } catch (exception: Exception) {
@@ -83,7 +110,8 @@ class AndroidLocalAuthenticator(
 
     private suspend fun awaitPrompt(
         activity: FragmentActivity,
-        reason: String
+        reason: String,
+        method: LocalUnlockMethod
     ): Result<Unit, AppError> {
         val executor = ContextCompat.getMainExecutor(activity)
         var prompt: BiometricPrompt? = null
@@ -119,7 +147,10 @@ class AndroidLocalAuthenticator(
                     }
                 )
                 prompt = currentPrompt
-                lifecycleGuard = AndroidAuthenticationLifecycleGuard(activity.lifecycle) {
+                lifecycleGuard = AndroidAuthenticationLifecycleGuard(
+                    activity.lifecycle,
+                    cancelOnStop = method == LocalUnlockMethod.Biometric
+                ) {
                     finish(Result.Error(SecurityError.AuthenticationCancelled))
                     currentPrompt.cancelAuthentication()
                 }
@@ -135,14 +166,16 @@ class AndroidLocalAuthenticator(
                     else executor.execute(cancelOnMain)
                 }
                 if (continuation.isActive) {
-                    currentPrompt.authenticate(
-                        BiometricPrompt.PromptInfo.Builder()
-                            .setTitle("Unlock Vineyard")
-                            .setSubtitle(reason)
+                    val builder = BiometricPrompt.PromptInfo.Builder()
+                        .setTitle("Unlock Vineyard").setSubtitle(reason)
+                    if (method == LocalUnlockMethod.Biometric) {
+                        builder.setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
                             .setNegativeButtonText("Cancel")
-                            .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
-                            .build()
-                    )
+                    } else {
+                        // DEVICE_CREDENTIAL alone is supported only from API 30.
+                        builder.setAllowedAuthenticators(BiometricManager.Authenticators.DEVICE_CREDENTIAL)
+                    }
+                    currentPrompt.authenticate(builder.build())
                 }
             }
         } finally {
@@ -150,6 +183,30 @@ class AndroidLocalAuthenticator(
             lifecycleGuard?.dispose()
             prompt?.cancelAuthentication()
         }
+    }
+
+    @Suppress("DEPRECATION") // API 24–29 compatible credential-only confirmation.
+    private suspend fun awaitLegacyCredential(activity: FragmentActivity, reason: String): Result<Unit, AppError> {
+        val keyguard = activity.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+        val intent = keyguard.createConfirmDeviceCredentialIntent("Unlock Vineyard", reason)
+            ?: return Result.Error(SecurityError.DeviceCredentialNotAvailable)
+        var fragment: DeviceCredentialFragment? = null
+        try {
+            return suspendCancellableCoroutine { continuation ->
+                val host = DeviceCredentialFragment()
+                fragment = host
+                host.onComplete = { success ->
+                    if (continuation.isActive) continuation.resume(
+                        if (success && isCurrentHost(activity) && activity.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) Result.Success(Unit)
+                        else Result.Error(SecurityError.AuthenticationCancelled))
+                }
+                host.credentialIntent = intent
+                activity.supportFragmentManager.beginTransaction().add(host, "VineShieldDeviceCredential").commitNow()
+                continuation.invokeOnCancellation {
+                    ContextCompat.getMainExecutor(activity).execute { host.cancel() }
+                }
+            }
+        } finally { fragment?.cancel() }
     }
 
     private fun mapAuthenticationError(errorCode: Int): SecurityError = when (errorCode) {

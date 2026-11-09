@@ -25,6 +25,8 @@ import androidx.compose.material3.Card
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.rncoding.testvineshield.core.presentation.root.userAction
+import com.rncoding.testvineshield.core.presentation.root.userActivity
 import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,7 +51,7 @@ fun VineyardDetailsScreen(
                 },
                 navigationIcon = {
                     TextButton(
-                        onClick = onBack
+                        onClick = userAction(onBack)
                     ) {
                         Text("Back")
                     }
@@ -57,7 +59,7 @@ fun VineyardDetailsScreen(
                 actions = {
                     if (state.details != null) {
                         TextButton(
-                            onClick = onEdit,
+                            onClick = userAction(onEdit),
                             enabled = !state.isDeleting
                         ) {
                             Text("Edit")
@@ -187,7 +189,7 @@ fun VineyardDetailsScreen(
 
                     item {
                         OutlinedButton(
-                            onClick = onDeleteRequest,
+                            onClick = userAction(onDeleteRequest),
                             enabled = !state.isDeleting,
                             modifier = Modifier.fillMaxWidth()
                         ) {
@@ -200,7 +202,8 @@ fun VineyardDetailsScreen(
 
         if (state.showDeleteConfirmation) {
             AlertDialog(
-                onDismissRequest = {
+            modifier = Modifier.userActivity(com.rncoding.testvineshield.core.presentation.root.LocalUserActivity.current),
+                onDismissRequest = userAction {
                     if (!state.isDeleting) {
                         onDeleteCancel()
                     }
@@ -216,7 +219,7 @@ fun VineyardDetailsScreen(
                 },
                 confirmButton = {
                     TextButton(
-                        onClick = onDeleteConfirm,
+                        onClick = userAction(onDeleteConfirm),
                         enabled = !state.isDeleting
                     ) {
                         if (state.isDeleting) {
@@ -228,7 +231,7 @@ fun VineyardDetailsScreen(
                 },
                 dismissButton = {
                     TextButton(
-                        onClick = onDeleteCancel,
+                        onClick = userAction(onDeleteCancel),
                         enabled = !state.isDeleting
                     ) {
                         Text("Cancel")

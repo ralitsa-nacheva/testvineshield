@@ -7,6 +7,7 @@ import com.rncoding.testvineshield.core.domain.error.DatabaseError
 import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.repository.SecuritySettingsRepository
 import com.rncoding.testvineshield.core.domain.security.SecuritySettings
+import com.rncoding.testvineshield.core.domain.error.SecurityError
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -67,12 +68,15 @@ class SecuritySettingsRepositoryImpl(
         settings: SecuritySettings
     ): Result<Unit, AppError> {
 
+        if (!SecuritySettings.validTimeout(settings.inactivityTimeoutMillis)) {
+            return Result.Error(SecurityError.InvalidLockSettings)
+        }
         return try {
 
             dao.upsertSettings(
                 mapper.domainToEntity(
                     userId = userId,
-                    settings = settings
+                    settings = settings.normalized()
                 )
             )
 
@@ -91,107 +95,16 @@ class SecuritySettingsRepositoryImpl(
         }
     }
 
-    override suspend fun setBiometricEnabled(
-        userId: Long,
-        enabled: Boolean
-    ): Result<Unit, AppError> {
-
-        return try {
-
-            val rowsUpdated =
-                dao.setBiometricEnabled(
-                    userId = userId,
-                    enabled = enabled
-                )
-
-            if (rowsUpdated == 0) {
-
-                /*
-                 * Settings don't exist yet.
-                 * Create them with the requested value.
-                 */
-                val current =
-                    dao.getSettings(userId)
-
-                val settings =
-                    current?.let(mapper::entityToDomain)
-                        ?: SecuritySettings(
-                            biometricEnabled = false,
-                            appPinEnabled = false
-                        )
-
-                dao.upsertSettings(
-                    mapper.domainToEntity(
-                        userId = userId,
-                        settings = settings.copy(
-                            biometricEnabled = enabled
-                        )
-                    )
-                )
-            }
-
-            Result.Success(Unit)
-
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-
-            Result.Error(
-                DatabaseError.Unknown(
-                    operation = DatabaseError.Operation.UPDATE,
-                    cause = e
-                )
-            )
+    override suspend fun setBiometricEnabled(userId: Long, enabled: Boolean): Result<Unit, AppError> =
+        when (val current = getSettings(userId)) {
+            is Result.Error -> current
+            is Result.Success -> saveSettings(userId, current.data.copy(biometricEnabled = enabled))
         }
-    }
 
-    override suspend fun setPinEnabled(
-        userId: Long,
-        enabled: Boolean
-    ): Result<Unit, AppError> {
-
-        return try {
-
-            val rowsUpdated =
-                dao.setPinEnabled(
-                    userId = userId,
-                    enabled = enabled
-                )
-
-            if (rowsUpdated == 0) {
-
-                val current =
-                    dao.getSettings(userId)
-
-                val settings =
-                    current?.let(mapper::entityToDomain)
-                        ?: SecuritySettings(
-                            biometricEnabled = false,
-                            appPinEnabled = false
-                        )
-
-                dao.upsertSettings(
-                    mapper.domainToEntity(
-                        userId = userId,
-                        settings = settings.copy(
-                            appPinEnabled = enabled
-                        )
-                    )
-                )
-            }
-
-            Result.Success(Unit)
-
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-
-            Result.Error(
-                DatabaseError.Unknown(
-                    operation = DatabaseError.Operation.UPDATE,
-                    cause = e
-                )
-            )
+    override suspend fun setPinEnabled(userId: Long, enabled: Boolean): Result<Unit, AppError> =
+        when (val current = getSettings(userId)) {
+            is Result.Error -> current
+            is Result.Success -> if (enabled) Result.Error(SecurityError.UserFallback)
+                else saveSettings(userId, current.data.copy(appPinEnabled = false))
         }
-    }
 }

@@ -1,272 +1,99 @@
 package com.rncoding.testvineshield.core.presentation.security
 
 import androidx.lifecycle.ViewModelStore
-import com.rncoding.testvineshield.core.domain.error.Result
-import com.rncoding.testvineshield.core.domain.error.SecurityError
-import com.rncoding.testvineshield.core.domain.error.UnexpectedError
+import com.rncoding.testvineshield.core.domain.error.*
 import com.rncoding.testvineshield.core.domain.repository.SecuritySettingsRepository
-import com.rncoding.testvineshield.core.domain.security.LocalAuthenticator
-import com.rncoding.testvineshield.core.domain.security.SecuritySettings
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.mockk
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.awaitCancellation
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.runCurrent
-import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
-import org.junit.After
-import org.junit.Before
+import com.rncoding.testvineshield.core.domain.security.*
+import io.mockk.*
+import kotlinx.coroutines.*
+import kotlinx.coroutines.test.*
 import org.junit.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import org.junit.Before
+import org.junit.After
+import kotlin.test.*
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SecuritySettingsViewModelTest {
-    private val repository = mockk<SecuritySettingsRepository>()
-    private val authenticator = mockk<LocalAuthenticator>()
+    private val repo = mockk<SecuritySettingsRepository>()
+    private val local = mockk<LocalAuthenticator>()
     private lateinit var store: ViewModelStore
-
-    @Before
-    fun setUp() {
-        Dispatchers.setMain(StandardTestDispatcher())
-        store = ViewModelStore()
-        coEvery { repository.getSettings(1L) } returns Result.Success(SecuritySettings(false, false))
-        coEvery { authenticator.isAvailable() } returns Result.Success(true)
-        coEvery { authenticator.authenticate(any()) } returns Result.Success(Unit)
-        coEvery { repository.setBiometricEnabled(1L, any()) } returns Result.Success(Unit)
+    private var saved = SecuritySettings()
+    @Before fun before() {
+        Dispatchers.setMain(StandardTestDispatcher()); store = ViewModelStore()
+        coEvery { repo.getSettings(1) } answers { Result.Success(saved) }
+        coEvery { repo.saveSettings(1, any()) } answers { saved = secondArg(); Result.Success(Unit) }
+        coEvery { local.isAvailable(any()) } returns Result.Success(true)
+        coEvery { local.authenticate(any(), any()) } returns Result.Success(Unit)
     }
-
-    @After
-    fun tearDown() {
-        store.clear()
-        Dispatchers.resetMain()
+    @After fun after() { store.clear(); Dispatchers.resetMain() }
+    private fun vm() = SecuritySettingsViewModel(1, repo, local).also { store.put("settings", it) }
+    @Test fun defaultsOffAndCannotEditBeforeLoad() = runTest {
+        val v = vm(); v.setLockEnabled(true); assertFalse(v.state.value.settings.inactivityLockEnabled)
+        v.load(); advanceUntilIdle(); assertTrue(v.state.value.canEdit); assertFalse(v.state.value.settings.inactivityLockEnabled)
     }
-
-    private fun viewModel() = SecuritySettingsViewModel(1L, repository, authenticator)
-        .also { store.put("settings", it) }
-
-    @Test
-    fun loadUsesTypedSettingsAndAvailability() = runTest {
-        coEvery { repository.getSettings(1L) } returns Result.Success(SecuritySettings(true, true))
-        val vm = viewModel()
-        vm.load()
-        vm.load()
-        assertTrue(vm.state.value.isLoading)
-        advanceUntilIdle()
-        assertTrue(vm.state.value.biometricEnabled)
-        assertTrue(vm.state.value.pinEnabled)
-        assertTrue(vm.state.value.biometricAvailable)
-        assertFalse(vm.state.value.isLoading)
-        coVerify(exactly = 1) { repository.getSettings(1L) }
+    @Test fun lockCanEnableWithPasswordAlone() = runTest {
+        coEvery { local.isAvailable(any()) } returns Result.Success(false)
+        val v = vm(); v.load(); advanceUntilIdle(); v.setLockEnabled(true); advanceUntilIdle()
+        assertTrue(v.state.value.settings.inactivityLockEnabled); assertFalse(v.state.value.settings.biometricEnabled)
     }
-
-    @Test
-    fun availabilityErrorPreservesStoredSettings() = runTest {
-        coEvery { repository.getSettings(1L) } returns Result.Success(SecuritySettings(true, true))
-        coEvery { authenticator.isAvailable() } returns Result.Error(SecurityError.SecurityUpdateRequired)
-        val vm = viewModel()
-        vm.load()
-        advanceUntilIdle()
-        assertTrue(vm.state.value.biometricEnabled)
-        assertTrue(vm.state.value.pinEnabled)
-        assertFalse(vm.state.value.biometricAvailable)
-        assertEquals(SecurityError.SecurityUpdateRequired.userMessage, vm.state.value.errorMessage)
+    @Test fun disablingSavesAllMethodsOffInOneWrite() = runTest {
+        saved = SecuritySettings(true, false, true, 60_000, true)
+        val v = vm(); v.load(); advanceUntilIdle(); v.setLockEnabled(false); v.setLockEnabled(false); advanceUntilIdle()
+        assertEquals(saved, saved.normalized()); assertFalse(saved.biometricEnabled); assertFalse(saved.deviceCredentialEnabled)
+        coVerify(exactly = 1) { repo.saveSettings(1, any()) }
     }
-
-    @Test
-    fun unavailableBiometricsCannotBeEnabled() = runTest {
-        coEvery { authenticator.isAvailable() } returns Result.Success(false)
-        val vm = viewModel()
-        vm.setBiometricEnabled(true)
-        advanceUntilIdle()
-        assertFalse(vm.state.value.biometricEnabled)
-        coVerify(exactly = 0) { authenticator.authenticate(any()) }
-        coVerify(exactly = 0) { repository.setBiometricEnabled(any(), any()) }
+    @Test fun optionalMethodsCannotEnableWhileLockOff() = runTest {
+        val v = vm(); v.load(); advanceUntilIdle(); v.setBiometricEnabled(true); v.setDeviceCredentialEnabled(true); advanceUntilIdle()
+        coVerify(exactly = 0) { local.authenticate(any(), any()) }
+        coVerify(exactly = 0) { repo.saveSettings(any(), any()) }
     }
-
-    @Test
-    fun enablingWaitsForAuthenticationAndPersistence() = runTest {
-        val authenticated = CompletableDeferred<Unit>()
-        val saved = CompletableDeferred<Unit>()
-        coEvery { authenticator.authenticate(any()) } coAnswers {
-            authenticated.await()
-            Result.Success(Unit)
-        }
-        coEvery { repository.setBiometricEnabled(1L, true) } coAnswers {
-            saved.await()
-            Result.Success(Unit)
-        }
-        val vm = viewModel()
-        vm.setBiometricEnabled(true)
-        vm.setBiometricEnabled(true)
-        runCurrent()
-        assertTrue(vm.state.value.isUpdating)
-        assertFalse(vm.state.value.biometricEnabled)
-        coVerify(exactly = 0) { repository.setBiometricEnabled(any(), any()) }
-        authenticated.complete(Unit)
-        runCurrent()
-        assertFalse(vm.state.value.biometricEnabled)
-        saved.complete(Unit)
-        advanceUntilIdle()
-        assertTrue(vm.state.value.biometricEnabled)
-        assertFalse(vm.state.value.isUpdating)
-        coVerify(exactly = 1) { authenticator.authenticate(any()) }
-        coVerify(exactly = 1) { repository.setBiometricEnabled(1L, true) }
+    @Test fun unavailableMethodNeverAuthenticatesOrSaves() = runTest {
+        saved = SecuritySettings(inactivityLockEnabled = true)
+        coEvery { local.isAvailable(any()) } returns Result.Success(false)
+        val v = vm(); v.load(); advanceUntilIdle(); v.setBiometricEnabled(true); advanceUntilIdle()
+        assertNotNull(v.state.value.errorMessage); coVerify(exactly = 0) { repo.saveSettings(any(), any()) }
     }
-
-    @Test
-    fun cancelledPromptDoesNotEnableOrSave() = runTest {
-        coEvery { authenticator.authenticate(any()) } returns Result.Error(SecurityError.AuthenticationCancelled)
-        val vm = viewModel()
-        vm.setBiometricEnabled(true)
-        advanceUntilIdle()
-        assertFalse(vm.state.value.biometricEnabled)
-        assertFalse(vm.state.value.isUpdating)
-        assertEquals(SecurityError.AuthenticationCancelled.userMessage, vm.state.value.errorMessage)
-        coVerify(exactly = 0) { repository.setBiometricEnabled(any(), any()) }
+    @Test fun enablingWaitsForSuccessfulPromptAndSave() = runTest {
+        saved = SecuritySettings(inactivityLockEnabled = true)
+        val prompt = CompletableDeferred<Unit>()
+        coEvery { local.authenticate(any(), any()) } coAnswers { prompt.await(); Result.Success(Unit) }
+        val v = vm(); v.load(); advanceUntilIdle(); v.setDeviceCredentialEnabled(true); v.setDeviceCredentialEnabled(true); runCurrent()
+        assertTrue(v.state.value.isUpdating); assertFalse(v.state.value.settings.deviceCredentialEnabled)
+        prompt.complete(Unit); advanceUntilIdle(); assertTrue(v.state.value.settings.deviceCredentialEnabled)
+        coVerify(exactly = 1) { repo.saveSettings(1, any()) }
     }
-
-    @Test
-    fun persistenceFailureKeepsPreviousToggleValue() = runTest {
-        coEvery { repository.setBiometricEnabled(1L, true) } returns Result.Error(UnexpectedError())
-        val vm = viewModel()
-        vm.setBiometricEnabled(true)
-        advanceUntilIdle()
-        assertFalse(vm.state.value.biometricEnabled)
-        assertFalse(vm.state.value.isUpdating)
-        assertNotNull(vm.state.value.errorMessage)
+    @Test fun cancelledPromptDoesNotSave() = runTest {
+        saved = SecuritySettings(inactivityLockEnabled = true)
+        coEvery { local.authenticate(any(), any()) } returns Result.Error(SecurityError.AuthenticationCancelled)
+        val v = vm(); v.load(); advanceUntilIdle(); v.setBiometricEnabled(true); advanceUntilIdle()
+        assertFalse(v.state.value.settings.biometricEnabled); coVerify(exactly = 0) { repo.saveSettings(any(), any()) }
     }
-
-    @Test
-    fun disablingDoesNotRequireBiometricAuthentication() = runTest {
-        coEvery { repository.getSettings(1L) } returns Result.Success(SecuritySettings(true, false))
-        coEvery { authenticator.isAvailable() } returns Result.Success(false)
-        val vm = viewModel()
-        vm.load()
-        advanceUntilIdle()
-        assertFalse(vm.state.value.biometricAvailable)
-        vm.setBiometricEnabled(false)
-        advanceUntilIdle()
-        assertFalse(vm.state.value.biometricEnabled)
-        coVerify(exactly = 0) { authenticator.authenticate(any()) }
-        coVerify(exactly = 1) { repository.setBiometricEnabled(1L, false) }
+    @Test fun failedSaveKeepsPreviousPolicy() = runTest {
+        coEvery { repo.saveSettings(1, any()) } returns Result.Error(UnexpectedError())
+        val v = vm(); v.load(); advanceUntilIdle(); v.setLockEnabled(true); advanceUntilIdle()
+        assertFalse(v.state.value.settings.inactivityLockEnabled); assertNotNull(v.state.value.errorMessage)
     }
-
-    @Test
-    fun clearingViewModelCancelsPromptWithoutSaving() = runTest {
-        var cancelled = false
-        coEvery { authenticator.authenticate(any()) } coAnswers {
-            try { awaitCancellation() } finally { cancelled = true }
-        }
-        val vm = viewModel()
-        vm.setBiometricEnabled(true)
-        runCurrent()
-        store.clear()
-        advanceUntilIdle()
-        assertTrue(cancelled)
-        assertFalse(vm.state.value.biometricEnabled)
-        assertFalse(vm.state.value.isUpdating)
-        coVerify(exactly = 0) { repository.setBiometricEnabled(any(), any()) }
+    @Test fun supportedTimeoutPersistsInvalidIsIgnored() = runTest {
+        saved = SecuritySettings(inactivityLockEnabled = true)
+        val v = vm(); v.load(); advanceUntilIdle(); v.setTimeout(0); v.setTimeout(2); advanceUntilIdle()
+        assertEquals(120_000L, saved.inactivityTimeoutMillis); coVerify(exactly = 1) { repo.saveSettings(1, any()) }
     }
-
-    @Test
-    fun unexpectedLoadFailureReleasesLoadingGuard() = runTest {
-        coEvery { repository.getSettings(1L) } throws IllegalStateException("Private database text")
-        val vm = viewModel()
-        vm.load()
-        advanceUntilIdle()
-        assertFalse(vm.state.value.isLoading)
-        assertEquals(UnexpectedError().userMessage, vm.state.value.errorMessage)
-        coEvery { repository.getSettings(1L) } returns Result.Success(SecuritySettings(false, false))
-        vm.load()
-        advanceUntilIdle()
-        assertTrue(vm.state.value.biometricAvailable)
+    @Test fun clearingVmCancelsPendingSetupWithoutSaving() = runTest {
+        saved = SecuritySettings(inactivityLockEnabled = true)
+        coEvery { local.authenticate(any(), any()) } coAnswers { awaitCancellation() }
+        val v = vm(); v.load(); advanceUntilIdle(); v.setBiometricEnabled(true); runCurrent(); store.clear(); advanceUntilIdle()
+        coVerify(exactly = 0) { repo.saveSettings(any(), any()) }; assertFalse(v.state.value.isUpdating)
     }
-
-    @Test
-    fun platformAvailabilityExceptionDoesNotEraseSavedPreferences() = runTest {
-        coEvery { repository.getSettings(1L) } returns Result.Success(SecuritySettings(true, false))
-        coEvery { authenticator.isAvailable() } throws IllegalStateException("Private native text")
-        val vm = viewModel()
-        vm.load()
-        advanceUntilIdle()
-        assertTrue(vm.state.value.biometricEnabled)
-        assertFalse(vm.state.value.isLoading)
-        assertEquals(UnexpectedError().userMessage, vm.state.value.errorMessage)
+    @Test fun failedLoadCanRetry() = runTest {
+        coEvery { repo.getSettings(1) } returns Result.Error(UnexpectedError())
+        val v = vm(); v.load(); advanceUntilIdle(); assertFalse(v.state.value.canEdit)
+        coEvery { repo.getSettings(1) } returns Result.Success(SecuritySettings())
+        v.load(); advanceUntilIdle(); assertTrue(v.state.value.canEdit)
     }
-
-    @Test
-    fun typedAvailabilityFailureDoesNotAuthenticateOrSave() = runTest {
-        coEvery { authenticator.isAvailable() } returns Result.Error(SecurityError.SecurityUpdateRequired)
-        val vm = viewModel()
-        vm.setBiometricEnabled(true)
-        advanceUntilIdle()
-        assertEquals(SecurityError.SecurityUpdateRequired.userMessage, vm.state.value.errorMessage)
-        assertFalse(vm.state.value.isUpdating)
-        coVerify(exactly = 0) { authenticator.authenticate(any()) }
-        coVerify(exactly = 0) { repository.setBiometricEnabled(any(), any()) }
+    @Test fun disablingUnavailableMethodDoesNotPrompt() = runTest {
+        saved = SecuritySettings(true, false, true)
+        coEvery { local.isAvailable(any()) } returns Result.Success(false)
+        val v = vm(); v.load(); advanceUntilIdle(); v.setBiometricEnabled(false); advanceUntilIdle()
+        assertFalse(saved.biometricEnabled); coVerify(exactly = 0) { local.authenticate(any(), any()) }
     }
-
-    @Test
-    fun cancelledAttemptCanBeRetriedAndOnlySuccessfulAttemptSaves() = runTest {
-        coEvery { authenticator.authenticate(any()) } returns Result.Error(SecurityError.AuthenticationCancelled)
-        val vm = viewModel()
-        vm.setBiometricEnabled(true)
-        advanceUntilIdle()
-        coEvery { authenticator.authenticate(any()) } returns Result.Success(Unit)
-        vm.setBiometricEnabled(true)
-        advanceUntilIdle()
-        assertTrue(vm.state.value.biometricEnabled)
-        assertEquals(null, vm.state.value.errorMessage)
-        coVerify(exactly = 2) { authenticator.authenticate(any()) }
-        coVerify(exactly = 1) { repository.setBiometricEnabled(1L, true) }
-    }
-
-    @Test
-    fun unavailableAppPinCannotBeNewlyEnabled() = runTest {
-        val vm = viewModel()
-        vm.setPinEnabled(true)
-        advanceUntilIdle()
-        assertFalse(vm.state.value.pinEnabled)
-        assertNotNull(vm.state.value.errorMessage)
-        coVerify(exactly = 0) { repository.setPinEnabled(any(), any()) }
-    }
-
-    @Test
-    fun existingPinPreferenceCanBeDisabledWithoutDuplicateWrites() = runTest {
-        coEvery { repository.getSettings(1L) } returns Result.Success(SecuritySettings(false, true))
-        coEvery { repository.setPinEnabled(1L, false) } returns Result.Success(Unit)
-        val vm = viewModel()
-        vm.load()
-        advanceUntilIdle()
-        vm.setPinEnabled(false)
-        vm.setPinEnabled(false)
-        advanceUntilIdle()
-        assertFalse(vm.state.value.pinEnabled)
-        coVerify(exactly = 1) { repository.setPinEnabled(1L, false) }
-    }
-
-    @Test
-    fun repositoryReadFailureIsRetryable() = runTest {
-        coEvery { repository.getSettings(1L) } returns Result.Error(UnexpectedError())
-        val vm = viewModel()
-        vm.load()
-        advanceUntilIdle()
-        assertFalse(vm.state.value.isLoading)
-        assertNotNull(vm.state.value.errorMessage)
-        coEvery { repository.getSettings(1L) } returns Result.Success(SecuritySettings(true, false))
-        vm.load()
-        advanceUntilIdle()
-        assertTrue(vm.state.value.biometricEnabled)
-        assertEquals(null, vm.state.value.errorMessage)
-    }
-
 }

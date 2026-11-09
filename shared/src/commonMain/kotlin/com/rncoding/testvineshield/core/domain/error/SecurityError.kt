@@ -1,6 +1,12 @@
 package com.rncoding.testvineshield.core.domain.error
 
 sealed interface SecurityError : AppError {
+    data object InvalidLockSettings : SecurityError {
+        override val userMessage = "Choose a supported inactivity period."
+        override val debugMessage = "Unsupported inactivity timeout."
+        override val cause: Throwable? = null
+    }
+
 
     data object AuthenticationInProgress : SecurityError {
         override val userMessage = "Authentication is already in progress. Finish or cancel it before trying again."
@@ -33,7 +39,7 @@ sealed interface SecurityError : AppError {
     data object AuthenticationFailed : SecurityError {
 
         override val userMessage =
-            "Biometric authentication failed."
+            "Authentication failed. Use your account password or try again."
 
         override val debugMessage =
             "The biometric authentication attempt failed."
@@ -44,7 +50,7 @@ sealed interface SecurityError : AppError {
     data object AuthenticationCancelled : SecurityError {
 
         override val userMessage =
-            "Biometric authentication was cancelled."
+            "Authentication was cancelled. You can still use your account password."
 
         override val debugMessage =
             "The user cancelled the biometric authentication prompt."
@@ -123,7 +129,7 @@ sealed interface SecurityError : AppError {
     ) : SecurityError {
 
         override val userMessage =
-            "Biometric authentication could not be completed."
+            "Device authentication could not be completed. Use your account password."
 
         override val debugMessage =
             "Unexpected biometric authentication error."

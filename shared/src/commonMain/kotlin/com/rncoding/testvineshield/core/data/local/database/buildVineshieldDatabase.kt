@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.data.local.database
 
+import com.rncoding.testvineshield.core.data.local.database.migrations.MIGRATION_3_4
 import com.rncoding.testvineshield.core.data.local.database.migrations.MIGRATION_2_3
 import com.rncoding.testvineshield.core.data.local.database.migrations.MIGRATION_1_2
 import androidx.room.RoomDatabase
@@ -12,7 +13,7 @@ fun buildVineshieldDatabase(
 ): VineshieldDatabase {
 
     return builder
-        .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
         .setDriver(
             BundledSQLiteDriver()
         )

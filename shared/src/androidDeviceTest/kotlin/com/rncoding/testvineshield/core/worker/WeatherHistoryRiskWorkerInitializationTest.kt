@@ -87,7 +87,13 @@ class WeatherHistoryRiskWorkerInitializationTest {
             }
         }
         val authorization = AuthorizeWeatherHistoryBackgroundWorkUseCase(
-            SessionManager(sessionRepository, clock), locations
+            SessionManager(sessionRepository, clock, object : com.rncoding.testvineshield.core.domain.repository.SecuritySettingsRepository {
+                override fun observeSettings(userId: Long) = flowOf(com.rncoding.testvineshield.core.domain.security.SecuritySettings())
+                override suspend fun getSettings(userId: Long) = AppResult.Success(com.rncoding.testvineshield.core.domain.security.SecuritySettings())
+                override suspend fun saveSettings(userId: Long, settings: com.rncoding.testvineshield.core.domain.security.SecuritySettings): AppResult<Unit, AppError> = error("Worker cannot change settings")
+                override suspend fun setBiometricEnabled(userId: Long, enabled: Boolean): AppResult<Unit, AppError> = error("Worker cannot change settings")
+                override suspend fun setPinEnabled(userId: Long, enabled: Boolean): AppResult<Unit, AppError> = error("Worker cannot change settings")
+            }), locations
         )
         val refresh = RefreshWeatherHistoryAndEvaluateRiskUseCase(weather, evaluator)
         val factory = object : WorkerFactory() {

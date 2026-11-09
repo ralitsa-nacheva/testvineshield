@@ -10,7 +10,7 @@ object SessionPolicy {
     // Require re-auth (biometric/PIN) after 5 min
     //const val REAUTH_THRESHOLD = 5 * 60 * 1000L
 
-    const val INACTIVITY_TIMEOUT_MILLIS = 15 * 60 * 1000L
+    // Inactivity is now opt-in and account-specific; see SecuritySettings.
 
     const val MAX_SESSION_DURATION_MILLIS =
         30L * 24L * 60L * 60L * 1000L

@@ -6,6 +6,7 @@ import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.error.StorageError
 import com.rncoding.testvineshield.core.domain.repository.SessionRepository
 import com.rncoding.testvineshield.core.domain.security.SecureStorage
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 
@@ -32,6 +33,8 @@ class SessionRepositoryImpl(
             serialized =
                 secureStorage.get(SESSION_KEY)
 
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
 
             return Result.Error(
@@ -75,6 +78,8 @@ class SessionRepositoryImpl(
                 )
             )
 
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
 
             /*
@@ -103,6 +108,8 @@ class SessionRepositoryImpl(
             serialized =
                 json.encodeToString(session)
 
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
 
             return Result.Error(
@@ -125,6 +132,8 @@ class SessionRepositoryImpl(
 
             Result.Success(Unit)
 
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
 
             Result.Error(
@@ -146,6 +155,8 @@ class SessionRepositoryImpl(
 
             Result.Success(Unit)
 
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
 
             Result.Error(

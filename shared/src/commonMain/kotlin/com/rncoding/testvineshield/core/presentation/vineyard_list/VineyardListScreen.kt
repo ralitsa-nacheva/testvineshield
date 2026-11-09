@@ -28,6 +28,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.rncoding.testvineshield.core.presentation.root.userAction
+import com.rncoding.testvineshield.core.presentation.root.userActivity
 import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -57,7 +59,7 @@ fun VineyardListScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = onCreateVineyard
+                onClick = userAction(onCreateVineyard)
             ) {
                 Text("+")
             }
@@ -109,7 +111,7 @@ fun VineyardListScreen(
                     ) { vineyard ->
                         VineyardListItem(
                             vineyard = vineyard,
-                            onClick = {
+                            onClick = userAction {
                                 onVineyardClick(
                                     vineyard.vineyardId
                                 )
@@ -128,7 +130,8 @@ fun VineyardListScreen(
 
     if (state.vineyardPendingDeletion != null) {
         AlertDialog(
-            onDismissRequest = onDeleteCancel,
+            modifier = Modifier.userActivity(com.rncoding.testvineshield.core.presentation.root.LocalUserActivity.current),
+            onDismissRequest = userAction(onDeleteCancel),
             title = {
                 Text("Delete vineyard?")
             },
@@ -140,14 +143,14 @@ fun VineyardListScreen(
             },
             confirmButton = {
                 TextButton(
-                    onClick = onDeleteConfirm
+                    onClick = userAction(onDeleteConfirm)
                 ) {
                     Text("Delete")
                 }
             },
             dismissButton = {
                 TextButton(
-                    onClick = onDeleteCancel
+                    onClick = userAction(onDeleteCancel)
                 ) {
                     Text("Cancel")
                 }
@@ -166,7 +169,7 @@ private fun VineyardListItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(
-                onClick = onClick
+                onClick = userAction(onClick)
             )
     ) {
         Column(
@@ -186,7 +189,7 @@ private fun VineyardListItem(
                 )
 
                 TextButton(
-                    onClick = onDelete
+                    onClick = userAction(onDelete)
                 ) {
                     Text("Delete")
                 }
@@ -282,7 +285,7 @@ private fun EmptyVineyardList(
             )
 
             Button(
-                onClick = onCreateVineyard
+                onClick = userAction(onCreateVineyard)
             ) {
                 Text("Create vineyard")
             }

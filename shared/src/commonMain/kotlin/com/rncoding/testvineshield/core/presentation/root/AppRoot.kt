@@ -3,6 +3,11 @@ package com.rncoding.testvineshield.core.presentation.root
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rncoding.testvineshield.core.domain.error.AppInitializationError
 import androidx.compose.runtime.getValue
@@ -41,6 +46,17 @@ private fun SessionRoot() {
 
     val authState by authViewModel.authState.collectAsState()
 
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    DisposableEffect(lifecycle, authViewModel) {
+        val observer = LifecycleEventObserver { _, _ ->
+            authViewModel.setForeground(lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED))
+        }
+        lifecycle.addObserver(observer)
+        authViewModel.setForeground(lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED))
+        onDispose { lifecycle.removeObserver(observer); authViewModel.setForeground(false) }
+    }
+    CompositionLocalProvider(LocalUserActivity provides authViewModel::recordInteraction) {
+        Box(Modifier.fillMaxSize().userActivity(authViewModel::recordInteraction)) {
     when (val state = authState) {
 
         AuthState.Loading -> {
@@ -72,5 +88,7 @@ private fun SessionRoot() {
                 onRetry = authViewModel::retryRestoreSession
             )
         }
+    }
+    }
     }
 }

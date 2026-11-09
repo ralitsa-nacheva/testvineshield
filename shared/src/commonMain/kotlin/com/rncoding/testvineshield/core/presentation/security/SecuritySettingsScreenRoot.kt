@@ -29,7 +29,9 @@ fun SecuritySettingsScreenRoot(
         state = state,
         onBack = onBack,
         onBiometricChanged = viewModel::setBiometricEnabled,
-        onPinChanged = viewModel::setPinEnabled,
+        onDeviceCredentialChanged = viewModel::setDeviceCredentialEnabled,
+        onLockChanged = viewModel::setLockEnabled,
+        onTimeoutChanged = viewModel::setTimeout,
         onReload = viewModel::load,
         onClearError = viewModel::clearError
     )

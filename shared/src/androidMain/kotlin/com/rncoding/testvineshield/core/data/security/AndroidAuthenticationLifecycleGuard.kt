@@ -7,6 +7,7 @@ import androidx.lifecycle.LifecycleOwner
 /** Ends one authentication attempt when its host stops. Access only on Main. */
 internal class AndroidAuthenticationLifecycleGuard(
     private val lifecycle: Lifecycle,
+    private val cancelOnStop: Boolean = true,
     private val onHostStopped: () -> Unit
 ) : LifecycleEventObserver {
     private var disposed = false
@@ -16,7 +17,7 @@ internal class AndroidAuthenticationLifecycleGuard(
     }
 
     override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
-        if (!disposed && (event == Lifecycle.Event.ON_STOP || event == Lifecycle.Event.ON_DESTROY)) {
+        if (!disposed && ((cancelOnStop && event == Lifecycle.Event.ON_STOP) || event == Lifecycle.Event.ON_DESTROY)) {
             dispose()
             onHostStopped()
         }

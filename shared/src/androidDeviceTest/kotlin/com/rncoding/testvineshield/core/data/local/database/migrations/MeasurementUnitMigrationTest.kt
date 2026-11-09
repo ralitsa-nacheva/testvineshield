@@ -59,7 +59,7 @@ class MeasurementUnitMigrationTest {
             try {
                 assertEquals(before, snapshot(upgraded))
                 val version = upgraded.prepare("PRAGMA user_version")
-                try { assertTrue(version.step()); assertEquals(3L, version.getLong(0)) } finally { version.close() }
+                try { assertTrue(version.step()); assertEquals(4L, version.getLong(0)) } finally { version.close() }
                 val foreignKeys = upgraded.prepare("PRAGMA foreign_key_check")
                 try { assertFalse(foreignKeys.step()) } finally { foreignKeys.close() }
             } finally { upgraded.close() }

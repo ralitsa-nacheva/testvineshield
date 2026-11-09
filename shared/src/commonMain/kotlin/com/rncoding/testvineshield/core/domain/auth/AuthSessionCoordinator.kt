@@ -42,7 +42,7 @@ class AuthSessionCoordinator(
     suspend fun restoreSession() {
         _authState.value = AuthState.Loading
 
-        when (val result = restoreSessionUseCase()) {
+        when (val result = restoreSafely()) {
 
             is Result.Success -> {
                 _authState.value = result.data
@@ -107,10 +107,16 @@ class AuthSessionCoordinator(
         )
     }
 
-    suspend fun unlock(): Result<AuthState, AppError> {
+    suspend fun unlock(request: com.rncoding.testvineshield.core.domain.usecases.user.UnlockRequest): Result<AuthState, AppError> {
+        if (_authState.value !is AuthState.Locked) return Result.Error(AuthError.NoActiveSession)
 
-        val result =
-            unlockSessionUseCase()
+        val locked = _authState.value
+        val result = unlockSessionUseCase(request)
+        if (_authState.value != locked) return Result.Error(AuthError.NoActiveSession)
+        if (result is Result.Error &&
+            (result.error == AuthError.SessionExpired || result.error == AuthError.NoActiveSession)) {
+            _authState.value = AuthState.Unauthenticated(AuthState.Unauthenticated.Reason.SessionExpired)
+        }
 
         when (result) {
 
@@ -140,6 +146,22 @@ class AuthSessionCoordinator(
         return result
     }
 
+
+    private suspend fun restoreSafely(): Result<AuthState, AppError> = try {
+        restoreSessionUseCase()
+    } catch (cancelled: CancellationException) { throw cancelled }
+    catch (_: Exception) { Result.Error(com.rncoding.testvineshield.core.domain.error.UnexpectedError()) }
+
+    suspend fun checkSession() {
+        val before = _authState.value
+        if (before !is AuthState.Authenticated) return
+        val result = restoreSafely()
+        if (_authState.value != before) return
+        _authState.value = when (result) {
+            is Result.Success -> result.data
+            is Result.Error -> AuthState.Error(result.error)
+        }
+    }
 
     suspend fun logout(): Result<Unit, AppError> {
 

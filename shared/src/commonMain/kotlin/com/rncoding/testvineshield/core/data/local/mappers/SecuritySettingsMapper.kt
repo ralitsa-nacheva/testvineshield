@@ -10,8 +10,11 @@ class SecuritySettingsMapper {
     ): SecuritySettings {
         return SecuritySettings(
             biometricEnabled = entity.biometricEnabled,
-            appPinEnabled = entity.appPinEnabled
-        )
+            appPinEnabled = false,
+            inactivityLockEnabled = entity.inactivityLockEnabled,
+            inactivityTimeoutMillis = entity.inactivityTimeoutMillis,
+            deviceCredentialEnabled = entity.deviceCredentialEnabled
+        ).normalized()
     }
 
     fun domainToEntity(
@@ -21,7 +24,10 @@ class SecuritySettingsMapper {
         return SecuritySettingsEntity(
             userId = userId,
             biometricEnabled = settings.biometricEnabled,
-            appPinEnabled = settings.appPinEnabled
+            appPinEnabled = false,
+            inactivityLockEnabled = settings.inactivityLockEnabled,
+            inactivityTimeoutMillis = settings.inactivityTimeoutMillis,
+            deviceCredentialEnabled = settings.deviceCredentialEnabled
         )
     }
 }

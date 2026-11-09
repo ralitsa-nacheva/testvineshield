@@ -7,6 +7,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import com.rncoding.testvineshield.core.presentation.root.userAction
+import com.rncoding.testvineshield.core.presentation.root.userActivity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.rncoding.testvineshield.core.domain.time.VineyardTimeZoneCatalog
@@ -18,6 +20,7 @@ internal fun VineyardTimeZonePicker(
     enabled: Boolean,
     onSelect: (String) -> Unit
 ) {
+    val activity = com.rncoding.testvineshield.core.presentation.root.LocalUserActivity.current
     val catalog = remember { VineyardTimeZoneCatalog() }
     var open by rememberSaveable { mutableStateOf(false) }
     var query by rememberSaveable { mutableStateOf("") }
@@ -25,19 +28,19 @@ internal fun VineyardTimeZonePicker(
     Column {
         OutlinedButton(
             modifier = Modifier.fillMaxWidth(), enabled = enabled,
-            onClick = { query = ""; open = true }
+            onClick = userAction { query = ""; open = true }
         ) { Text("Time zone: " + selectedId.ifBlank { "Choose time zone" }) }
         if (errorMessage != null) Text(errorMessage, color = MaterialTheme.colorScheme.error)
     }
     if (open && enabled) {
         val matches = remember(query, catalog) { catalog.search(query) }
-        Dialog(onDismissRequest = { open = false }) {
-            Surface(shape = MaterialTheme.shapes.large) {
+        Dialog(onDismissRequest = userAction { open = false }) {
+            Surface(modifier = Modifier.userActivity(activity), shape = MaterialTheme.shapes.large) {
                 Column(Modifier.fillMaxWidth().heightIn(max = 560.dp).padding(16.dp)) {
                     Text("Choose vineyard time zone", style = MaterialTheme.typography.titleLarge)
                     if (selectedId.isNotBlank()) Text("Current: $selectedId")
                     OutlinedTextField(
-                        value = query, onValueChange = { query = it }, singleLine = true,
+                        value = query, onValueChange = { activity(); query = it }, singleLine = true,
                         label = { Text("Search city or zone, e.g. Sofia") },
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -46,11 +49,11 @@ internal fun VineyardTimeZonePicker(
                         items(matches, key = { it }) { id ->
                             TextButton(
                                 modifier = Modifier.fillMaxWidth(),
-                                onClick = { if (enabled) { onSelect(id); open = false } }
+                                onClick = userAction { activity(); if (enabled) { onSelect(id); open = false } }
                             ) { Text(if (id == selectedId) "$id (selected)" else id) }
                         }
                     }
-                    TextButton(onClick = { open = false }) { Text("Cancel") }
+                    TextButton(onClick = userAction { open = false }) { Text("Cancel") }
                 }
             }
         }

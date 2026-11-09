@@ -18,11 +18,14 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
+import com.rncoding.testvineshield.core.presentation.root.LocalUserActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.rncoding.testvineshield.core.presentation.root.userAction
+import com.rncoding.testvineshield.core.presentation.root.userActivity
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 
@@ -50,6 +53,7 @@ fun AccountScreen(
                 uiState.isDeleting ||
                 uiState.isLoggingOut
 
+    val activity = LocalUserActivity.current
     Scaffold(
         topBar = {
             TopAppBar(
@@ -58,7 +62,7 @@ fun AccountScreen(
                 },
                 navigationIcon = {
                     TextButton(
-                        onClick = onBack,
+                        onClick = userAction(onBack),
                         enabled = !isBusy
                     ) {
                         Text("Back")
@@ -80,7 +84,7 @@ fun AccountScreen(
 
             OutlinedTextField(
                 value = uiState.newEmail,
-                onValueChange = onNewEmailChanged,
+                onValueChange = { activity(); onNewEmailChanged(it) },
                 modifier = Modifier.fillMaxWidth(),
                 label = {
                     Text("Email")
@@ -91,7 +95,7 @@ fun AccountScreen(
 
             OutlinedTextField(
                 value = uiState.currentPassword,
-                onValueChange = onCurrentPasswordChanged,
+                onValueChange = { activity(); onCurrentPasswordChanged(it) },
                 modifier = Modifier.fillMaxWidth(),
                 label = {
                     Text("Current password")
@@ -103,7 +107,7 @@ fun AccountScreen(
 
             OutlinedTextField(
                 value = uiState.newPassword,
-                onValueChange = onNewPasswordChanged,
+                onValueChange = { activity(); onNewPasswordChanged(it) },
                 modifier = Modifier.fillMaxWidth(),
                 label = {
                     Text("New password (optional)")
@@ -115,7 +119,7 @@ fun AccountScreen(
 
             OutlinedTextField(
                 value = uiState.confirmNewPassword,
-                onValueChange = onConfirmNewPasswordChanged,
+                onValueChange = { activity(); onConfirmNewPasswordChanged(it) },
                 modifier = Modifier.fillMaxWidth(),
                 label = {
                     Text("Confirm new password")
@@ -126,7 +130,7 @@ fun AccountScreen(
             )
 
             Button(
-                onClick = onUpdateAccount,
+                onClick = userAction(onUpdateAccount),
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isBusy
             ) {
@@ -143,7 +147,7 @@ fun AccountScreen(
                 Text(message)
 
                 TextButton(
-                    onClick = onClearError
+                    onClick = userAction(onClearError)
                 ) {
                     Text("Dismiss")
                 }
@@ -158,7 +162,7 @@ fun AccountScreen(
             Text("Security")
 
             OutlinedButton(
-                onClick = onSecuritySettings,
+                onClick = userAction(onSecuritySettings),
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isBusy
             ) {
@@ -174,7 +178,7 @@ fun AccountScreen(
             Text("Account actions")
 
             OutlinedButton(
-                onClick = onLogout,
+                onClick = userAction(onLogout),
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isBusy
             ) {
@@ -188,7 +192,7 @@ fun AccountScreen(
             }
 
             OutlinedButton(
-                onClick = {
+                onClick = userAction {
                     showDeleteConfirmation = true
                 },
                 modifier = Modifier.fillMaxWidth(),
@@ -201,7 +205,8 @@ fun AccountScreen(
 
     if (showDeleteConfirmation) {
         AlertDialog(
-            onDismissRequest = {
+            modifier = Modifier.userActivity(com.rncoding.testvineshield.core.presentation.root.LocalUserActivity.current),
+            onDismissRequest = userAction {
                 if (!uiState.isDeleting) {
                     showDeleteConfirmation = false
                 }
@@ -217,7 +222,7 @@ fun AccountScreen(
             },
             confirmButton = {
                 TextButton(
-                    onClick = {
+                    onClick = userAction {
                         showDeleteConfirmation = false
                         onDeleteAccount()
                     },
@@ -234,7 +239,7 @@ fun AccountScreen(
             },
             dismissButton = {
                 TextButton(
-                    onClick = {
+                    onClick = userAction {
                         showDeleteConfirmation = false
                     },
                     enabled = !uiState.isDeleting

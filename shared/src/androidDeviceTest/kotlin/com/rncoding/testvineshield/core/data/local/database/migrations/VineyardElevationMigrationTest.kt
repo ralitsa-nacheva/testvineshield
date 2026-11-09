@@ -85,7 +85,7 @@ class VineyardElevationMigrationTest {
             }
         }
         val database = Room.databaseBuilder<VineshieldDatabase>(context, name)
-            .setDriver(BundledSQLiteDriver()).addMigrations(fail).build()
+            .setDriver(BundledSQLiteDriver()).addMigrations(fail, MIGRATION_3_4).build()
         try {
             var failure: Exception? = null
             try { database.vineyardDao().getVineyard(1, 10) } catch (exception: Exception) { failure = exception }

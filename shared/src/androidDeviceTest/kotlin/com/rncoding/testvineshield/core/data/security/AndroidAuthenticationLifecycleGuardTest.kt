@@ -59,6 +59,18 @@ class AndroidAuthenticationLifecycleGuardTest {
         guard.dispose()
     }
 
+    @Test
+    fun credentialPromptSurvivesStopButNotHostDestruction() = onMain {
+        val owner = TestOwner().apply { resume() }
+        var calls = 0
+        AndroidAuthenticationLifecycleGuard(owner.lifecycle, cancelOnStop = false) { calls++ }
+        owner.event(Lifecycle.Event.ON_PAUSE)
+        owner.event(Lifecycle.Event.ON_STOP)
+        assertEquals(0, calls)
+        owner.event(Lifecycle.Event.ON_DESTROY)
+        assertEquals(1, calls)
+    }
+
     private fun onMain(block: () -> Unit) {
         InstrumentationRegistry.getInstrumentation().runOnMainSync { block() }
     }

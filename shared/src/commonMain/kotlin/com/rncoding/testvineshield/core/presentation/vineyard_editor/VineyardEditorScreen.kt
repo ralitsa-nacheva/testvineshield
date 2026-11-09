@@ -25,8 +25,10 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.runtime.Composable
+import com.rncoding.testvineshield.core.presentation.root.LocalUserActivity
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.rncoding.testvineshield.core.presentation.root.userAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
@@ -56,7 +58,7 @@ fun VineyardEditorScreen(
                 },
                 navigationIcon = {
                     TextButton(
-                        onClick = onBack
+                        onClick = userAction(onBack)
                     ) {
                         Text("Back")
                     }
@@ -104,7 +106,7 @@ fun VineyardEditorScreen(
                         )
 
                         Button(
-                            onClick = onBack
+                            onClick = userAction(onBack)
                         ) {
                             Text("Back")
                         }
@@ -200,7 +202,7 @@ private fun VineyardEditorForm(
                             selected = state.sizeUnit == unit,
                             enabled = state.canEdit,
                             role = androidx.compose.ui.semantics.Role.RadioButton,
-                            onClick = { onSizeUnitChange(unit) }
+                            onClick = userAction { onSizeUnitChange(unit) }
                         ),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -281,7 +283,7 @@ private fun VineyardEditorForm(
                     TextButton(
                         enabled = state.canEdit,
                         modifier = Modifier.semantics { contentDescription = "Change elevation sign" },
-                        onClick = { onElevationChange(toggleElevationSign(state.elevation)) }
+                        onClick = userAction { onElevationChange(toggleElevationSign(state.elevation)) }
                     ) { Text("±") }
                 },
                 supportingText = "Blank means unknown. Decimal dot or comma; no grouping separators.",
@@ -291,7 +293,7 @@ private fun VineyardEditorForm(
 
         item {
             Button(
-                onClick = onSave,
+                onClick = userAction(onSave),
                 enabled =
                     state.canEdit,
                 modifier =
@@ -327,9 +329,10 @@ private fun VineyardTextField(
     enabled: Boolean = true,
     trailingIcon: @Composable (() -> Unit)? = null
 ) {
+    val activity = LocalUserActivity.current
     OutlinedTextField(
         value = value,
-        onValueChange = onValueChange,
+        onValueChange = { activity(); onValueChange(it) },
         label = {
             Text(label)
         },

@@ -2,103 +2,77 @@ package com.rncoding.testvineshield.core.domain.usecases.user
 
 import com.rncoding.testvineshield.core.domain.auth.AuthState
 import com.rncoding.testvineshield.core.domain.auth.SessionState
-import com.rncoding.testvineshield.core.domain.datamodels.UserDomainModel
-import com.rncoding.testvineshield.core.domain.error.AppError
-import com.rncoding.testvineshield.core.domain.error.AuthError
-import com.rncoding.testvineshield.core.domain.error.Result
-import com.rncoding.testvineshield.core.domain.repository.UserRepository
-import com.rncoding.testvineshield.core.domain.security.LocalAuthenticator
-import com.rncoding.testvineshield.core.domain.security.SessionManager
+import com.rncoding.testvineshield.core.domain.error.*
+import com.rncoding.testvineshield.core.domain.repository.*
+import com.rncoding.testvineshield.core.domain.security.*
 
-/**
- * Unlocks an existing authenticated session using the
- * platform's local authentication mechanism.
- *
- * Examples:
- *
- * Android:
- * - BiometricPrompt
- * - device credential
- *
- * iOS:
- * - LocalAuthentication / LAContext
- */
+sealed interface UnlockRequest {
+    data class Password(val value: String) : UnlockRequest {
+        override fun toString(): String = "Password([redacted])"
+    }
+    data class Platform(val method: LocalUnlockMethod) : UnlockRequest
+}
+
+/** Verify the existing account, then refresh activity; never create a new session here. */
 class UnlockSessionUseCase(
     private val sessionManager: SessionManager,
     private val userRepository: UserRepository,
-    private val localAuthenticator: LocalAuthenticator
+    private val localAuthenticator: LocalAuthenticator,
+    private val securitySettingsRepository: SecuritySettingsRepository
 ) {
-
-    suspend operator fun invoke(): Result<AuthState, AppError> {
-
-        // 1. Get the persisted session.
-        val session = when (val result = sessionManager.getSession()) {
-            is Result.Error -> return Result.Error(result.error)
-
-            is Result.Success -> {
-                result.data
-                    ?: return Result.Error(AuthError.NoActiveSession)
+    suspend operator fun invoke(request: UnlockRequest): Result<AuthState, AppError> {
+        val session = when (val stored = sessionManager.getSession()) {
+            is Result.Error -> return Result.Error(stored.error)
+            is Result.Success -> stored.data ?: return Result.Error(AuthError.NoActiveSession)
+        }
+        when (val state = sessionManager.getSessionState()) {
+            is Result.Error -> return Result.Error(state.error)
+            is Result.Success -> when (state.data) {
+                SessionState.Expired -> return Result.Error(AuthError.SessionExpired)
+                SessionState.LoggedOut -> return Result.Error(AuthError.NoActiveSession)
+                else -> Unit
             }
         }
-
-        // 2. Authenticate the user locally.
-        when (
-            val authenticationResult =
-                localAuthenticator.authenticate(
-                    reason = "Unlock your vineyard account"
-                )
-        ) {
-            is Result.Error -> {
-                return Result.Error(authenticationResult.error)
+        val user = when (val loaded = userRepository.getUserById(session.userId)) {
+            is Result.Error -> return Result.Error(loaded.error)
+            is Result.Success -> loaded.data ?: return Result.Error(AuthError.UserNotFound)
+        }
+        val authentication = when (request) {
+            is UnlockRequest.Password -> {
+                if (request.value.isEmpty()) return Result.Error(AuthError.InvalidCredentials)
+                // Repository login verifies the saved hash; this does not create/extend a session.
+                when (val verified = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { userRepository.login(user.userEmail, request.value) }) {
+                    is Result.Error -> Result.Error(verified.error)
+                    is Result.Success -> if (verified.data.userId == session.userId) Result.Success(Unit)
+                        else Result.Error(AuthError.InvalidCredentials)
+                }
             }
-
-            is Result.Success -> {
-                // Authentication succeeded.
+            is UnlockRequest.Platform -> {
+                val settings = when (val saved = securitySettingsRepository.getSettings(session.userId)) {
+                    is Result.Error -> return Result.Error(saved.error)
+                    is Result.Success -> saved.data.normalized()
+                }
+                val enabled = when (request.method) {
+                    LocalUnlockMethod.Biometric -> settings.biometricEnabled
+                    LocalUnlockMethod.DeviceCredential -> settings.deviceCredentialEnabled
+                }
+                if (!enabled) return Result.Error(SecurityError.UserFallback)
+                when (val available = localAuthenticator.isAvailable(request.method)) {
+                    is Result.Error -> return Result.Error(available.error)
+                    is Result.Success -> if (!available.data) return Result.Error(SecurityError.UserFallback)
+                }
+                localAuthenticator.authenticate("Unlock your vineyard account", request.method)
             }
         }
-
-        // 3. Make sure the session has not expired.
-        val sessionState = when (val result = sessionManager.getSessionState()) {
-            is Result.Error -> return Result.Error(result.error)
-            is Result.Success -> result.data
+        if (authentication is Result.Error) return Result.Error(authentication.error)
+        // Reject a completion after logout/account change instead of refreshing another user's session.
+        when (val current = sessionManager.getSession()) {
+            is Result.Error -> return Result.Error(current.error)
+            is Result.Success -> if (current.data != session) return Result.Error(AuthError.NoActiveSession)
         }
-
-        when (sessionState) {
-            SessionState.Expired -> {
-                return Result.Error(AuthError.SessionExpired)
-            }
-
-            SessionState.LoggedOut -> {
-                return Result.Error(AuthError.NoActiveSession)
-            }
-
-            SessionState.TimedOut,
-            SessionState.Active -> {
-                // Continue.
-            }
+        return when (val refreshed = sessionManager.refreshSession(expectedSession = session)) {
+            is Result.Error -> Result.Error(refreshed.error)
+            is Result.Success -> Result.Success(AuthState.Authenticated(user))
         }
-
-        // 4. Refresh the session's lastActiveAt.
-        val refreshedSession = when (val result = sessionManager.refreshSession()) {
-            is Result.Error -> return Result.Error(result.error)
-            is Result.Success -> result.data
-        }
-
-        // 5. Load the user associated with the session.
-        val user = when (
-            val result = userRepository.getUserById(refreshedSession.userId)
-        ) {
-            is Result.Error -> return Result.Error(result.error)
-
-            is Result.Success -> {
-                result.data
-                    ?: return Result.Error(AuthError.UserNotFound)
-            }
-        }
-
-        // 6. Authentication succeeded and the session is valid.
-        return Result.Success(
-            AuthState.Authenticated(user)
-        )
     }
 }
