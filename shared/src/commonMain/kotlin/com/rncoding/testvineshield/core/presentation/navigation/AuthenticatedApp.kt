@@ -2,7 +2,8 @@ package com.rncoding.testvineshield.core.presentation.navigation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import com.rncoding.testvineshield.core.presentation.blocks.*
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
@@ -22,6 +23,7 @@ fun AuthenticatedApp(
     activityBadgeCount: Int = 0
 ) {
 
+    var busyBlockRoute by remember { mutableStateOf<AppRoute?>(null) }
     val navigationState =
         rememberVineShieldNavigationState()
 
@@ -36,7 +38,7 @@ fun AuthenticatedApp(
                 activityBadgeCount =
                     activityBadgeCount,
                 onDestinationSelected =
-                    navigationState::selectDestination
+                    { if(busyBlockRoute == null) navigationState.selectDestination(it) }
             )
         }
     ) { innerPadding ->
@@ -46,7 +48,7 @@ fun AuthenticatedApp(
                 navigationState.currentBackStack,
 
             onBack = {
-                navigationState.goBack()
+                if(busyBlockRoute == null) navigationState.goBack()
             },
 
             modifier =
@@ -104,7 +106,8 @@ fun AuthenticatedApp(
 
                             onDeleted = {
                                 navigationState.goBack()
-                            }
+                            },
+                            onBlocks = { navigationState.navigate(BlocksRoute(route.vineyardId)) }
                         )
                     }
 
@@ -133,6 +136,22 @@ fun AuthenticatedApp(
                                 navigationState.goBack()
                             }
                         )
+                    }
+
+                    entry<BlocksRoute> { route ->
+                        BlockListScreenRoot(route.vineyardId,userId,onBack={navigationState.goBack()},
+                            onCreate={navigationState.navigate(BlockEditorRoute(route.vineyardId))},
+                            onOpen={navigationState.navigate(BlockDetailsRoute(route.vineyardId,it))})
+                    }
+                    entry<BlockDetailsRoute> { route ->
+                        BlockDetailsScreenRoot(route.vineyardId,route.blockId,userId,onBack={navigationState.goBack()},
+                            onEdit={navigationState.navigate(BlockEditorRoute(route.vineyardId,route.blockId))},
+                            onDeleted={navigationState.goBack()},
+                            onBusyChanged={ if(it) busyBlockRoute=route else if(busyBlockRoute==route) busyBlockRoute=null })
+                    }
+                    entry<BlockEditorRoute> { route ->
+                        BlockEditorScreenRoot(route.vineyardId,route.blockId,userId,onBack={navigationState.goBack()},
+                            onSaved={navigationState.goBack()},onBusyChanged={ if(it) busyBlockRoute=route else if(busyBlockRoute==route) busyBlockRoute=null })
                     }
 
                     entry<ActivitiesRoute> {

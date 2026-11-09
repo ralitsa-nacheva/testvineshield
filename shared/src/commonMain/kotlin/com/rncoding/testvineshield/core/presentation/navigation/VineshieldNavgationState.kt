@@ -14,7 +14,7 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 
-private val vineShieldSerializersModule =
+internal val vineShieldSerializersModule =
     SerializersModule {
 
         polymorphic(NavKey::class) {
@@ -23,6 +23,9 @@ private val vineShieldSerializersModule =
             subclass(VineyardDetailsRoute::class)
             subclass(CreateVineyardRoute::class)
             subclass(EditVineyardRoute::class)
+            subclass(BlocksRoute::class)
+            subclass(BlockDetailsRoute::class)
+            subclass(BlockEditorRoute::class)
 
             subclass(ActivitiesRoute::class)
             subclass(ActivityDetailsRoute::class)

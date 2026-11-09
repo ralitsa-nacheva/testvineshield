@@ -1,5 +1,7 @@
 package com.rncoding.testvineshield.di
 
+import com.rncoding.testvineshield.core.domain.usecases.block.ObserveOwnedBlocksUseCase
+import com.rncoding.testvineshield.core.presentation.blocks.*
 import com.rncoding.testvineshield.core.data.datasource.WeatherRemoteDataSource
 import com.rncoding.testvineshield.core.data.disease_risk.DefaultDiseaseRiskHostContextProvider
 import com.rncoding.testvineshield.core.data.disease_risk.DefaultDiseaseRiskPersistence
@@ -966,4 +968,8 @@ val commonModule =
                 vineyardDetailsUiMapper = get()
             )
         }
+        factory { ObserveOwnedBlocksUseCase(get(),get(),get()) }
+        viewModel { (vineyardId:Long) -> BlockListViewModel(vineyardId,get()) }
+        viewModel { (key:BlockKey) -> BlockDetailsViewModel(key,get(),get()) }
+        viewModel { (request:BlockEditorRequest) -> BlockEditorViewModel(request,get(),get(),get(),get()) }
     }

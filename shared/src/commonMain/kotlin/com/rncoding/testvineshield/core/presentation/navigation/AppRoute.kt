@@ -54,3 +54,10 @@ data object AccountRoute : AppRoute
 
 @Serializable
 data object SecuritySettingsRoute : AppRoute
+
+@Serializable
+data class BlocksRoute(val vineyardId: Long) : AppRoute
+@Serializable
+data class BlockDetailsRoute(val vineyardId: Long,val blockId: Long) : AppRoute
+@Serializable
+data class BlockEditorRoute(val vineyardId: Long,val blockId: Long = 0) : AppRoute

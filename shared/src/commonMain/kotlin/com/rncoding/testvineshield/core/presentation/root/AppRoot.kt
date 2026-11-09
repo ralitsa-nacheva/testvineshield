@@ -5,6 +5,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -45,6 +50,19 @@ private fun SessionRoot() {
     val authViewModel = koinViewModel<AuthViewModel>()
 
     val authState by authViewModel.authState.collectAsState()
+    // Keep navigation/form state behind a lock, keyed to its owner; logout discards it.
+    val appStateHolder = rememberSaveableStateHolder()
+    var appStateOwner by rememberSaveable { mutableStateOf<Long?>(null) }
+    LaunchedEffect(authState) {
+        val state = authState
+        if (state is AuthState.Unauthenticated) {
+            appStateOwner?.let { appStateHolder.removeState(it) }
+            appStateOwner = null
+        } else if (state is AuthState.Authenticated) {
+            if (appStateOwner != state.user.userId) appStateOwner?.let { appStateHolder.removeState(it) }
+            appStateOwner = state.user.userId
+        }
+    }
 
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     DisposableEffect(lifecycle, authViewModel) {
@@ -78,9 +96,9 @@ private fun SessionRoot() {
         }
 
         is AuthState.Authenticated ->
-            AuthenticatedApp(
-                userId = state.user.userId
-            )
+            appStateHolder.SaveableStateProvider(state.user.userId) {
+                AuthenticatedApp(userId = state.user.userId)
+            }
 
         is AuthState.Error -> {
             AuthStartupErrorScreen(
