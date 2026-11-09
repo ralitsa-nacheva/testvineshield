@@ -67,7 +67,6 @@ internal fun ActivityDraft.parsed(vineyardId: Long, blockId: Long?, original: Ac
     val plannedDate=date(ActivityField.Planned,true)
     val completedDate=date(ActivityField.Completed,status==ActivityStatus.COMPLETED)
     if(status!=ActivityStatus.COMPLETED && completed.isNotBlank()) errors[ActivityField.Completed]="Clear the completion date for a non-completed record."
-    if(plannedDate!=null && completedDate!=null && completedDate<plannedDate) errors[ActivityField.Completed]="Completion cannot precede the planned date under the current record rule."
     if(errors.isNotEmpty() || plannedDate==null) return ActivityDraftResult(null,errors)
     // Copy hidden treatment values and immutable identity from the loaded record; never blank them on a basic edit.
     val template=original ?: ActivityDomainModel(0,vineyardId,blockId,"","","",null,"medium","planned",plannedDate,null,null,null,0,0,null,null,null,null,null)

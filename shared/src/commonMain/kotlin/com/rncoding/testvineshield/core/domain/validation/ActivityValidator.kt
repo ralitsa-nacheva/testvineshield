@@ -61,14 +61,8 @@ class ActivityValidator {
             )
         }
 
-        if (
-            activity.completedAt != null &&
-            activity.completedAt < activity.plannedAt
-        ) {
-            return ActivityError.InvalidInput(
-                "Completion date cannot precede the planned date."
-            )
-        }
+        // A plan is a target, not a start date. Early completion is valid;
+        // keep plannedAt and completedAt as independent calendar dates.
 
         if (
             activity.status == ActivityStatus.COMPLETED.dbValue &&

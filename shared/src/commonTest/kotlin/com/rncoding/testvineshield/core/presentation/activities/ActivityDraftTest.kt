@@ -31,9 +31,28 @@ class ActivityDraftTest {
         val completed=assertNotNull(draft().copy(status=ActivityStatus.COMPLETED,completed="2026-11-10").parsed(10,null,null).record)
         assertEquals(LocalDate(2026,11,10),completed.completedAt)
     }
-    @Test fun nonCompletedDateAndCurrentDateOrderRuleAreEnforced() {
-        assertTrue(ActivityField.Completed in draft().copy(completed="2026-11-10").parsed(10,null,null).errors)
-        assertTrue(ActivityField.Completed in draft().copy(status=ActivityStatus.COMPLETED,completed="2026-11-08").parsed(10,null,null).errors)
+    @Test fun nonCompletedDateIsStillRejected() {
+        for (status in ActivityStatus.entries.filter { it != ActivityStatus.COMPLETED }) {
+            val result = draft().copy(status = status, completed = "2026-11-08").parsed(10, null, null)
+            assertNull(result.record)
+            assertTrue(ActivityField.Completed in result.errors)
+        }
+    }
+    @Test fun earlyOnTimeAndLateCompletionPreserveBothDates() {
+        for (actual in listOf("2026-11-08", "2026-11-09", "2026-11-10")) {
+            val record = assertNotNull(draft().copy(status = ActivityStatus.COMPLETED, completed = actual).parsed(10, null, null).record)
+            assertEquals(LocalDate(2026, 11, 9), record.plannedAt)
+            assertEquals(LocalDate.parse(actual), record.completedAt)
+            assertNull(ActivityValidator().validate(record))
+        }
+    }
+    @Test fun invalidEarlyCompletionTextIsRetainedForCorrection() {
+        val raw = draft().copy(status = ActivityStatus.COMPLETED, completed = "2026-02-30")
+        val restored = assertNotNull(ActivityDraft.restore(raw.savedValues()))
+        assertEquals("2026-02-30", restored.completed)
+        val result = restored.parsed(10, null, null)
+        assertNull(result.record)
+        assertTrue(ActivityField.Completed in result.errors)
     }
     @Test fun basicEditPreservesHiddenTreatmentIdentityAndMetadata() {
         val base=assertNotNull(draft().parsed(10,20,null).record).copy(activityId=30,createdAt=1,updatedAt=2,

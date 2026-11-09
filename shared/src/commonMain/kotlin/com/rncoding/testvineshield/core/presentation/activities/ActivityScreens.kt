@@ -143,7 +143,7 @@ fun ActivityEditorScreenRoot(ownerId: Long,scope: ActivityScope,activityId: Long
             item {RecordChoice("Status",state.draft.status,ActivityStatus.entries,state.canEdit,{label(it.dbValue)},{it?.let(vm::status)},allowUnknown=false)}
             item {RecordChoice("Priority",state.draft.priority,ActivityPriority.entries,state.canEdit,{label(it.dbValue)},{it?.let(vm::priority)},allowUnknown=false)}
             item {RecordChoice("Observed vine stage",state.draft.stage,PhenologicalStage.entries,state.canEdit,{label(it.dbValue)},vm::stage)}
-            item {Text("Leave stage unknown when unobserved. Completion currently must be on or after the planned date.")}
+            item {Text("Leave stage unknown when unobserved. Planned is the target date; completion is when the work was done and may be earlier. Keep both dates accurate.")}
             item {Button(onClick=userAction {vm.save();onBusyChanged(vm.state.value.saving)},enabled=state.canEdit,modifier=Modifier.fillMaxWidth()) {Text("Save activity")} }
         }
     }

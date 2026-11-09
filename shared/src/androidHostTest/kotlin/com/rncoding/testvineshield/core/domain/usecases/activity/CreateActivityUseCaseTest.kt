@@ -331,4 +331,20 @@ class CreateActivityUseCaseTest {
         )
     }
 
+    @Test
+    fun createsEarlyCompletedActivityWithoutChangingThePlan(): Unit = runBlocking {
+        givenAuthenticatedUserAndOwnedVineyard()
+        every { clock.nowMillis() } returns 5000L
+        val captured = slot<ActivityDomainModel>()
+        coEvery { activityRepository.addActivity(capture(captured)) } returns 30L
+        val requested = activity().copy(
+            status = ActivityStatus.COMPLETED.dbValue,
+            completedAt = LocalDate(2026, 9, 30)
+        )
+
+        assertIs<Result.Success<*>>(useCase(requested))
+        assertEquals(requested.copy(createdAt = 5000L, updatedAt = 5000L), captured.captured)
+        coVerify(exactly = 1) { activityRepository.addActivity(any()) }
+    }
+
 }

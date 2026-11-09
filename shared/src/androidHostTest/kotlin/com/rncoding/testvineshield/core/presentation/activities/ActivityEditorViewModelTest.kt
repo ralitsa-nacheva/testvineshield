@@ -60,6 +60,17 @@ class ActivityEditorViewModelTest {
         coVerify {update(match {it.status=="completed" && it.completedAt?.toString()=="2026-11-10" && it.treatmentProduct=="Preserved product" && it.treatmentProductQuantity==0.5})}
         assertTrue(v.state.value.saved)
     }
+    @Test fun earlyCompletionPreservesPlanScopeAndTreatmentData() = runTest {
+        val v = vm(ActivityEditorRequest(ActivityScope(10), 30, complete = true))
+        advanceUntilIdle()
+        v.text(ActivityField.Completed, "2026-11-08")
+        v.save()
+        advanceUntilIdle()
+        coVerify(exactly = 1) {
+            update(old.copy(status = "completed", completedAt = kotlinx.datetime.LocalDate(2026, 11, 8)))
+        }
+        assertTrue(v.state.value.saved)
+    }
     @Test fun restoredDraftCannotBypassParentOwnership()=runTest {
         coEvery {parent(10)} returns Result.Error(DatabaseError.NotFound("Vineyard"))
         val v=vm();advanceUntilIdle();v.save();assertFalse(v.state.value.ready)

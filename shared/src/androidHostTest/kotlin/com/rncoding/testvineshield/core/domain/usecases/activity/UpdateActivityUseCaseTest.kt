@@ -324,4 +324,36 @@ class UpdateActivityUseCaseTest {
             useCase(activity())
         }
     }
+    @Test
+    fun recordsEarlyCompletionAndPreservesCreationAndTreatmentFields(): Unit = runBlocking {
+        val existing = activity().copy(
+            treatmentProduct = "Existing product",
+            treatmentProductQuantity = 0.5,
+            treatmentProductUnits = "kg",
+            waterQuantity = 10.0,
+            treatmentProductRate = 0.125
+        )
+        givenExistingActivity(existing)
+        every { clock.nowMillis() } returns 3000L
+        val captured = slot<ActivityDomainModel>()
+        coEvery { activityRepository.updateActivity(10L, capture(captured)) } returns true
+        val completed = existing.copy(
+            status = ActivityStatus.COMPLETED.dbValue,
+            completedAt = LocalDate(2026, 9, 30)
+        )
+
+        assertIs<Result.Success<*>>(useCase(completed))
+        assertEquals(completed.copy(updatedAt = 3000L), captured.captured)
+        coVerify(exactly = 1) { activityRepository.updateActivity(10L, any()) }
+    }
+
+    @Test
+    fun rejectsCompletionDateOnNonCompletedActivityBeforeWriting(): Unit = runBlocking {
+        givenAuthenticatedUser()
+        val result = useCase(activity().copy(completedAt = LocalDate(2026, 9, 30)))
+        val error = assertIs<Result.Error<*>>(result)
+        assertIs<ActivityError.InvalidInput>(error.error)
+        coVerify(exactly = 0) { activityRepository.updateActivity(any(), any()) }
+    }
+
 }
