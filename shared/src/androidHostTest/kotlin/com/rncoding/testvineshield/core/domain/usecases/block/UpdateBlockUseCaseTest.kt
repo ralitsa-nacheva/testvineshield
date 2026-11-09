@@ -53,9 +53,9 @@ class UpdateBlockUseCaseTest {
         blockId: Long = 20L,
         vineyardId: Long = 10L,
         name: String = "North Block",
-        area: Int = 1000,
+        area: Double = 1000.0,
         rowCount: Int = 20,
-        rowSpacing: Int = 250
+        rowSpacing: Double = 250.0
     ) = BlockDomainModel(
         blockId = blockId,
         vineyardId = vineyardId,
@@ -174,7 +174,7 @@ class UpdateBlockUseCaseTest {
     fun invalidAreaIsRejected(): Unit = runBlocking {
         givenAuthenticatedUser()
 
-        val result = useCase(block(area = 0))
+        val result = useCase(block(area = 0.0))
 
         val error = assertIs<Result.Error<*>>(result)
         assertIs<BlockError.InvalidInput>(error.error)
@@ -188,7 +188,7 @@ class UpdateBlockUseCaseTest {
     fun invalidRowSpacingIsRejected(): Unit = runBlocking {
         givenAuthenticatedUser()
 
-        val result = useCase(block(rowSpacing = 0))
+        val result = useCase(block(rowSpacing = 0.0))
 
         val error = assertIs<Result.Error<*>>(result)
         assertIs<BlockError.InvalidInput>(error.error)

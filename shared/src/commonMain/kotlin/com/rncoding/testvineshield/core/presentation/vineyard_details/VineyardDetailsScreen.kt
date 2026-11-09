@@ -1,6 +1,7 @@
 package com.rncoding.testvineshield.core.presentation.vineyard_details
 
 import com.rncoding.testvineshield.core.presentation.formatting.formatPlainDecimal
+import com.rncoding.testvineshield.core.presentation.formatting.formatBlockArea
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -369,14 +370,10 @@ private fun BlockSummaryCard(
             )
 
             Text(
-                "Area: ${block.area} ${block.areaUnit?.symbol ?: "(unit unknown)"}"
+                "Area: ${formatBlockArea(block.area, block.areaUnit)}"
             )
 
-            block.phenologicalStage?.let {
-                Text(
-                    "Phenological stage: ${it.name}"
-                )
-            }
+            Text("Phenological stage: ${block.phenologicalStage?.name ?: "Unknown"}")
 
             block.latestActivityType?.let {
                 Text(

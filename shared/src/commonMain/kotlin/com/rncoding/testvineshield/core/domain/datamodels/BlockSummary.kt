@@ -8,7 +8,7 @@ import com.rncoding.testvineshield.core.domain.datamodels.enums.PhenologicalStag
 data class BlockSummary(
     val blockId: Long,
     val name: String,
-    val area: Int,
+    val area: Double?,
     val vineVariety: String,
     val phenologicalStage: PhenologicalStage?,
     val latestActivityType: String?,

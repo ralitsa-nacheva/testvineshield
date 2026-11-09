@@ -21,7 +21,7 @@ class VineyardElevationMigrationTest {
     private fun snapshot(connection: SQLiteConnection): Map<String, List<List<String>>> =
         SchemaV2Fixture.columns.mapValues { (table, columns) ->
             val query = "SELECT " + columns.joinToString {
-                if (table == "vineyard" && it == "elevation") "quote(CAST(elevation AS REAL))" else "quote(`$it`)"
+                if (table == "vineyard" && it == "elevation") "quote(CAST(elevation AS REAL))" else if (table == "block" && it in listOf("area", "row_spacing")) "quote(CAST(`$it` AS REAL))" else "quote(`$it`)"
             } + " FROM `$table`"
             val statement = connection.prepare(query)
             try { buildList { while (statement.step()) add(columns.indices.map { statement.getText(it) }) }.sortedBy { it.toString() } }
@@ -85,7 +85,7 @@ class VineyardElevationMigrationTest {
             }
         }
         val database = Room.databaseBuilder<VineshieldDatabase>(context, name)
-            .setDriver(BundledSQLiteDriver()).addMigrations(fail, MIGRATION_3_4).build()
+            .setDriver(BundledSQLiteDriver()).addMigrations(fail, MIGRATION_3_4, MIGRATION_4_5).build()
         try {
             var failure: Exception? = null
             try { database.vineyardDao().getVineyard(1, 10) } catch (exception: Exception) { failure = exception }

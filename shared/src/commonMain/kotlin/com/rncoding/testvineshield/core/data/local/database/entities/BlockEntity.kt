@@ -23,18 +23,18 @@ data class BlockEntity(
     @ColumnInfo(name = "vineyard_id")
     val vineyardId: Long, // foreign key
     val name: String,
-    val area: Int,
+    val area: Double?,
     @ColumnInfo(name = "vine_variety")
     val vineVariety: String,
     val color: String,
     @ColumnInfo(name = "root_stock")
     val rootStock: String,
     @ColumnInfo(name = "row_count")
-    val rowCount: Int,
+    val rowCount: Int?,
     @ColumnInfo(name = "row_spacing")
-    val rowSpacing: Int,
+    val rowSpacing: Double?,
     @ColumnInfo(name = "planted_at")
-    val plantedAt: LocalDate,
+    val plantedAt: LocalDate?,
     @ColumnInfo(name = "phenological_stage")
     val phenologicalStage: PhenologicalStage?,
     @ColumnInfo(name = "area_unit", defaultValue = "NULL")

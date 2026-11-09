@@ -52,12 +52,12 @@ internal suspend fun VineshieldDatabase.insertDiseaseRiskTestData():
             blockId = blockId,
             vineyardId = vineyardId,
             name = "Test Block",
-            area = 1,
+            area = 1.0,
             vineVariety = "Merlot",
             color = "Red",
             rootStock = "SO4",
             rowCount = 10,
-            rowSpacing = 2,
+            rowSpacing = 2.0,
             plantedAt = date,
             phenologicalStage = null
         )

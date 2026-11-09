@@ -124,12 +124,12 @@ class BlockCascadeDeletionTest {
                 blockId = 0L,
                 vineyardId = vineyardId,
                 name = name,
-                area = 1000,
+                area = 1000.0,
                 vineVariety = "Merlot",
                 color = "Red",
                 rootStock = "SO4",
                 rowCount = 20,
-                rowSpacing = 250,
+                rowSpacing = 250.0,
                 plantedAt = testDate,
                 phenologicalStage = null
             )
@@ -298,12 +298,12 @@ class BlockCascadeDeletionTest {
                 blockId = 0L,
                 vineyardId = vineyardId,
                 name = name,
-                area = 1000,
+                area = 1000.0,
                 vineVariety = "Merlot",
                 color = "Red",
                 rootStock = "SO4",
                 rowCount = 20,
-                rowSpacing = 250,
+                rowSpacing = 250.0,
                 plantedAt = testDate,
                 phenologicalStage = null
             )
@@ -482,12 +482,12 @@ class BlockCascadeDeletionTest {
                 blockId = 0L,
                 vineyardId = vineyardId,
                 name = "Decimal Harvest Test",
-                area = 1000,
+                area = 1000.0,
                 vineVariety = "Merlot",
                 color = "Red",
                 rootStock = "SO4",
                 rowCount = 20,
-                rowSpacing = 250,
+                rowSpacing = 250.0,
                 plantedAt = testDate,
                 phenologicalStage = null
             )

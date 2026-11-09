@@ -115,12 +115,12 @@ class ActivityDaoTest {
                 blockId = 0L,
                 vineyardId = vineyardId,
                 name = name,
-                area = 10,
+                area = 10.0,
                 vineVariety = "Merlot",
                 color = "Red",
                 rootStock = "SO4",
                 rowCount = 10,
-                rowSpacing = 2,
+                rowSpacing = 2.0,
                 plantedAt = testDate,
                 phenologicalStage = PhenologicalStage.DORMANCY
             )

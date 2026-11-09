@@ -60,7 +60,7 @@ class InactivitySettingsMigrationTest {
             }
         }
         val db = Room.databaseBuilder<VineshieldDatabase>(context, name)
-            .setDriver(BundledSQLiteDriver()).addMigrations(failing).build()
+            .setDriver(BundledSQLiteDriver()).addMigrations(failing, MIGRATION_4_5).build()
         try {
             var failed = false
             try { db.securitySettingsDao().getSettings(1) } catch (_: Exception) { failed = true }

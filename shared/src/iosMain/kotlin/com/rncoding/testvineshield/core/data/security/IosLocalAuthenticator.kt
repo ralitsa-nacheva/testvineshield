@@ -39,12 +39,12 @@ class IosLocalAuthenticator : LocalAuthenticator {
         authenticate(reason, LocalUnlockMethod.Biometric)
 
     override suspend fun authenticate(reason: String, method: LocalUnlockMethod): Result<Unit, AppError> =
-        withContext(Dispatchers.Main.immediate) {
+        withContext<Result<Unit, AppError>>(Dispatchers.Main.immediate) {
             if (!promptLock.tryLock()) return@withContext Result.Error(SecurityError.AuthenticationInProgress)
             val context = LAContext()
             pendingContext = context
             try {
-                suspendCancellableCoroutine { continuation ->
+                suspendCancellableCoroutine<Result<Unit, AppError>> { continuation ->
                     continuation.invokeOnCancellation { context.invalidate() }
                     context.evaluatePolicy(
                         policy(method),

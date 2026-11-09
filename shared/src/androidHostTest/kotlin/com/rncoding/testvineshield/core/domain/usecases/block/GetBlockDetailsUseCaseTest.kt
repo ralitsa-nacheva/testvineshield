@@ -49,12 +49,12 @@ class GetBlockDetailsUseCaseTest {
         blockId = 20L,
         vineyardId = 10L,
         name = "North Block",
-        area = 1000,
+        area = 1000.0,
         vineVariety = "Merlot",
         color = "Red",
         rootStock = "SO4",
         rowCount = 20,
-        rowSpacing = 250,
+        rowSpacing = 250.0,
         plantedAt = LocalDate(2020, 4, 15),
         phenologicalStage = null
     )

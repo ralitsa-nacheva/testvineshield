@@ -9,13 +9,13 @@ data class BlockDomainModel(
     val blockId: Long,
     val vineyardId: Long, // foreign key
     val name: String,
-    val area: Int,
+    val area: Double?,
     val vineVariety: String,
     val color: String,
     val rootStock: String,
-    val rowCount: Int,
-    val rowSpacing: Int,
-    val plantedAt: LocalDate,
+    val rowCount: Int?,
+    val rowSpacing: Double?,
+    val plantedAt: LocalDate?,
     val phenologicalStage: PhenologicalStage?,
     val areaUnit: AreaUnit? = null,
     val rowSpacingUnit: LengthUnit? = null

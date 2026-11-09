@@ -26,7 +26,7 @@ class MeasurementUnitMigrationTest {
     private val context get() = InstrumentationRegistry.getInstrumentation().targetContext
     private fun snapshot(connection: SQLiteConnection): Map<String, List<List<String>>> =
         SchemaV1Fixture.columns.mapValues { (table, columns) ->
-            val query = "SELECT " + columns.joinToString { if (table == "vineyard" && it == "elevation") "quote(CAST(elevation AS REAL))" else "quote(`$it`)" } + " FROM `$table`"
+            val query = "SELECT " + columns.joinToString { if (table == "vineyard" && it == "elevation") "quote(CAST(elevation AS REAL))" else if (table == "block" && it in listOf("area", "row_spacing")) "quote(CAST(`$it` AS REAL))" else "quote(`$it`)" } + " FROM `$table`"
             val statement = connection.prepare(query)
             try {
                 buildList {
@@ -53,13 +53,13 @@ class MeasurementUnitMigrationTest {
             val vineyard = assertNotNull(migrated.vineyardDao().getVineyard(1, 10))
             val block = assertNotNull(migrated.blockDao().getBlockById(10, 20))
             assertNull(vineyard.sizeUnit); assertNull(block.areaUnit); assertNull(block.rowSpacingUnit)
-            assertEquals(1.25, vineyard.size); assertEquals(7, block.area); assertNull(block.phenologicalStage)
+            assertEquals(1.25, vineyard.size); assertEquals(7.0, block.area); assertNull(block.phenologicalStage)
             migrated.close(); database = null
             val upgraded = BundledSQLiteDriver().open(path)
             try {
                 assertEquals(before, snapshot(upgraded))
                 val version = upgraded.prepare("PRAGMA user_version")
-                try { assertTrue(version.step()); assertEquals(4L, version.getLong(0)) } finally { version.close() }
+                try { assertTrue(version.step()); assertEquals(5L, version.getLong(0)) } finally { version.close() }
                 val foreignKeys = upgraded.prepare("PRAGMA foreign_key_check")
                 try { assertFalse(foreignKeys.step()) } finally { foreignKeys.close() }
             } finally { upgraded.close() }
@@ -92,7 +92,7 @@ class MeasurementUnitMigrationTest {
             assertEquals(AreaUnit.HECTARE, assertNotNull(reopened.vineyardDao().getVineyard(1, 10)).sizeUnit)
             val block = assertNotNull(reopened.blockDao().getBlockById(10, 20))
             assertEquals(AreaUnit.SQUARE_METRE, block.areaUnit); assertEquals(LengthUnit.METRE, block.rowSpacingUnit)
-            assertEquals(7, block.area); assertEquals(2, block.rowSpacing)
+            assertEquals(7.0, block.area); assertEquals(2.0, block.rowSpacing)
         } finally { database?.close(); context.deleteDatabase(name) }
     }
 }

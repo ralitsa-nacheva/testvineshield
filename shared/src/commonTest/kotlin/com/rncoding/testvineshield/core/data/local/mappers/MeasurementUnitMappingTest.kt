@@ -31,7 +31,7 @@ class MeasurementUnitMappingTest {
         assertEquals(original.copy(sizeUnit = null), mapper.domainToEntity(mapper.entityToDomain(original.copy(sizeUnit = null))))
     }
     @Test fun blockRoundTripPreservesLegacyNumbersAndExplicitUnits() {
-        val original = BlockDomainModel(1, 2, "Block", 10, "Merlot", "red", "unknown", 5, 2,
+        val original = BlockDomainModel(1, 2, "Block", 10.0, "Merlot", "red", "unknown", 5, 2.0,
             LocalDate(2020, 1, 1), null, AreaUnit.SQUARE_METRE, LengthUnit.METRE)
         val mapper = BlockMapper()
         assertEquals(original, mapper.toDomain(mapper.toEntity(original)))

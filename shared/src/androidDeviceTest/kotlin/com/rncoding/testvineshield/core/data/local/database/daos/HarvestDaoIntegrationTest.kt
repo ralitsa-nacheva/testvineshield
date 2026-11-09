@@ -87,12 +87,12 @@ class HarvestDaoIntegrationTest {
                 blockId = 1L,
                 vineyardId = vineyardId,
                 name = "Block A",
-                area = 100,
+                area = 100.0,
                 vineVariety = "Merlot",
                 color = "Red",
                 rootStock = "SO4",
                 rowCount = 10,
-                rowSpacing = 2,
+                rowSpacing = 2.0,
                 plantedAt = LocalDate(2020, 4, 1),
                 phenologicalStage = null
             )
@@ -149,12 +149,12 @@ class HarvestDaoIntegrationTest {
                 blockId = secondBlockId,
                 vineyardId = vineyardId,
                 name = "Block B",
-                area = 80,
+                area = 80.0,
                 vineVariety = "Cabernet Sauvignon",
                 color = "Red",
                 rootStock = "SO4",
                 rowCount = 8,
-                rowSpacing = 2,
+                rowSpacing = 2.0,
                 plantedAt = LocalDate(2021, 4, 1),
                 phenologicalStage = null
             )

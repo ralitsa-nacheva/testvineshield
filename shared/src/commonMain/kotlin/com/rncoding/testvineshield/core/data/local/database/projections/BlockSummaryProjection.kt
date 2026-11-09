@@ -12,7 +12,7 @@ data class BlockSummaryProjection(
 
     val name: String,
 
-    val area: Int,
+    val area: Double?,
 
     @ColumnInfo(name = "vine_variety")
     val vineVariety: String,

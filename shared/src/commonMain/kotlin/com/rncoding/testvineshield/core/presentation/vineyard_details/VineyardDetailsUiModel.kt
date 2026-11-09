@@ -46,7 +46,7 @@ data class WeatherRiskUiModel(
 data class BlockUiModel(
     val blockId: Long,
     val name: String,
-    val area: Int,
+    val area: Double?,
     val vineVariety: String,
     val phenologicalStage: PhenologicalStage?,
     val latestActivityType: String?,
