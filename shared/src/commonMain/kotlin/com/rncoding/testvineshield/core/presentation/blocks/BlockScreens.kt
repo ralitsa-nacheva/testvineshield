@@ -1,6 +1,8 @@
 package com.rncoding.testvineshield.core.presentation.blocks
 
 import androidx.compose.foundation.layout.*
+import com.rncoding.testvineshield.core.presentation.components.RecordChoice
+import com.rncoding.testvineshield.core.presentation.components.RecordTopBar
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
@@ -33,7 +35,7 @@ private val draftValuesSaver = listSaver<ArrayList<String>, String>(
 fun BlockListScreenRoot(vineyardId: Long, ownerId: Long, onBack: ()->Unit, onCreate: ()->Unit, onOpen: (Long)->Unit) {
     val vm = koinViewModel<BlockListViewModel>(key = "blocks-$ownerId-$vineyardId", parameters = { parametersOf(vineyardId) })
     val state by vm.state.collectAsStateWithLifecycle()
-    Scaffold(topBar = { BlockBar("Blocks", onBack) }, floatingActionButton = {
+    Scaffold(topBar = { RecordTopBar("Blocks", onBack) }, floatingActionButton = {
         if (!state.loading && state.error==null) ExtendedFloatingActionButton(onClick = userAction(onCreate)) { Text("Add block") }
     }) { padding ->
         LazyColumn(Modifier.padding(padding).fillMaxHeight().widthIn(max = 720.dp).fillMaxWidth(), contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 100.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -56,7 +58,7 @@ fun BlockListScreenRoot(vineyardId: Long, ownerId: Long, onBack: ()->Unit, onCre
 }
 
 @Composable
-fun BlockDetailsScreenRoot(vineyardId: Long, blockId: Long, ownerId: Long, onBack: ()->Unit, onEdit: ()->Unit, onDeleted: ()->Unit, onBusyChanged: (Boolean)->Unit = {}) {
+fun BlockDetailsScreenRoot(vineyardId: Long, blockId: Long, ownerId: Long, onBack: ()->Unit, onEdit: ()->Unit, onDeleted: ()->Unit, onBusyChanged: (Boolean)->Unit = {}, onActivities: ()->Unit = {}) {
     val vm = koinViewModel<BlockDetailsViewModel>(key = "block-$ownerId-$vineyardId-$blockId", parameters = { parametersOf(BlockKey(vineyardId, blockId)) })
     val state by vm.state.collectAsStateWithLifecycle()
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { vm.load() }
@@ -65,12 +67,13 @@ fun BlockDetailsScreenRoot(vineyardId: Long, blockId: Long, ownerId: Long, onBac
         onBusyChanged(state.deleting)
         onDispose { onBusyChanged(false) }
     }
-    Scaffold(topBar = { BlockBar("Block details", { if (!vm.state.value.deleting) onBack() }, !state.deleting) }) { padding ->
+    Scaffold(topBar = { RecordTopBar("Block details", { if (!vm.state.value.deleting) onBack() }, !state.deleting) }) { padding ->
         LazyColumn(Modifier.padding(padding).fillMaxHeight().widthIn(max = 720.dp).fillMaxWidth(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (state.loading || state.deleting) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
             state.error?.let { error -> item { ErrorNotice(error, vm::load) } }
             state.block?.let { block ->
                 item { Text(block.name, style = MaterialTheme.typography.headlineSmall) }
+                item { TextButton(onClick=userAction(onActivities),enabled=!state.deleting) { Text("Block activities") } }
                 item { Text("Variety: ${block.vineVariety}") }
                 item { Text("Area: ${formatBlockArea(block.area,block.areaUnit)}") }
                 item { Text("Rows: ${block.rowCount?.toString() ?: "Unknown"}") }
@@ -130,7 +133,7 @@ fun BlockEditorScreenRoot(vineyardId: Long, blockId: Long = 0, ownerId: Long, on
 @Composable
 fun BlockEditorScreen(state: BlockEditorState, editing: Boolean, onBack: ()->Unit, onSave: ()->Unit, onRetry: ()->Unit, onText: (BlockField, String)->Unit, onAreaUnit: (AreaUnit?)->Unit, onSpacingUnit: (LengthUnit?)->Unit, onStage: (PhenologicalStage?)->Unit) {
     val activity = LocalUserActivity.current
-    Scaffold(topBar = { BlockBar(if (editing) "Edit block" else "New block", onBack, !state.saving) }) { padding ->
+    Scaffold(topBar = { RecordTopBar(if (editing) "Edit block" else "New block", onBack, !state.saving) }) { padding ->
         LazyColumn(Modifier.padding(padding).imePadding().fillMaxHeight().widthIn(max = 720.dp).fillMaxWidth(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (state.loading || state.saving) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
             state.error?.let { error -> item { ErrorNotice(error, if (!state.ready) onRetry else null) } }
@@ -148,35 +151,16 @@ fun BlockEditorScreen(state: BlockEditorState, editing: Boolean, onBack: ()->Uni
                 }
                 OutlinedTextField(value = state.draft.text(field), onValueChange = { activity()
                     onText(field, it) }, enabled = state.canEdit, modifier = Modifier.fillMaxWidth(), label = {Text(label)}, singleLine = true, isError = field in state.errors, supportingText = {Text(state.errors[field]?: help)}, keyboardOptions = KeyboardOptions(keyboardType = keyboard))
-                if (field==BlockField.Area) Choice("Area unit", state.draft.areaUnit, AreaUnit.entries, state.canEdit, {it.symbol}, onAreaUnit)
-                if (field==BlockField.Spacing) Choice("Spacing unit", state.draft.spacingUnit, LengthUnit.entries, state.canEdit, {it.symbol}, onSpacingUnit)
+                if (field==BlockField.Area) RecordChoice("Area unit", state.draft.areaUnit, AreaUnit.entries, state.canEdit, {it.symbol}, onAreaUnit)
+                if (field==BlockField.Spacing) RecordChoice("Spacing unit", state.draft.spacingUnit, LengthUnit.entries, state.canEdit, {it.symbol}, onSpacingUnit)
             }
-            item { Choice("Current stage (manual)", state.draft.stage, PhenologicalStage.entries, state.canEdit, {stageLabel(it)}, onStage) }
+            item { RecordChoice("Current stage (manual)", state.draft.stage, PhenologicalStage.entries, state.canEdit, {stageLabel(it)}, onStage) }
             item { Text("No stage is inferred from planting age. Unknown units never imply metres or hectares.") }
             item { Button(onClick = userAction(onSave), enabled = state.canEdit, modifier = Modifier.fillMaxWidth()) { Text(if (state.saving) "Saving…" else "Save block") } }
         }
     }
 }
 
-@Composable
-private fun <T> Choice(label: String, selected: T?, values: List<T>, enabled: Boolean, text: (T)->String, changed: (T?)->Unit) {
-    var open by remember { mutableStateOf(false) }
-    LaunchedEffect(enabled) { if (!enabled) open = false }
-    Box {
-        OutlinedButton(onClick = userAction {open = true}, enabled = enabled, modifier = Modifier.fillMaxWidth()) { Text("$label: ${selected?.let(text) ?: "Unknown / not specified"}") }
-        DropdownMenu(expanded = open && enabled, onDismissRequest = userAction {open = false}, modifier = Modifier.heightIn(max = 320.dp)) {
-            DropdownMenuItem(text = {Text("Unknown / not specified")}, onClick = userAction {changed(null)
-                open = false})
-            values.forEach { value -> DropdownMenuItem(text = {Text(text(value))}, onClick = userAction {changed(value)
-                    open = false}) }
-        }
-    }
-}
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun BlockBar(title: String, onBack: ()->Unit, enabled: Boolean = true) {
-    TopAppBar(title = {Text(title)}, navigationIcon = {TextButton(onClick = userAction(onBack), enabled = enabled) { Text("Back") }})
-}
 @Composable
 private fun ErrorNotice(message: String, retry: (()->Unit)?) {
     Column { Text(message, color = MaterialTheme.colorScheme.error)

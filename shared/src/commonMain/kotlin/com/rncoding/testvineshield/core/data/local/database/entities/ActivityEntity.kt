@@ -41,7 +41,7 @@ data class ActivityEntity(
     val activityDescription: String,
     val season: String,
     @ColumnInfo(name = "phenological_stage")
-    val phenologicalStage: PhenologicalStage,
+    val phenologicalStage: PhenologicalStage?,
     val priority: ActivityPriority,
     val status: ActivityStatus,
     @ColumnInfo(name = "planned_at")

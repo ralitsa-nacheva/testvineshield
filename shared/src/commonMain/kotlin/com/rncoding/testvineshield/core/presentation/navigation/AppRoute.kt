@@ -61,3 +61,9 @@ data class BlocksRoute(val vineyardId: Long) : AppRoute
 data class BlockDetailsRoute(val vineyardId: Long,val blockId: Long) : AppRoute
 @Serializable
 data class BlockEditorRoute(val vineyardId: Long,val blockId: Long = 0) : AppRoute
+
+
+@Serializable
+data class ActivityListRoute(val vineyardId: Long,val blockId: Long = 0) : AppRoute
+@Serializable
+data class ActivityEditorRoute(val vineyardId: Long,val blockId: Long = 0,val activityId: Long = 0,val complete: Boolean = false) : AppRoute

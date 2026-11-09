@@ -63,7 +63,7 @@ class ActivityRepositoryImpl(
             activityType = activityType,
             activityDescription = activityDescription,
             season = season,
-            phenologicalStage = phenologicalStage.dbValue,
+            phenologicalStage = phenologicalStage?.dbValue,
             priority = priority.dbValue,
             status = status.dbValue,
             plannedAt = plannedAt,
@@ -88,7 +88,7 @@ class ActivityRepositoryImpl(
             activityDescription = activityDescription,
             season = season,
             phenologicalStage =
-                PhenologicalStage.fromDbValue(phenologicalStage),
+                phenologicalStage?.let(PhenologicalStage::fromDbValue),
             priority = ActivityPriority.fromDbValue(priority),
             status = ActivityStatus.fromDbValue(status),
             plannedAt = plannedAt,

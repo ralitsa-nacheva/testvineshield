@@ -1,5 +1,8 @@
 package com.rncoding.testvineshield.di
 
+import com.rncoding.testvineshield.core.presentation.activities.*
+import com.rncoding.testvineshield.core.domain.usecases.activity.ObserveActivityNotebookUseCase
+import com.rncoding.testvineshield.core.domain.usecases.activity.ActivityScope
 import com.rncoding.testvineshield.core.domain.usecases.block.ObserveOwnedBlocksUseCase
 import com.rncoding.testvineshield.core.presentation.blocks.*
 import com.rncoding.testvineshield.core.data.datasource.WeatherRemoteDataSource
@@ -972,4 +975,8 @@ val commonModule =
         viewModel { (vineyardId:Long) -> BlockListViewModel(vineyardId,get()) }
         viewModel { (key:BlockKey) -> BlockDetailsViewModel(key,get(),get()) }
         viewModel { (request:BlockEditorRequest) -> BlockEditorViewModel(request,get(),get(),get(),get()) }
+        factory { ObserveActivityNotebookUseCase(get(),get(),get(),get()) }
+        viewModel { (scope: ActivityScope) -> ActivityListViewModel(scope,get()) }
+        viewModel { (key: ActivityKey) -> ActivityDetailsViewModel(key,get(),get(),get()) }
+        viewModel { (request: ActivityEditorRequest) -> ActivityEditorViewModel(request,get(),get(),get(),get(),get()) }
     }

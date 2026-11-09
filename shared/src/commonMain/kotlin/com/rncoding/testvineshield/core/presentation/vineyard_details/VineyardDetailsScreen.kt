@@ -40,7 +40,8 @@ fun VineyardDetailsScreen(
     onDeleteRequest: () -> Unit,
     onDeleteConfirm: () -> Unit,
     onDeleteCancel: () -> Unit,
-    onBlocks: () -> Unit = {}
+    onBlocks: () -> Unit = {},
+    onActivities: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -133,6 +134,7 @@ fun VineyardDetailsScreen(
                     }
 
                     item {
+                        TextButton(onClick=userAction(onActivities)) { Text("Vineyard activities") }
                         SectionTitle("Blocks")
                         TextButton(onClick=userAction(onBlocks)) { Text("Manage blocks") }
                     }

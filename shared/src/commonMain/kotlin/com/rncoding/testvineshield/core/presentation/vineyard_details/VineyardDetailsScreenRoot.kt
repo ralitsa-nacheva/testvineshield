@@ -15,7 +15,8 @@ fun VineyardDetailsScreenRoot(
     onBack: () -> Unit,
     onEdit: () -> Unit,
     onDeleted: () -> Unit,
-    onBlocks: () -> Unit = {}
+    onBlocks: () -> Unit = {},
+    onActivities: () -> Unit = {}
 ) {
     val viewModel =
         koinViewModel<VineyardDetailsViewModel>(
@@ -56,6 +57,7 @@ fun VineyardDetailsScreenRoot(
         onBack = onBack,
         onEdit = onEdit,
         onBlocks = onBlocks,
+        onActivities = onActivities,
         onDeleteRequest =
             viewModel::requestDelete,
         onDeleteConfirm =

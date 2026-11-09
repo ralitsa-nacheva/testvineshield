@@ -6,17 +6,19 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.rncoding.testvineshield.core.presentation.root.userAction
 
 @Composable
 fun VineShieldNavigationBar(
     selectedDestination: TopLevelDestination,
     alertBadgeCount: Int,
     activityBadgeCount: Int,
-    onDestinationSelected: (TopLevelDestination) -> Unit
+    onDestinationSelected: (TopLevelDestination) -> Unit,
+    destinations: List<TopLevelDestination> = TopLevelDestination.entries
 ) {
     NavigationBar {
 
-        TopLevelDestination.entries.forEach { destination ->
+        destinations.forEach { destination ->
 
             val badgeCount =
                 when (destination) {
@@ -33,7 +35,7 @@ fun VineShieldNavigationBar(
                 selected =
                     selectedDestination == destination,
 
-                onClick = {
+                onClick = userAction {
                     onDestinationSelected(destination)
                 },
 

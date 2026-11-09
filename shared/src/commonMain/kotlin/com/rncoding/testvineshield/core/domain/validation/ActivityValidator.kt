@@ -53,7 +53,7 @@ class ActivityValidator {
             )
         }
 
-        if (PhenologicalStage.entries.none {
+        if (activity.phenologicalStage != null && PhenologicalStage.entries.none {
                 it.dbValue == activity.phenologicalStage
             }) {
             return ActivityError.InvalidInput(

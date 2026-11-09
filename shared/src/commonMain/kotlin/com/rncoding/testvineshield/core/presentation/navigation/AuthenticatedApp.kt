@@ -3,6 +3,8 @@ package com.rncoding.testvineshield.core.presentation.navigation
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
+import com.rncoding.testvineshield.core.presentation.activities.*
+import com.rncoding.testvineshield.core.domain.usecases.activity.ActivityScope
 import com.rncoding.testvineshield.core.presentation.blocks.*
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.entryProvider
@@ -23,9 +25,15 @@ fun AuthenticatedApp(
     activityBadgeCount: Int = 0
 ) {
 
-    var busyBlockRoute by remember { mutableStateOf<AppRoute?>(null) }
+    var busyRecordRoute by remember { mutableStateOf<AppRoute?>(null) }
     val navigationState =
         rememberVineShieldNavigationState()
+
+    val availableDestinations = listOf(TopLevelDestination.VINEYARDS, TopLevelDestination.ACTIVITIES, TopLevelDestination.ACCOUNT)
+    LaunchedEffect(navigationState.selectedDestination) {
+        if (navigationState.selectedDestination !in availableDestinations)
+            navigationState.selectDestination(TopLevelDestination.VINEYARDS)
+    }
 
     Scaffold(
         bottomBar = {
@@ -38,7 +46,8 @@ fun AuthenticatedApp(
                 activityBadgeCount =
                     activityBadgeCount,
                 onDestinationSelected =
-                    { if(busyBlockRoute == null) navigationState.selectDestination(it) }
+                    { if(busyRecordRoute == null) navigationState.selectDestination(it) },
+                destinations = availableDestinations
             )
         }
     ) { innerPadding ->
@@ -48,7 +57,7 @@ fun AuthenticatedApp(
                 navigationState.currentBackStack,
 
             onBack = {
-                if(busyBlockRoute == null) navigationState.goBack()
+                if(busyRecordRoute == null) navigationState.goBack()
             },
 
             modifier =
@@ -107,7 +116,8 @@ fun AuthenticatedApp(
                             onDeleted = {
                                 navigationState.goBack()
                             },
-                            onBlocks = { navigationState.navigate(BlocksRoute(route.vineyardId)) }
+                            onBlocks = { navigationState.navigate(BlocksRoute(route.vineyardId)) },
+                            onActivities = { navigationState.navigate(ActivityListRoute(route.vineyardId)) }
                         )
                     }
 
@@ -147,26 +157,33 @@ fun AuthenticatedApp(
                         BlockDetailsScreenRoot(route.vineyardId,route.blockId,userId,onBack={navigationState.goBack()},
                             onEdit={navigationState.navigate(BlockEditorRoute(route.vineyardId,route.blockId))},
                             onDeleted={navigationState.goBack()},
-                            onBusyChanged={ if(it) busyBlockRoute=route else if(busyBlockRoute==route) busyBlockRoute=null })
+                            onActivities={navigationState.navigate(ActivityListRoute(route.vineyardId,route.blockId))},
+                            onBusyChanged={ if(it) busyRecordRoute=route else if(busyRecordRoute==route) busyRecordRoute=null })
                     }
                     entry<BlockEditorRoute> { route ->
                         BlockEditorScreenRoot(route.vineyardId,route.blockId,userId,onBack={navigationState.goBack()},
-                            onSaved={navigationState.goBack()},onBusyChanged={ if(it) busyBlockRoute=route else if(busyBlockRoute==route) busyBlockRoute=null })
+                            onSaved={navigationState.goBack()},onBusyChanged={ if(it) busyRecordRoute=route else if(busyRecordRoute==route) busyRecordRoute=null })
                     }
 
                     entry<ActivitiesRoute> {
-
-                        FeaturePlaceholderScreen(
-                            title = "Activities"
-                        )
+                        ActivityListScreenRoot(userId,onVineyard={navigationState.navigate(ActivityListRoute(it))})
                     }
-
+                    entry<ActivityListRoute> { route ->
+                        ActivityListScreenRoot(userId,ActivityScope(route.vineyardId,route.blockId),onBack={navigationState.goBack()},
+                            onCreate={navigationState.navigate(ActivityEditorRoute(route.vineyardId,route.blockId))},
+                            onOpen={navigationState.navigate(ActivityDetailsRoute(route.vineyardId,it))})
+                    }
                     entry<ActivityDetailsRoute> { route ->
-
-                        FeaturePlaceholderScreen(
-                            title =
-                                "Activity ${route.activityId}"
-                        )
+                        ActivityDetailsScreenRoot(userId,route.vineyardId,route.activityId,onBack={navigationState.goBack()},
+                            onEdit={navigationState.navigate(ActivityEditorRoute(route.vineyardId,activityId=route.activityId))},
+                            onComplete={navigationState.navigate(ActivityEditorRoute(route.vineyardId,activityId=route.activityId,complete=true))},
+                            onDeleted={navigationState.goBack()},
+                            onBusyChanged={if(it) busyRecordRoute=route else if(busyRecordRoute==route) busyRecordRoute=null})
+                    }
+                    entry<ActivityEditorRoute> { route ->
+                        ActivityEditorScreenRoot(userId,ActivityScope(route.vineyardId,route.blockId),route.activityId,route.complete,
+                            onBack={navigationState.goBack()},onSaved={navigationState.goBack()},
+                            onBusyChanged={if(it) busyRecordRoute=route else if(busyRecordRoute==route) busyRecordRoute=null})
                     }
 
                     entry<AlertsRoute> {

@@ -1,6 +1,5 @@
 package com.rncoding.testvineshield.core.domain.datamodels
 
-import androidx.room.ColumnInfo
 import kotlinx.datetime.LocalDate
 
 data class ActivityDomainModel(
@@ -10,7 +9,7 @@ data class ActivityDomainModel(
     val activityType: String,
     val activityDescription: String,
     val season: String,
-    val phenologicalStage: String, // enum?
+    val phenologicalStage: String?, // null means unknown; known values use stable enum codes
     val priority: String,
     val status: String,
     val plannedAt: LocalDate,
