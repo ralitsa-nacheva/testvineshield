@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.data.repository
 
+import com.rncoding.testvineshield.core.domain.datamodels.CachedForecastHour
 import com.rncoding.testvineshield.core.data.local.database.daos.WeatherForecastDao
 import com.rncoding.testvineshield.core.data.local.database.entities.WeatherForecastEntity
 import com.rncoding.testvineshield.core.data.local.mappers.WeatherForecastMapper
@@ -16,6 +17,11 @@ class WeatherForecastRepositoryImpl(
     private val forecastDao: WeatherForecastDao,
     private val forecastMapper: WeatherForecastMapper
 ) : WeatherForecastRepository {
+    override fun observeCachedForecast(vineyardId: Long): Flow<List<CachedForecastHour>> =
+        forecastDao.observeForecastWeather(vineyardId).map { rows ->
+            rows.map { CachedForecastHour(entityToDomain(it), it.forecastCreatedAt) }
+        }
+
 
     override fun observeForecast(
         vineyardId: Long

@@ -1,7 +1,9 @@
 package com.rncoding.testvineshield.core.data.disease_risk
 
+import kotlinx.coroutines.flow.Flow
 import com.rncoding.testvineshield.core.data.local.database.daos.DiseaseRiskMonitoringConfigurationDao
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskEvaluationCoordinator
+import kotlinx.coroutines.flow.map
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskModelType
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskMonitoringConfiguration
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskMonitoringConfigurationRepository
@@ -10,6 +12,9 @@ class DiseaseRiskMonitoringConfigurationRepositoryImpl(
     private val dao: DiseaseRiskMonitoringConfigurationDao,
     private val coordinator: DiseaseRiskEvaluationCoordinator
 ) : DiseaseRiskMonitoringConfigurationRepository {
+    override fun observeConfigurationsForVineyard(vineyardId: Long): Flow<List<DiseaseRiskMonitoringConfiguration>> =
+        dao.observeConfigurationsForVineyard(vineyardId).map { rows -> rows.map(DiseaseRiskMonitoringConfigurationMapper::toDomain) }
+
 
     override suspend fun getConfiguration(
         vineyardId: Long,

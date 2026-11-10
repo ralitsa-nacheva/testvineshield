@@ -31,6 +31,9 @@ class VineyardDiseaseRiskEvaluatorImplTest {
     private class FakeMonitoringRepository :
         DiseaseRiskMonitoringConfigurationRepository {
 
+        override fun observeConfigurationsForVineyard(vineyardId: Long): kotlinx.coroutines.flow.Flow<List<DiseaseRiskMonitoringConfiguration>> =
+            kotlinx.coroutines.flow.flow { emit(configurations.filter { it.vineyardId == vineyardId }) }
+
         var configurations =
             emptyList<DiseaseRiskMonitoringConfiguration>()
 

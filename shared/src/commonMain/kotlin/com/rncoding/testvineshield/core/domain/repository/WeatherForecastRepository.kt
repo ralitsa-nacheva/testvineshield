@@ -1,9 +1,13 @@
 package com.rncoding.testvineshield.core.domain.repositories
 
+import com.rncoding.testvineshield.core.domain.datamodels.CachedForecastHour
 import com.rncoding.testvineshield.core.domain.datamodels.WeatherHistoryDomainModel
 import kotlinx.coroutines.flow.Flow
 
 interface WeatherForecastRepository {
+    /** Preserves cache-fetch metadata; never substitutes validity time for fetch time. */
+    fun observeCachedForecast(vineyardId: Long): Flow<List<CachedForecastHour>>
+
 
     /**
      * Observe the stored forecast for a vineyard.

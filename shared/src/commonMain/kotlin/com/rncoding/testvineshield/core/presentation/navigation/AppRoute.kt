@@ -7,6 +7,9 @@ import kotlinx.serialization.Serializable
 sealed interface AppRoute : NavKey
 
 @Serializable
+data class VineyardWeatherRoute(val vineyardId: Long) : AppRoute
+
+@Serializable
 data object VineyardsRoute : AppRoute
 
 @Serializable

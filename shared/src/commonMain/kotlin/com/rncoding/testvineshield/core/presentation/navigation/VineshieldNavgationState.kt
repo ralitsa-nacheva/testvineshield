@@ -36,6 +36,7 @@ internal val vineShieldSerializersModule =
             subclass(ActivityDetailsRoute::class)
             subclass(SprayRoute::class)
             subclass(SprayExportRoute::class)
+            subclass(VineyardWeatherRoute::class)
             subclass(ActivityListRoute::class)
             subclass(ActivityEditorRoute::class)
 

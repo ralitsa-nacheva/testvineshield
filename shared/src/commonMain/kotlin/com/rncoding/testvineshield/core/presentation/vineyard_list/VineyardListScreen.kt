@@ -212,10 +212,8 @@ private fun VineyardListItem(
                 }
             )
 
-            vineyard.latestTemperature?.let { temperature ->
-                Text(
-                    text = "Temperature: $temperature °C"
-                )
+            if (vineyard.latestTemperature != null) {
+                Text("Cached weather saved · open vineyard for timestamps")
             }
 
             vineyard.lastActivityStatus?.let { status ->

@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.data.local.database.daos
 
+import kotlinx.coroutines.flow.Flow
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
@@ -8,6 +9,9 @@ import com.rncoding.testvineshield.core.data.local.database.entities.DiseaseRisk
 
 @Dao
 interface DiseaseRiskMonitoringConfigurationDao {
+    @Query("SELECT * FROM disease_risk_monitoring_configuration WHERE vineyard_id = :vineyardId ORDER BY block_id, disease_id, model_type")
+    fun observeConfigurationsForVineyard(vineyardId: Long): Flow<List<DiseaseRiskMonitoringConfigurationEntity>>
+
 
     @Query(
         """

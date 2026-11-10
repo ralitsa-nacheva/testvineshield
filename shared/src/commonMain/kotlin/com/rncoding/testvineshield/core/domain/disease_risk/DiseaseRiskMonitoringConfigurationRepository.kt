@@ -1,6 +1,10 @@
 package com.rncoding.testvineshield.core.domain.disease_risk
 
+import kotlinx.coroutines.flow.Flow
 interface DiseaseRiskMonitoringConfigurationRepository {
+    /** All saved configurations, including disabled records. No model execution. */
+    fun observeConfigurationsForVineyard(vineyardId: Long): Flow<List<DiseaseRiskMonitoringConfiguration>>
+
 
     suspend fun getConfiguration(
         vineyardId: Long,

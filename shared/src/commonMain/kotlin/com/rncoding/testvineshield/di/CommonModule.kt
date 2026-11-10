@@ -1,5 +1,8 @@
 package com.rncoding.testvineshield.di
 
+import com.rncoding.testvineshield.core.presentation.weather.WeatherViewModel
+import com.rncoding.testvineshield.core.domain.usecases.weather.RefreshOwnedWeatherUseCase
+import com.rncoding.testvineshield.core.domain.usecases.weather.ObserveOwnedWeatherUseCase
 import com.rncoding.testvineshield.core.presentation.activities.*
 import com.rncoding.testvineshield.core.domain.usecases.activity.ObserveActivityNotebookUseCase
 import com.rncoding.testvineshield.core.domain.usecases.activity.ActivityScope
@@ -1015,4 +1018,8 @@ val commonModule =
         factory<SprayExportEncoder> { SprayExportEncoderImpl() }
         factory { PrepareSprayExportUseCase(get(), get(), get(), get(), get(), get()) }
         viewModel { (key: com.rncoding.testvineshield.core.domain.usecases.activity.SprayKey) -> SprayExportViewModel(key, get(), get()) }
+        factory { ObserveOwnedWeatherUseCase(get(), get(), get(), get(), get(), get(), get()) }
+        factory { RefreshOwnedWeatherUseCase(get(), get(), get(), get(), get()) }
+        viewModel { (vineyardId: Long) -> WeatherViewModel(vineyardId, get(), get(), get()) }
+
     }

@@ -100,6 +100,10 @@ fun AuthenticatedApp(
                         )
                     }
 
+                    entry<VineyardWeatherRoute> { route ->
+                        com.rncoding.testvineshield.core.presentation.weather.WeatherScreenRoot(userId, route.vineyardId,
+                            onBack = { navigationState.goBack() })
+                    }
                     entry<VineyardDetailsRoute> { route ->
                         VineyardDetailsScreenRoot(
                             vineyardId =
@@ -122,7 +126,8 @@ fun AuthenticatedApp(
                                 navigationState.goBack()
                             },
                             onBlocks = { navigationState.navigate(BlocksRoute(route.vineyardId)) },
-                            onActivities = { navigationState.navigate(ActivityListRoute(route.vineyardId)) }
+                            onActivities = { navigationState.navigate(ActivityListRoute(route.vineyardId)) },
+                            onWeather = { navigationState.navigate(VineyardWeatherRoute(route.vineyardId)) }
                         )
                     }
 

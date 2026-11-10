@@ -41,7 +41,8 @@ fun VineyardDetailsScreen(
     onDeleteConfirm: () -> Unit,
     onDeleteCancel: () -> Unit,
     onBlocks: () -> Unit = {},
-    onActivities: () -> Unit = {}
+    onActivities: () -> Unit = {},
+    onWeather: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -122,15 +123,10 @@ fun VineyardDetailsScreen(
                     }
 
                     item {
-                        WeatherSection(
-                            weather = details.weather
-                        )
-                    }
-
-                    item {
-                        WeatherRiskSection(
-                            risk = details.weatherRisk
-                        )
+                        SectionTitle("Weather and monitoring")
+                        Text("Review cached history, forecast age and saved monitoring settings.")
+                        TextButton(onClick = userAction(onWeather)) { Text("Open weather and monitoring") }
+                        Text("Disease risk is not assessed here. No active alerts does not establish that the vineyard is safe.")
                     }
 
                     item {
@@ -280,76 +276,6 @@ fun VineyardDetailsScreen(
             )
         }
     }
-
-    @Composable
-    private fun WeatherSection(
-        weather: WeatherUiModel?
-    ) {
-        Column(
-            verticalArrangement =
-                Arrangement.spacedBy(4.dp)
-        ) {
-            SectionTitle("Current weather")
-
-            if (weather == null) {
-                EmptySectionText(
-                    "Weather data is not available yet."
-                )
-                return
-            }
-
-            Text(
-                "Temperature: ${weather.temperature} °C"
-            )
-
-            Text(
-                "Humidity: ${weather.relativeHumidity} %"
-            )
-
-            Text(
-                "Precipitation: ${weather.precipitation} mm"
-            )
-
-            Text(
-                "Wind: ${weather.windSpeed} km/h"
-            )
-        }
-    }
-//temporary
-@Composable
-private fun WeatherRiskSection(
-    risk: WeatherRiskUiModel?
-) {
-    Column(
-        verticalArrangement =
-            Arrangement.spacedBy(4.dp)
-    ) {
-        SectionTitle("Disease risk")
-
-        if (risk == null) {
-            EmptySectionText(
-                "Disease risk has not been calculated yet."
-            )
-            return
-        }
-
-        Text(
-            "Infection score: ${risk.infectionScore}"
-        )
-
-        Text(
-            if (risk.powderyMildewInitialInfection) {
-                "Powdery mildew infection conditions detected."
-            } else {
-                "No initial powdery mildew infection conditions detected."
-            }
-        )
-
-        Text(
-            "Wetness hours: ${risk.wetnessHoursAt10C}"
-        )
-    }
-}
 
 @Composable
 private fun BlockSummaryCard(
