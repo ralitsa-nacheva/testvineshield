@@ -172,7 +172,13 @@ fun AuthenticatedApp(
                         HarvestListScreenRoot(userId, HarvestScope(route.vineyardId, route.blockId),
                             onBack = { navigationState.goBack() },
                             onCreate = { navigationState.navigate(HarvestEditorRoute(route.vineyardId, route.blockId)) },
-                            onOpen = { navigationState.navigate(HarvestDetailsRoute(route.vineyardId, route.blockId, it)) })
+                            onOpen = { navigationState.navigate(HarvestDetailsRoute(route.vineyardId, route.blockId, it)) },
+                            onExport = { navigationState.navigate(HarvestExportRoute(route.vineyardId, route.blockId, it)) })
+                    }
+                    entry<HarvestExportRoute> { route ->
+                        HarvestExportScreenRoot(userId, HarvestScope(route.vineyardId, route.blockId), route.season,
+                            onBack = { navigationState.goBack() },
+                            onBusyChanged = { if (it) busyRecordRoute = route else if (busyRecordRoute == route) busyRecordRoute = null })
                     }
                     entry<HarvestDetailsRoute> { route ->
                         HarvestDetailsScreenRoot(userId, HarvestKey(HarvestScope(route.vineyardId, route.blockId), route.harvestId),

@@ -141,6 +141,9 @@ import com.rncoding.testvineshield.core.data.repository.HarvestRepositoryImpl
 import com.rncoding.testvineshield.core.domain.usecases.harvest.ObserveOwnedHarvestsUseCase
 import com.rncoding.testvineshield.core.domain.usecases.harvest.GetHarvestDetailsUseCase
 import com.rncoding.testvineshield.core.presentation.harvest.*
+import com.rncoding.testvineshield.core.domain.usecases.harvest.PrepareHarvestExportUseCase
+import com.rncoding.testvineshield.core.domain.export.HarvestExportEncoder
+import com.rncoding.testvineshield.core.data.export.HarvestExportEncoderImpl
 import com.rncoding.testvineshield.core.domain.usecases.harvest.HarvestScope
 import com.rncoding.testvineshield.core.domain.repository.HarvestRepository
 import com.rncoding.testvineshield.core.domain.usecases.disease.CreateDiseaseUseCase
@@ -988,4 +991,7 @@ val commonModule =
         viewModel { (scope: HarvestScope) -> HarvestListViewModel(scope, get()) }
         viewModel { (key: HarvestKey) -> HarvestDetailsViewModel(key, get(), get()) }
         viewModel { (request: HarvestEditorRequest) -> HarvestEditorViewModel(request, get(), get(), get(), get()) }
+        factory<HarvestExportEncoder> { HarvestExportEncoderImpl() }
+        factory { PrepareHarvestExportUseCase(get(), get(), get(), get(), get(), get()) }
+        viewModel { HarvestExportViewModel(get()) }
     }

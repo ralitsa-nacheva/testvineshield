@@ -24,7 +24,7 @@ import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
 @Composable
-fun HarvestListScreenRoot(ownerId: Long, scope: HarvestScope, onBack: () -> Unit, onCreate: () -> Unit, onOpen: (Long) -> Unit) {
+fun HarvestListScreenRoot(ownerId: Long, scope: HarvestScope, onBack: () -> Unit, onCreate: () -> Unit, onOpen: (Long) -> Unit, onExport: (String?) -> Unit = {}) {
     val vm = koinViewModel<HarvestListViewModel>(key = "harvests-$ownerId-${scope.vineyardId}-${scope.blockId}", parameters = { parametersOf(scope) })
     val state by vm.state.collectAsStateWithLifecycle()
     var season by rememberSaveable(ownerId, scope.vineyardId, scope.blockId) { mutableStateOf<String?>(null) }
@@ -36,6 +36,7 @@ fun HarvestListScreenRoot(ownerId: Long, scope: HarvestScope, onBack: () -> Unit
             state.error?.let { item { HarvestErrorNotice(it, vm::reload) } }
             state.snapshot?.let { snapshot ->
                 item { Text(snapshot.blockName, style = MaterialTheme.typography.headlineSmall) }
+                item { OutlinedButton(onClick = userAction { onExport(season) }, enabled = snapshot.records.any { season == null || it.season == season }) { Text("Export harvest records") } }
                 item { RecordChoice("Season", season, snapshot.records.map { it.season }.distinct().sortedDescending(), true, { it }, { season = it }, nullLabel = "All seasons") }
                 val visible = snapshot.records.filter { season == null || it.season == season }
                 if (visible.isEmpty()) item { Text(if (snapshot.records.isEmpty()) "No harvest records yet. Record a harvest for this block." else "No records for the selected season. Choose All seasons to see every record.") }

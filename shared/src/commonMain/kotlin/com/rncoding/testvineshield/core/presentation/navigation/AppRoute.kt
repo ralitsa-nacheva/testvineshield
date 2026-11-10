@@ -75,3 +75,7 @@ data class HarvestListRoute(val vineyardId: Long, val blockId: Long) : AppRoute
 data class HarvestDetailsRoute(val vineyardId: Long, val blockId: Long, val harvestId: Long) : AppRoute
 @Serializable
 data class HarvestEditorRoute(val vineyardId: Long, val blockId: Long, val harvestId: Long = 0) : AppRoute
+
+
+@Serializable
+data class HarvestExportRoute(val vineyardId: Long, val blockId: Long, val season: String? = null) : AppRoute
