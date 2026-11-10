@@ -70,7 +70,7 @@ class HarvestExportEncoderImpl : HarvestExportEncoder {
     private suspend fun csv(snapshot: HarvestExportSnapshot): String = buildString {
         append('\uFEFF') // UTF-8 BOM for spreadsheet Unicode detection; JSON has no BOM.
         fun row(values: List<String>) {
-            append(values.joinToString(",") { "\"" + it.replace("\"", "\"\"") + "\"" }).append("\r\n")
+            append(values.joinToString(",", transform = ::csvQuoted)).append("\r\n")
             // Bound growth while building, not only after allocating the final UTF-8 byte array.
             if (length > MAX_UTF8_BYTES) throw HarvestExportLimitException()
         }
@@ -93,11 +93,5 @@ class HarvestExportEncoderImpl : HarvestExportEncoder {
     }
 
     /** Spreadsheet-view CSV is not a lossless text interchange. Use JSON for exact strings. */
-    private fun spreadsheetText(value: String): String {
-        val significant = value.dropWhile { it.isWhitespace() || it == '\uFEFF' || it == '\u200B' }
-        val dangerous = significant.firstOrNull() in listOf('=', '+', '-', '@', '＝', '＋', '－', '＠') || value.firstOrNull() in listOf('\t', '\r', '\n')
-        // A literal text marker prevents the original value from starting the cell.
-        // Spreadsheet apps differ; saving/reopening a CSV can alter escaping.
-        return if (dangerous) "'" + value else value
-    }
+    private fun spreadsheetText(value: String): String = spreadsheetTextValue(value)
 }

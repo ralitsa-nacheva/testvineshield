@@ -145,6 +145,9 @@ import com.rncoding.testvineshield.core.domain.usecases.harvest.PrepareHarvestEx
 import com.rncoding.testvineshield.core.domain.export.HarvestExportEncoder
 import com.rncoding.testvineshield.core.data.export.HarvestExportEncoderImpl
 import com.rncoding.testvineshield.core.domain.usecases.harvest.HarvestScope
+import com.rncoding.testvineshield.core.domain.export.SprayExportEncoder
+import com.rncoding.testvineshield.core.data.export.SprayExportEncoderImpl
+import com.rncoding.testvineshield.core.domain.usecases.activity.PrepareSprayExportUseCase
 import com.rncoding.testvineshield.core.domain.repository.SprayRepository
 import com.rncoding.testvineshield.core.data.repository.SprayRepositoryImpl
 import com.rncoding.testvineshield.core.data.local.database.daos.SprayDao
@@ -1009,4 +1012,7 @@ val commonModule =
         factory { SaveSprayRecordUseCase(get(), get(), get()) }
         factory { DeleteSprayRecordUseCase(get(), get()) }
         viewModel { (request: SprayRequest) -> SprayViewModel(request, get(), get(), get()) }
+        factory<SprayExportEncoder> { SprayExportEncoderImpl() }
+        factory { PrepareSprayExportUseCase(get(), get(), get(), get(), get(), get()) }
+        viewModel { (key: com.rncoding.testvineshield.core.domain.usecases.activity.SprayKey) -> SprayExportViewModel(key, get(), get()) }
     }

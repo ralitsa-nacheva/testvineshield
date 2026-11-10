@@ -7,6 +7,7 @@ import com.rncoding.testvineshield.core.presentation.harvest.*
 import com.rncoding.testvineshield.core.domain.usecases.harvest.HarvestScope
 import com.rncoding.testvineshield.core.presentation.activities.*
 import com.rncoding.testvineshield.core.presentation.spray.SprayScreenRoot
+import com.rncoding.testvineshield.core.presentation.spray.SprayExportScreenRoot
 import com.rncoding.testvineshield.core.domain.usecases.activity.SprayKey
 import com.rncoding.testvineshield.core.domain.usecases.activity.ActivityScope
 import com.rncoding.testvineshield.core.presentation.blocks.*
@@ -214,6 +215,12 @@ fun AuthenticatedApp(
                     entry<SprayRoute> { route ->
                         SprayScreenRoot(userId, SprayKey(route.vineyardId, route.activityId),
                             onBack = { navigationState.goBack() }, onFinished = { navigationState.goBack() },
+                            onExport = { navigationState.navigate(SprayExportRoute(route.vineyardId, route.activityId)) },
+                            onBusyChanged = { if (it) busyRecordRoute = route else if (busyRecordRoute == route) busyRecordRoute = null })
+                    }
+                    entry<SprayExportRoute> { route ->
+                        SprayExportScreenRoot(userId, SprayKey(route.vineyardId, route.activityId),
+                            onBack = { navigationState.goBack() },
                             onBusyChanged = { if (it) busyRecordRoute = route else if (busyRecordRoute == route) busyRecordRoute = null })
                     }
                     entry<ActivityEditorRoute> { route ->

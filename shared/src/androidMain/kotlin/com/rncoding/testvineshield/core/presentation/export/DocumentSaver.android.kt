@@ -6,7 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
-import com.rncoding.testvineshield.core.domain.export.PreparedHarvestExport
+import com.rncoding.testvineshield.core.domain.export.PreparedDocument
 import kotlinx.coroutines.*
 
 @Composable
@@ -27,7 +27,7 @@ actual fun rememberDocumentSaver(): DocumentSaver {
     val csv = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/csv"), selected)
     return remember(resolver, scope, json, csv) {
         object : DocumentSaver {
-            override suspend fun save(document: PreparedHarvestExport): DocumentSaveResult {
+            override suspend fun save(document: PreparedDocument): DocumentSaveResult {
                 val task = scope.async<DocumentSaveResult> {
                     if (saving || pending != null) return@async DocumentSaveResult.Failed("Another export is already open.")
                     saving = true

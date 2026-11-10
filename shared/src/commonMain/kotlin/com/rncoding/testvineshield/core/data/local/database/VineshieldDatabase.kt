@@ -53,7 +53,7 @@ import com.rncoding.testvineshield.core.data.local.database.entities.DiseaseRisk
     HarvestEntity::class, ObservedSymptomEntity::class, OccurrenceActivityCrossRef::class,
     OccurrenceSymptomCrossRef::class, SecuritySettingsEntity::class, SymptomEntity::class, UserEntity::class,
     VineyardEntity::class, WeatherCalculationEntity::class, WeatherHistoryEntity::class, WeatherForecastEntity::class, SprayApplicationEntity::class, SprayProductEntity::class],
-    version = 8)
+    version = 9)
 @TypeConverters(LocalDateRoomConverters::class, DomainEnumRoomConverters::class, MeasurementUnitRoomConverters::class)
 @ConstructedBy(VineshieldConstructor::class)
 

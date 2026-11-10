@@ -3,9 +3,7 @@ package com.rncoding.testvineshield.core.domain.export
 import com.rncoding.testvineshield.core.domain.datamodels.HarvestDomainModel
 import com.rncoding.testvineshield.core.domain.usecases.harvest.HarvestScope
 
-enum class HarvestExportFormat(val extension: String, val mimeType: String) {
-    JSON("json", "application/json"), CSV("csv", "text/csv")
-}
+typealias HarvestExportFormat = DocumentExportFormat
 
 data class HarvestExportSnapshot(
     val scope: HarvestScope,
@@ -16,12 +14,7 @@ data class HarvestExportSnapshot(
     val records: List<HarvestDomainModel>
 )
 
-data class PreparedHarvestExport(
-    val fileName: String,
-    val mimeType: String,
-    val content: String,
-    val recordCount: Int
-)
+typealias PreparedHarvestExport = PreparedDocument
 
 interface HarvestExportEncoder {
     suspend fun encode(snapshot: HarvestExportSnapshot, format: HarvestExportFormat): PreparedHarvestExport

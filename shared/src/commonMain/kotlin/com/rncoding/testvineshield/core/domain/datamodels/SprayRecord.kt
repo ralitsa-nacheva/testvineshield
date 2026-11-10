@@ -18,7 +18,8 @@ data class SprayProductLine(
     val productName: String,
     val quantity: Double? = null,
     val unit: SprayQuantityUnit? = null,
-    val labelReference: String? = null
+    val labelReference: String? = null,
+    val rate: SprayRate? = null
 )
 
 /** Local calendar date/time with declared zone, not a fabricated UTC instant. */

@@ -1,7 +1,7 @@
 package com.rncoding.testvineshield.core.presentation.export
 
 import androidx.compose.runtime.Composable
-import com.rncoding.testvineshield.core.domain.export.PreparedHarvestExport
+import com.rncoding.testvineshield.core.domain.export.PreparedDocument
 
 sealed interface DocumentSaveResult {
     data object Saved : DocumentSaveResult
@@ -11,7 +11,7 @@ sealed interface DocumentSaveResult {
 
 interface DocumentSaver {
     /** The implementation belongs to the current screen/window; disposal cancels it. */
-    suspend fun save(document: PreparedHarvestExport): DocumentSaveResult
+    suspend fun save(document: PreparedDocument): DocumentSaveResult
 }
 
 @Composable

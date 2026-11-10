@@ -83,3 +83,7 @@ data class HarvestExportRoute(val vineyardId: Long, val blockId: Long, val seaso
 
 @Serializable
 data class SprayRoute(val vineyardId: Long, val activityId: Long) : AppRoute
+
+
+@Serializable
+data class SprayExportRoute(val vineyardId: Long, val activityId: Long) : AppRoute

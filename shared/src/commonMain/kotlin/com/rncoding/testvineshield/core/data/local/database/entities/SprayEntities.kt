@@ -29,5 +29,9 @@ data class SprayProductEntity(
     @ColumnInfo(name = "product_name") val productName: String,
     val quantity: Double?,
     @ColumnInfo(name = "quantity_unit") val quantityUnit: String?,
-    @ColumnInfo(name = "label_reference") val labelReference: String?
+    @ColumnInfo(name = "label_reference") val labelReference: String?,
+    @ColumnInfo(name = "rate_quantity") val rateQuantity: Double? = null,
+    @ColumnInfo(name = "rate_product_unit") val rateProductUnit: String? = null,
+    @ColumnInfo(name = "rate_basis_quantity") val rateBasisQuantity: Double? = null,
+    @ColumnInfo(name = "rate_basis_unit") val rateBasisUnit: String? = null
 )

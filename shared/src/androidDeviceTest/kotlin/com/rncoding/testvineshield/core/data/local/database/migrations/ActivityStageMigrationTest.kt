@@ -84,7 +84,7 @@ class ActivityStageMigrationTest {
         val fail=object: Migration(5,6) {
             override fun migrate(connection: SQLiteConnection) {MIGRATION_5_6.migrate(connection);error("Injected failure")}
         }
-        val db=Room.databaseBuilder<VineshieldDatabase>(context,name).setDriver(BundledSQLiteDriver()).addMigrations(fail, MIGRATION_6_7, MIGRATION_7_8).build()
+        val db=Room.databaseBuilder<VineshieldDatabase>(context,name).setDriver(BundledSQLiteDriver()).addMigrations(fail, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9).build()
         try {
             var failed=false;try {db.activityDao().getActivityById(10,30)} catch(_: Exception) {failed=true}
             assertTrue(failed);db.close()

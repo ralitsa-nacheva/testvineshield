@@ -1,7 +1,7 @@
 package com.rncoding.testvineshield.core.presentation.export
 
 import androidx.compose.runtime.*
-import com.rncoding.testvineshield.core.domain.export.PreparedHarvestExport
+import com.rncoding.testvineshield.core.domain.export.PreparedDocument
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.convert
@@ -26,7 +26,7 @@ actual fun rememberDocumentSaver(): DocumentSaver {
             // UIKit's delegate is weak; retain it for the entire picker operation.
             private var retainedDelegate: UIDocumentPickerDelegateProtocol? = null
 
-            override suspend fun save(document: PreparedHarvestExport): DocumentSaveResult {
+            override suspend fun save(document: PreparedDocument): DocumentSaveResult {
                 val task = scope.async<DocumentSaveResult> {
                     if (busy) return@async DocumentSaveResult.Failed("Another export is already open.")
                     val controller = host ?: return@async DocumentSaveResult.Failed("The export window is unavailable. Reopen this screen.")

@@ -2,6 +2,7 @@ package com.rncoding.testvineshield.core.presentation.spray
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.rncoding.testvineshield.core.domain.datamodels.SprayRateBasis
 import com.rncoding.testvineshield.core.domain.datamodels.SprayQuantityUnit
 import com.rncoding.testvineshield.core.domain.datamodels.units.AreaUnit
 import com.rncoding.testvineshield.core.domain.error.Result
@@ -69,10 +70,13 @@ class SprayViewModel(
     fun removeLine(index: Int) = change { if (it.lines.size > 1 && index in it.lines.indices) it.copy(lines = it.lines.filterIndexed { at, _ -> at != index }) else it }
     fun lineText(index: Int, field: SprayLineField, value: String) = change { draft ->
         draft.copy(lines = draft.lines.mapIndexed { at, line -> if (at != index) line else when (field) {
-            SprayLineField.Name -> line.copy(name = value); SprayLineField.Quantity -> line.copy(quantity = value); SprayLineField.Reference -> line.copy(reference = value)
+            SprayLineField.Name -> line.copy(name = value); SprayLineField.Quantity -> line.copy(quantity = value); SprayLineField.Reference -> line.copy(reference = value); SprayLineField.RateQuantity -> line.copy(rateQuantity = value); SprayLineField.RateBasisQuantity -> line.copy(rateBasisQuantity = value)
         } })
     }
     fun lineUnit(index: Int, value: SprayQuantityUnit?) = change { draft -> draft.copy(lines = draft.lines.mapIndexed { at, line -> if (at == index) line.copy(unit = value) else line }) }
+    fun lineRateUnit(index: Int, value: SprayQuantityUnit?) = change { draft -> draft.copy(lines = draft.lines.mapIndexed { at, line -> if (at == index) line.copy(rateUnit = value) else line }) }
+    fun lineRateBasis(index: Int, value: SprayRateBasis?) = change { draft -> draft.copy(lines = draft.lines.mapIndexed { at, line -> if (at == index) line.copy(rateBasis = value) else line }) }
+    fun clearRate(index: Int) = change { draft -> draft.copy(lines = draft.lines.mapIndexed { at, line -> if (at == index) line.copy(rateQuantity = "", rateUnit = null, rateBasisQuantity = "", rateBasis = null) else line }) }
     fun save() {
         if (!_state.value.canEdit) return
         val parsed = _state.value.draft.parsed(request.key.activityId)

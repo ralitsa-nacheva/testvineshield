@@ -26,6 +26,9 @@ class SprayValidator(private val zones: VineyardTimeZoneCatalog = VineyardTimeZo
                 return invalid("Product ${index + 1}: enter a name of 1–200 characters.")
             if (!positive(line.quantity)) return invalid("Product ${index + 1}: a known quantity must be finite and greater than zero.")
             if (line.quantity != null && line.unit == null) return invalid("Product ${index + 1}: choose the quantity unit.")
+            val rate = line.rate
+            if (rate != null && (!rate.quantity.isFinite() || rate.quantity <= 0.0 || !rate.basisQuantity.isFinite() || rate.basisQuantity <= 0.0))
+                return invalid("Product ${index + 1}: rate product and basis amounts must be finite and greater than zero.")
             if ((line.labelReference?.length ?: 0) > 500) return invalid("Product ${index + 1}: label reference must be at most 500 characters.")
         }
         return null

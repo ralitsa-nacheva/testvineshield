@@ -25,7 +25,7 @@ import org.koin.core.parameter.parametersOf
 private val spraySaver = listSaver<ArrayList<String>, String>(save = { it.toList() }, restore = { ArrayList(it) })
 
 @Composable
-fun SprayScreenRoot(ownerId: Long, key: SprayKey, onBack: () -> Unit, onFinished: () -> Unit, onBusyChanged: (Boolean) -> Unit = {}) {
+fun SprayScreenRoot(ownerId: Long, key: SprayKey, onBack: () -> Unit, onFinished: () -> Unit, onBusyChanged: (Boolean) -> Unit = {}, onExport: () -> Unit = {}) {
     var savedDraft by rememberSaveable(ownerId, key.vineyardId, key.activityId, stateSaver = spraySaver) { mutableStateOf(arrayListOf<String>()) }
     val vm = koinViewModel<SprayViewModel>(key = "spray-$ownerId-${key.vineyardId}-${key.activityId}", parameters = { parametersOf(SprayRequest(key, SprayDraft.restore(savedDraft))) })
     val state by vm.state.collectAsStateWithLifecycle()
@@ -64,9 +64,11 @@ fun SprayScreenRoot(ownerId: Long, key: SprayKey, onBack: () -> Unit, onFinished
                                 Text("${index + 1}. ${line.productName}", style = MaterialTheme.typography.titleMedium)
                                 Text("Quantity: ${amount(line.quantity, line.unit?.label)}")
                                 Text("Label/reference as recorded: ${line.labelReference ?: "Not recorded"}")
+                                Text("Recorded rate: ${line.rate?.let { rate -> amount(rate.quantity, rate.productUnit.label) + " per " + amount(rate.basisQuantity, rate.basis.label) } ?: "Unknown"}")
                             } }
                         } }
                         item { Text("Notes: ${record.notes ?: "Not recorded"}") }
+                        item { OutlinedButton(onClick = userAction(onExport), enabled = !state.busy, modifier = Modifier.fillMaxWidth()) { Text("Export saved spray application") } }
                         item { Button(onClick = userAction(vm::edit), enabled = !state.busy, modifier = Modifier.fillMaxWidth()) { Text("Edit spray record") } }
                         item { OutlinedButton(onClick = userAction(vm::requestDelete), enabled = !state.busy, modifier = Modifier.fillMaxWidth()) { Text("Delete spray record") } }
                     }
@@ -89,22 +91,10 @@ fun SprayScreenRoot(ownerId: Long, key: SprayKey, onBack: () -> Unit, onFinished
                     } }
                     item { TimeZonePicker(state.draft.zone, null, state.canEdit, vm::zone); Text("Initially uses the vineyard time zone; choose the zone that applied to this application. Unknown local time remains blank; no UTC instant is inferred.") }
                     state.draft.lines.forEachIndexed { index, line -> item {
-                        OutlinedCard(Modifier.fillMaxWidth()) { Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text("Product ${index + 1}", style = MaterialTheme.typography.titleMedium)
-                            SprayLineField.entries.forEach { field ->
-                                val value = when (field) { SprayLineField.Name -> line.name; SprayLineField.Quantity -> line.quantity; SprayLineField.Reference -> line.reference }
-                                val label = when (field) { SprayLineField.Name -> "Product name * (up to 200 characters)"; SprayLineField.Quantity -> "Product quantity (optional)"; SprayLineField.Reference -> "Label/registration reference (optional, up to 500 characters)" }
-                                val error = state.errors["line-$index-${field.name.lowercase()}"]
-                                OutlinedTextField(value = value, onValueChange = { activity(); vm.lineText(index, field, it) }, enabled = state.canEdit, modifier = Modifier.fillMaxWidth(), label = { Text(label) }, singleLine = true,
-                                    isError = error != null, supportingText = { error?.let { Text(it) } }, keyboardOptions = KeyboardOptions(keyboardType = if (field == SprayLineField.Quantity) KeyboardType.Decimal else KeyboardType.Text))
-                            }
-                            RecordChoice("Product quantity unit", line.unit, SprayQuantityUnit.entries, state.canEdit, { it.label }, { vm.lineUnit(index, it) })
-                            state.errors["line-$index-unit"]?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-                            OutlinedButton(onClick = userAction { vm.removeLine(index) }, enabled = state.canEdit && state.draft.lines.size > 1) { Text("Remove product ${index + 1}") }
-                        } }
+                        SprayLineInputs(line, index, state, vm)
                     } }
                     item { OutlinedButton(onClick = userAction(vm::addLine), enabled = state.canEdit && state.draft.lines.size < 20) { Text("Add product line") } }
-                    item { Text("Changing a unit only relabels the number. No conversion, dose-rate calculation, label check or spray export is provided in this slice.") }
+                    item { Text("Changing a unit only relabels the number. No conversion, dose-rate calculation or label check is performed. Export uses saved records only.") }
                     item { Button(onClick = userAction { vm.save(); onBusyChanged(vm.state.value.saving) }, enabled = state.canEdit, modifier = Modifier.fillMaxWidth()) { Text("Save spray record") } }
                 }
             }
