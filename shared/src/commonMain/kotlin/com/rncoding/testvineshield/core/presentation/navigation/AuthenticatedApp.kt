@@ -6,6 +6,8 @@ import androidx.compose.runtime.*
 import com.rncoding.testvineshield.core.presentation.harvest.*
 import com.rncoding.testvineshield.core.domain.usecases.harvest.HarvestScope
 import com.rncoding.testvineshield.core.presentation.activities.*
+import com.rncoding.testvineshield.core.presentation.spray.SprayScreenRoot
+import com.rncoding.testvineshield.core.domain.usecases.activity.SprayKey
 import com.rncoding.testvineshield.core.domain.usecases.activity.ActivityScope
 import com.rncoding.testvineshield.core.presentation.blocks.*
 import androidx.compose.ui.Modifier
@@ -205,8 +207,14 @@ fun AuthenticatedApp(
                         ActivityDetailsScreenRoot(userId,route.vineyardId,route.activityId,onBack={navigationState.goBack()},
                             onEdit={navigationState.navigate(ActivityEditorRoute(route.vineyardId,activityId=route.activityId))},
                             onComplete={navigationState.navigate(ActivityEditorRoute(route.vineyardId,activityId=route.activityId,complete=true))},
+                            onSpray={navigationState.navigate(SprayRoute(route.vineyardId,route.activityId))},
                             onDeleted={navigationState.goBack()},
                             onBusyChanged={if(it) busyRecordRoute=route else if(busyRecordRoute==route) busyRecordRoute=null})
+                    }
+                    entry<SprayRoute> { route ->
+                        SprayScreenRoot(userId, SprayKey(route.vineyardId, route.activityId),
+                            onBack = { navigationState.goBack() }, onFinished = { navigationState.goBack() },
+                            onBusyChanged = { if (it) busyRecordRoute = route else if (busyRecordRoute == route) busyRecordRoute = null })
                     }
                     entry<ActivityEditorRoute> { route ->
                         ActivityEditorScreenRoot(userId,ActivityScope(route.vineyardId,route.blockId),route.activityId,route.complete,

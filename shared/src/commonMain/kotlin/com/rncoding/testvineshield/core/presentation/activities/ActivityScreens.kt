@@ -66,7 +66,7 @@ fun ActivityListScreenRoot(ownerId: Long,scope: ActivityScope=ActivityScope(),on
 
 @Composable
 fun ActivityDetailsScreenRoot(ownerId: Long,vineyardId: Long,activityId: Long,onBack: ()->Unit,onEdit: ()->Unit,
-    onComplete: ()->Unit,onDeleted: ()->Unit,onBusyChanged: (Boolean)->Unit={}) {
+    onComplete: ()->Unit,onDeleted: ()->Unit,onBusyChanged: (Boolean)->Unit={},onSpray: ()->Unit={}) {
     val vm=koinViewModel<ActivityDetailsViewModel>(key="activity-$ownerId-$vineyardId-$activityId",parameters={parametersOf(ActivityKey(vineyardId,activityId))})
     val state by vm.state.collectAsStateWithLifecycle()
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {vm.load()}
@@ -86,7 +86,8 @@ fun ActivityDetailsScreenRoot(ownerId: Long,vineyardId: Long,activityId: Long,on
                 item {Text("Description: ${record.activityDescription.ifBlank {"Not recorded"}}")}
                 item {Text("Tool: ${record.tool ?: "Not recorded"}")}
                 item {Text("Notes: ${record.notes ?: "Not recorded"}")}
-                // Existing structured treatment data is read-only here and preserved by basic edits.
+                item {OutlinedButton(onClick=userAction(onSpray),enabled=!state.deleting,modifier=Modifier.fillMaxWidth()) {Text("Spray record / product lines")} }
+                // Prior single-product treatment data is read-only here and preserved by basic edits.
                 record.treatmentProduct?.let {value -> item {Text("Recorded treatment product: $value")} }
                 record.treatmentProductQuantity?.let {value -> item {Text("Recorded treatment quantity: $value ${record.treatmentProductUnits ?: "(unit unknown)"}")} }
                 record.waterQuantity?.let {value -> item {Text("Recorded water quantity: $value (unit not stored)")} }
@@ -100,7 +101,7 @@ fun ActivityDetailsScreenRoot(ownerId: Long,vineyardId: Long,activityId: Long,on
         }
     }
     if(state.confirmDelete) AlertDialog(modifier=Modifier.userActivity(LocalUserActivity.current),onDismissRequest=userAction(vm::cancelDelete),
-        title={Text("Delete activity?")},text={Text("This cannot be undone. Activities linked to a disease observation cannot be deleted.")},
+        title={Text("Delete activity?")},text={Text("This deletes the activity and any structured spray record/product lines. This cannot be undone. Activities linked to a disease observation cannot be deleted.")},
         confirmButton={TextButton(onClick=userAction {vm.confirmDelete();onBusyChanged(vm.state.value.deleting)},enabled=!state.deleting) {Text("Delete")}},
         dismissButton={TextButton(onClick=userAction(vm::cancelDelete),enabled=!state.deleting) {Text("Cancel")}})
 }

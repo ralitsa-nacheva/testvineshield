@@ -1,6 +1,9 @@
 package com.rncoding.testvineshield.core.data.local.database
 
 import com.rncoding.testvineshield.core.data.local.database.converters.MeasurementUnitRoomConverters
+import com.rncoding.testvineshield.core.data.local.database.daos.SprayDao
+import com.rncoding.testvineshield.core.data.local.database.entities.SprayApplicationEntity
+import com.rncoding.testvineshield.core.data.local.database.entities.SprayProductEntity
 import androidx.room.ConstructedBy
 import androidx.room.Database
 import androidx.room.RoomDatabase
@@ -49,8 +52,8 @@ import com.rncoding.testvineshield.core.data.local.database.entities.DiseaseRisk
     DiseaseRiskEvaluationEntity::class, DiseaseRiskModelStateEntity::class, DiseaseSymptomCrossRef::class,
     HarvestEntity::class, ObservedSymptomEntity::class, OccurrenceActivityCrossRef::class,
     OccurrenceSymptomCrossRef::class, SecuritySettingsEntity::class, SymptomEntity::class, UserEntity::class,
-    VineyardEntity::class, WeatherCalculationEntity::class, WeatherHistoryEntity::class, WeatherForecastEntity::class],
-    version = 7)
+    VineyardEntity::class, WeatherCalculationEntity::class, WeatherHistoryEntity::class, WeatherForecastEntity::class, SprayApplicationEntity::class, SprayProductEntity::class],
+    version = 8)
 @TypeConverters(LocalDateRoomConverters::class, DomainEnumRoomConverters::class, MeasurementUnitRoomConverters::class)
 @ConstructedBy(VineshieldConstructor::class)
 
@@ -60,6 +63,7 @@ abstract class VineshieldDatabase: RoomDatabase() {
     }
     abstract fun vineyardDao(): VineyardDao
     abstract fun activityDao(): ActivityDao
+    abstract fun sprayDao(): SprayDao
     abstract fun blockDao(): BlockDao
     abstract fun diseaseAlertDao(): DiseaseAlertDao
     abstract fun diseaseDao(): DiseaseDao

@@ -145,6 +145,14 @@ import com.rncoding.testvineshield.core.domain.usecases.harvest.PrepareHarvestEx
 import com.rncoding.testvineshield.core.domain.export.HarvestExportEncoder
 import com.rncoding.testvineshield.core.data.export.HarvestExportEncoderImpl
 import com.rncoding.testvineshield.core.domain.usecases.harvest.HarvestScope
+import com.rncoding.testvineshield.core.domain.repository.SprayRepository
+import com.rncoding.testvineshield.core.data.repository.SprayRepositoryImpl
+import com.rncoding.testvineshield.core.data.local.database.daos.SprayDao
+import com.rncoding.testvineshield.core.domain.validation.SprayValidator
+import com.rncoding.testvineshield.core.domain.usecases.activity.GetSprayRecordUseCase
+import com.rncoding.testvineshield.core.domain.usecases.activity.SaveSprayRecordUseCase
+import com.rncoding.testvineshield.core.domain.usecases.activity.DeleteSprayRecordUseCase
+import com.rncoding.testvineshield.core.presentation.spray.*
 import com.rncoding.testvineshield.core.domain.repository.HarvestRepository
 import com.rncoding.testvineshield.core.domain.usecases.disease.CreateDiseaseUseCase
 import com.rncoding.testvineshield.core.domain.usecases.disease.DeleteDiseaseUseCase
@@ -994,4 +1002,11 @@ val commonModule =
         factory<HarvestExportEncoder> { HarvestExportEncoderImpl() }
         factory { PrepareHarvestExportUseCase(get(), get(), get(), get(), get(), get()) }
         viewModel { HarvestExportViewModel(get()) }
+        single<SprayDao> { get<VineshieldDatabase>().sprayDao() }
+        single<SprayRepository> { SprayRepositoryImpl(get()) }
+        factory { SprayValidator() }
+        factory { GetSprayRecordUseCase(get(), get(), get()) }
+        factory { SaveSprayRecordUseCase(get(), get(), get()) }
+        factory { DeleteSprayRecordUseCase(get(), get()) }
+        viewModel { (request: SprayRequest) -> SprayViewModel(request, get(), get(), get()) }
     }
