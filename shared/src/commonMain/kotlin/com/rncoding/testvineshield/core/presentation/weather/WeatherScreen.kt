@@ -60,11 +60,11 @@ fun WeatherScreen(state: WeatherScreenState, onBack: () -> Unit, onRetry: () -> 
                     Text("Historical cache fetch time is not stored. The time below is the hour represented by the data.")
                     if (display.excludedHistoryHours > 0) Text("${display.excludedHistoryHours} incomplete/future history hours excluded; check the device clock.")
                 }
-                display.history.lastOrNull()?.let { hour -> item { WeatherHourCard(hour, zone, "Latest completed cached hour") } }
+                display.history.lastOrNull()?.let { hour -> item { WeatherHourCard(hour, zone, "Latest cached time step (at least one hour old)") } }
                 item {
                     Text("Forecast", style = MaterialTheme.typography.titleLarge)
                     Text(cacheLabel(display.forecastAge))
-                    Text("Fetch time (request start): ${weatherTime(display.forecastFetchedAt, zone)}")
+                    Text("Recorded refresh start: ${weatherTime(display.forecastFetchedAt, zone)}")
                     CoverageText(display.forecastCoverage, zone)
                     if (display.mixedForecastFetchTimes) Text("Stored forecast contains inconsistent fetch times. Refresh before relying on it.")
                     Text("Showing up to the next 24 cached hourly values. Forecasts are predictions; refresh does not guarantee local conditions.")
@@ -106,7 +106,7 @@ private fun WeatherHourCard(hour: WeatherHistoryDomainModel, zone: String, label
         Text(weatherTime(hour.timestamp, zone))
         Text("Temperature: ${weatherMetric(hour.hourlyTemp2m, "°C")}")
         Text("Relative humidity: ${weatherMetric(hour.relativeHumidity2m, "%", 0.0..100.0)}")
-        Text("Precipitation: ${weatherMetric(hour.precipitation, "mm", 0.0..Double.MAX_VALUE)}")
+        Text("Precipitation (preceding hour): ${weatherMetric(hour.precipitation, "mm", 0.0..Double.MAX_VALUE)}")
         Text("Wind at 10 m: ${weatherMetric(hour.windSpeed10m, "km/h", 0.0..Double.MAX_VALUE)}")
     } }
 }

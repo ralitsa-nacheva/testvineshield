@@ -8,6 +8,13 @@ import com.rncoding.testvineshield.core.data.datasource.WeatherRemoteDataSource
 import com.rncoding.testvineshield.core.domain.datamodels.WeatherHistoryDomainModel
 import com.rncoding.testvineshield.core.domain.repositories.WeatherForecastRepository
 import com.rncoding.testvineshield.core.data.local.database.daos.VineyardDao
+import com.rncoding.testvineshield.core.data.local.mappers.DatabaseErrorMapper
+import com.rncoding.testvineshield.core.data.remote.WeatherNetworkErrorMapper
+import com.rncoding.testvineshield.core.domain.error.*
+import com.rncoding.testvineshield.core.domain.error.Result
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -15,7 +22,8 @@ class WeatherForecastRepositoryImpl(
     private val remoteDataSource: WeatherRemoteDataSource,
     private val vineyardDao: VineyardDao,
     private val forecastDao: WeatherForecastDao,
-    private val forecastMapper: WeatherForecastMapper
+    private val forecastMapper: WeatherForecastMapper,
+    private val refreshCoordinator: WeatherRefreshCoordinator = WeatherRefreshCoordinator()
 ) : WeatherForecastRepository {
     override fun observeCachedForecast(vineyardId: Long): Flow<List<CachedForecastHour>> =
         forecastDao.observeForecastWeather(vineyardId).map { rows ->
@@ -52,67 +60,44 @@ class WeatherForecastRepositoryImpl(
         latitude: Double,
         longitude: Double,
         fetchedAt: Long
-    ) {
-        require(vineyardId > 0L) {
-            "Vineyard ID must be positive."
+    ): Result<Unit, AppError> {
+        if (vineyardId <= 0 || !latitude.isFinite() || latitude !in -90.0..90.0 ||
+            !longitude.isFinite() || longitude !in -180.0..180.0 || fetchedAt <= 0 || fetchedAt > Long.MAX_VALUE - 8L * 24 * ONE_HOUR_MILLIS) {
+            return Result.Error(WeatherHistoryError.InvalidInput("Invalid forecast request"))
         }
+        return refreshCoordinator.withRefresh(vineyardId) { refreshInternal(vineyardId, latitude, longitude, fetchedAt) }
+    }
 
-        require(latitude in -90.0..90.0) {
-            "Invalid vineyard latitude."
-        }
-
-        require(longitude in -180.0..180.0) {
-            "Invalid vineyard longitude."
-        }
-
-        val timeZone = requireNotNull(
+    private suspend fun refreshInternal(vineyardId: Long, latitude: Double, longitude: Double, fetchedAt: Long): Result<Unit, AppError> {
+        currentCoroutineContext().ensureActive()
+        val timeZone = try {
             vineyardDao.getVineyardTimeZone(vineyardId)
-        ) {
-            "Time zone not found for vineyard $vineyardId."
-        }
-
-        val response = remoteDataSource.fetchWeatherForecast(
-            latitude = latitude,
-            longitude = longitude,
-            timeZone = timeZone
-        )
-
-        require(response.timezone == timeZone) {
-            "Open-Meteo returned time zone '${response.timezone}' " +
-                    "instead of '$timeZone'."
-        }
-
-        val entities = forecastMapper.weatherDtoToEntities(
-            weatherDto = response,
-            vineyardId = vineyardId,
-            forecastCreatedAt = fetchedAt,
-            fromTimestamp = fetchedAt
-        )
-
-        require(entities.size >= MINIMUM_FORECAST_HOURS) {
-            "Insufficient forecast coverage. " +
-                    "Expected at least $MINIMUM_FORECAST_HOURS hourly observations, " +
-                    "but received ${entities.size}."
-        }
-
-        require(
-            entities.zipWithNext().all { (previous, current) ->
-                current.timestamp - previous.timestamp == ONE_HOUR_MILLIS
-            }
-        ) {
-            "Forecast observations contain missing, duplicate, or unordered hours."
-        }
-
-        require(
-            entities.first().timestamp >= fetchedAt
-        ) {
-            "Forecast contains observations before the requested cutoff."
-        }
-
-        forecastDao.replaceForecast(
-            vineyardId = vineyardId,
-            forecast = entities
-        )
+        } catch (e: CancellationException) { throw e }
+        catch (e: Exception) { return Result.Error(DatabaseErrorMapper.map(e, DatabaseError.Operation.READ)) }
+            ?: return Result.Error(DatabaseError.NotFound("Vineyard"))
+        currentCoroutineContext().ensureActive()
+        val response = try {
+            remoteDataSource.fetchWeatherForecast(latitude, longitude, timeZone)
+        } catch (e: CancellationException) { throw e }
+        catch (e: Exception) { return Result.Error(WeatherNetworkErrorMapper.map(e)) }
+        currentCoroutineContext().ensureActive()
+        if (response.timezone != timeZone) return Result.Error(WeatherHistoryError.TimeZoneMismatch(timeZone, response.timezone))
+        val entities = try {
+            val mapped = forecastMapper.weatherDtoToEntities(response, vineyardId, fetchedAt, fetchedAt)
+            require(mapped.size >= MINIMUM_FORECAST_HOURS) { "Insufficient forecast coverage" }
+            require(mapped.zipWithNext().all { (a,b) -> b.timestamp - a.timestamp == ONE_HOUR_MILLIS }) { "Discontinuous forecast" }
+            require(mapped.first().timestamp >= fetchedAt && mapped.first().timestamp - fetchedAt <= ONE_HOUR_MILLIS) { "Forecast begins outside the next hour" }
+            require(mapped.last().timestamp <= fetchedAt + 8L * 24 * ONE_HOUR_MILLIS) { "Forecast horizon exceeds the request contract" }
+            mapped
+        } catch (e: CancellationException) { throw e }
+        catch (e: Exception) { return Result.Error(NetworkError.SerializationError(e)) }
+        currentCoroutineContext().ensureActive()
+        try {
+            forecastDao.replaceForecast(vineyardId, entities)
+        } catch (e: CancellationException) { throw e }
+        catch (e: Exception) { return Result.Error(DatabaseErrorMapper.map(e, DatabaseError.Operation.INSERT)) }
+        currentCoroutineContext().ensureActive()
+        return Result.Success(Unit)
     }
 
     private fun entityToDomain(

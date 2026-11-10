@@ -11,5 +11,7 @@ data class WeatherDto(
     val timezone: String,
 
     @SerialName("hourly")
-    val hourlyWeather: HourlyWeatherDto
+    val hourlyWeather: HourlyWeatherDto,
+    @SerialName("hourly_units")
+    val hourlyUnits: Map<String, String>? = null
 )

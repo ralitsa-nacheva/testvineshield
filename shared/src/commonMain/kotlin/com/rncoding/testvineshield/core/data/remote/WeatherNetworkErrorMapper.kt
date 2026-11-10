@@ -6,6 +6,7 @@ import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.client.plugins.ResponseException
 import kotlinx.io.IOException
 import kotlinx.coroutines.CancellationException
+import kotlinx.serialization.SerializationException
 
 object WeatherNetworkErrorMapper {
 
@@ -15,6 +16,7 @@ object WeatherNetworkErrorMapper {
         }
 
         return when (exception) {
+            is SerializationException -> NetworkError.SerializationError(exception)
             is HttpRequestTimeoutException ->
                 NetworkError.Timeout
 
@@ -28,10 +30,9 @@ object WeatherNetworkErrorMapper {
             is IOException ->
                 NetworkError.NoInternet
 
-            else ->
-                NetworkError.Unknown(
-                    cause = exception
-                )
+            else -> if (exception.cause is SerializationException) {
+                NetworkError.SerializationError(exception)
+            } else NetworkError.Unknown(cause = exception)
         }
     }
 }

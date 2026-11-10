@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.data.local.mappers
 
+import com.rncoding.testvineshield.core.data.remote.WeatherResponseValidator
 import com.rncoding.testvineshield.core.data.local.database.entities.WeatherHistoryEntity
 import com.rncoding.testvineshield.core.data.remote.dto.WeatherDto
 import com.rncoding.testvineshield.core.domain.datamodels.WeatherHistoryDomainModel
@@ -13,6 +14,7 @@ class WeatherHistoryMapper {
         latestCompletedHourStart: Long
     ): List<WeatherHistoryEntity> {
 
+        WeatherResponseValidator.validate(weatherDto)
         val hourly = weatherDto.hourlyWeather
 
         val weatherValues = mutableListOf<WeatherHistoryEntity>()

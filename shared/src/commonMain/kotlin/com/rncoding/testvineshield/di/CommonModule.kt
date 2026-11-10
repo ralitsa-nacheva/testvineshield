@@ -431,12 +431,14 @@ val commonModule =
                 coordinator = get()
             )
         }
+        single { com.rncoding.testvineshield.core.data.repository.WeatherRefreshCoordinator() }
         single<WeatherForecastRepository> {
             WeatherForecastRepositoryImpl(
                 remoteDataSource = get(),
                 vineyardDao = get(),
                 forecastDao = get(),
-                forecastMapper = get()
+                forecastMapper = get(),
+                refreshCoordinator = get()
             )
         }
 
@@ -445,7 +447,8 @@ val commonModule =
                 remoteDataSource = get(),
                 vineyardDao = get(),
                 weatherHistoryDao = get(),
-                weatherHistoryMapper = get()
+                weatherHistoryMapper = get(),
+                refreshCoordinator = get()
             )
         }
 

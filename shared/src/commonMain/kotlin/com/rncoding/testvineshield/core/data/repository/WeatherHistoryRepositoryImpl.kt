@@ -25,7 +25,8 @@ class WeatherHistoryRepositoryImpl(
     private val remoteDataSource: WeatherRemoteDataSource,
     private val vineyardDao: VineyardDao,
     private val weatherHistoryDao: WeatherHistoryDao,
-    private val weatherHistoryMapper: WeatherHistoryMapper
+    private val weatherHistoryMapper: WeatherHistoryMapper,
+    private val refreshCoordinator: WeatherRefreshCoordinator = WeatherRefreshCoordinator()
 ) : WeatherHistoryRepository {
 
 
@@ -35,6 +36,11 @@ class WeatherHistoryRepositoryImpl(
         latitude: Double,
         longitude: Double
     ): Result<WeatherHistoryRefreshResult, AppError> {
+        if (vineyardId <= 0) return refreshInternal(vineyardId, latitude, longitude)
+        return refreshCoordinator.withRefresh(vineyardId) { refreshInternal(vineyardId, latitude, longitude) }
+    }
+
+    private suspend fun refreshInternal(vineyardId: Long, latitude: Double, longitude: Double): Result<WeatherHistoryRefreshResult, AppError> {
 
         if (vineyardId <= 0L) {
             return Result.Error(

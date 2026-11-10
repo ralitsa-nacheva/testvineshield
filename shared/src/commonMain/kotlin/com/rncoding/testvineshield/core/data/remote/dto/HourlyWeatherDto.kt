@@ -39,6 +39,7 @@ data class HourlyWeatherDto(
     @SerialName("soil_moisture_1_to_3cm")
     val soilMoisture1to3cm: List<Double>,
     @SerialName("is_day")
+    @Serializable(with = DaylightFlagsSerializer::class)
     val isDay: List<Boolean>
 )
 

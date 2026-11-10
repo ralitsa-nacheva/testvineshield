@@ -50,6 +50,7 @@ class WeatherHistoryMapperHostTest {
         longitude = 23.3,
         elevation = 550.0,
         timezone = "Europe/Sofia",
+        hourlyUnits = com.rncoding.testvineshield.core.data.remote.WeatherResponseValidator.expectedUnits,
         hourlyWeather = hourlyWeather(timestamps)
     )
 
@@ -138,14 +139,10 @@ class WeatherHistoryMapperHostTest {
     }
 
     @Test
-    fun emptyHourlyDataReturnsEmptyList() {
-        val entities = mapper.weatherDtoToEntity(
-            weatherDto = weatherDto(emptyList()),
-            vineyardId = vineyardId,
-            latestCompletedHourStart = 1_800_000_000_000L
-        )
-
-        assertTrue(entities.isEmpty())
+    fun emptyHourlyDataIsRejected() {
+        kotlin.test.assertFailsWith<IllegalArgumentException> {
+            mapper.weatherDtoToEntity(weatherDto(emptyList()), vineyardId, 1_800_000_000_000L)
+        }
     }
 
     @Test

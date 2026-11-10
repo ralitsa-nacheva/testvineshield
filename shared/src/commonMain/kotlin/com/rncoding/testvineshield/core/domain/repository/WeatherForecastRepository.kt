@@ -1,5 +1,7 @@
 package com.rncoding.testvineshield.core.domain.repositories
 
+import com.rncoding.testvineshield.core.domain.error.Result
+import com.rncoding.testvineshield.core.domain.error.AppError
 import com.rncoding.testvineshield.core.domain.datamodels.CachedForecastHour
 import com.rncoding.testvineshield.core.domain.datamodels.WeatherHistoryDomainModel
 import kotlinx.coroutines.flow.Flow
@@ -42,5 +44,5 @@ interface WeatherForecastRepository {
         latitude: Double,
         longitude: Double,
         fetchedAt: Long
-    )
+    ): Result<Unit, AppError>
 }

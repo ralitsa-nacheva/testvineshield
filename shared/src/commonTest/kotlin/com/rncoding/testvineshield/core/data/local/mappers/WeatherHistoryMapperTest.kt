@@ -100,6 +100,7 @@ class WeatherHistoryMapperTest {
             longitude = 77.2,
             elevation = 200.0,
             timezone = "Asia/Kolkata",
+            hourlyUnits = com.rncoding.testvineshield.core.data.remote.WeatherResponseValidator.expectedUnits,
             hourlyWeather = HourlyWeatherDto(
                 timestamp = timestamps,
                 hourlyTemp2m = doubles,

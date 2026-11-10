@@ -51,8 +51,10 @@ class RefreshOwnedWeatherUseCase(
             }
             if (!sameOwner(owner)) return Result.Error(AuthError.NoActiveSession)
             val forecastError = try {
-                forecast.refreshForecast(vineyardId, parent.latitude, parent.longitude, clock.nowMillis())
-                null
+                when (val result = forecast.refreshForecast(vineyardId, parent.latitude, parent.longitude, clock.nowMillis())) {
+                    is Result.Success -> null
+                    is Result.Error -> result.error
+                }
             } catch (e: CancellationException) { throw e }
             catch (_: Exception) { UnexpectedError() }
             currentCoroutineContext().ensureActive()

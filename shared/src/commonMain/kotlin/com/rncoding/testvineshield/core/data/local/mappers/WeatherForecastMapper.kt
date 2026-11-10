@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.data.local.mappers
 
+import com.rncoding.testvineshield.core.data.remote.WeatherResponseValidator
 import com.rncoding.testvineshield.core.data.local.database.entities.WeatherForecastEntity
 import com.rncoding.testvineshield.core.data.remote.dto.WeatherDto
 
@@ -12,38 +13,8 @@ class WeatherForecastMapper {
         fromTimestamp: Long
     ): List<WeatherForecastEntity> {
 
+        WeatherResponseValidator.validate(weatherDto)
         val hourly = weatherDto.hourlyWeather
-        val expectedSize = hourly.timestamp.size
-
-        require(expectedSize > 0) {
-            "Open-Meteo returned an empty forecast."
-        }
-
-        val fieldSizes = listOf(
-            hourly.hourlyTemp2m.size,
-            hourly.relativeHumidity2m.size,
-            hourly.dewPoint2m.size,
-            hourly.cloudCover.size,
-            hourly.windSpeed10m.size,
-            hourly.precipitation.size,
-            hourly.rain.size,
-            hourly.showers.size,
-            hourly.snowfall.size,
-            hourly.snowDepth.size,
-            hourly.weatherCode.size,
-            hourly.freezingLevelHeight.size,
-            hourly.visibility.size,
-            hourly.soilTemperature0cm.size,
-            hourly.soilTemperature6cm.size,
-            hourly.soilMoisture0to1cm.size,
-            hourly.soilMoisture1to3cm.size,
-            hourly.isDay.size
-        )
-
-        require(fieldSizes.all { it == expectedSize }) {
-            "Open-Meteo forecast contains inconsistent hourly array lengths."
-        }
-
         return hourly.timestamp.indices.mapNotNull { index ->
 
             // Open-Meteo returns Unix seconds.

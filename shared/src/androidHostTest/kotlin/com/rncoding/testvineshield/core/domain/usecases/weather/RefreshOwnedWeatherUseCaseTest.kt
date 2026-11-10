@@ -27,7 +27,7 @@ class RefreshOwnedWeatherUseCaseTest {
         every { clock.nowMillis() } returns 2_000_000_000_000L
         coEvery { vineyards.getVineyard(1,10) } returns Result.Success(parent)
         coEvery { history.refreshWeatherHistory(10,42.1,24.7) } returns Result.Success(WeatherHistoryRefreshResult(10, 2_000_000_000_000L, 24, 0))
-        coEvery { forecast.refreshForecast(10,42.1,24.7,any()) } just Runs
+        coEvery { forecast.refreshForecast(10,42.1,24.7,any()) } returns Result.Success(Unit)
     }
     @Test fun invalidScopeAndMissingOwnerNeverRefresh() = runTest {
         assertIs<Result.Error<*>>(refresh(0))

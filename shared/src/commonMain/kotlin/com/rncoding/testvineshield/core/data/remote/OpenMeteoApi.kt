@@ -2,6 +2,7 @@ package com.rncoding.testvineshield.core.data.remote
 
 import com.rncoding.testvineshield.core.data.remote.dto.WeatherDto
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.expectSuccess
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
@@ -18,11 +19,15 @@ class OpenMeteoApi(
         return client.get(
             "https://api.open-meteo.com/v1/forecast"
         ) {
+            expectSuccess = true
             parameter("latitude", latitude)
             parameter("longitude", longitude)
             parameter("hourly", HOURLY_VARIABLES)
             parameter("timezone", timeZone)
             parameter("timeformat", "unixtime")
+            parameter("temperature_unit", "celsius")
+            parameter("wind_speed_unit", "kmh")
+            parameter("precipitation_unit", "mm")
             parameter("past_days", 7)
             parameter("forecast_days", 1)
         }.body()
@@ -36,11 +41,15 @@ class OpenMeteoApi(
         return client.get(
             "https://api.open-meteo.com/v1/forecast"
         ) {
+            expectSuccess = true
             parameter("latitude", latitude)
             parameter("longitude", longitude)
             parameter("hourly", HOURLY_VARIABLES)
             parameter("timezone", timeZone)
             parameter("timeformat", "unixtime")
+            parameter("temperature_unit", "celsius")
+            parameter("wind_speed_unit", "kmh")
+            parameter("precipitation_unit", "mm")
             parameter("forecast_days", 7)
         }.body()
     }
