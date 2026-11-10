@@ -39,7 +39,7 @@ interface HarvestDao {
         harvestDate: LocalDate,
         units: String,
         quantity: Double,
-        brixSugarContent: Double
+        brixSugarContent: Double?
     ): Int
 
 

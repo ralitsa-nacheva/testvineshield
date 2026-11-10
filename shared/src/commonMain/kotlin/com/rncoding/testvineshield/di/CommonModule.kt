@@ -138,6 +138,10 @@ import com.rncoding.testvineshield.core.domain.usecases.block.UpdateBlockUseCase
 import com.rncoding.testvineshield.core.domain.validation.BlockValidator
 import com.rncoding.testvineshield.core.data.local.mappers.HarvestMapper
 import com.rncoding.testvineshield.core.data.repository.HarvestRepositoryImpl
+import com.rncoding.testvineshield.core.domain.usecases.harvest.ObserveOwnedHarvestsUseCase
+import com.rncoding.testvineshield.core.domain.usecases.harvest.GetHarvestDetailsUseCase
+import com.rncoding.testvineshield.core.presentation.harvest.*
+import com.rncoding.testvineshield.core.domain.usecases.harvest.HarvestScope
 import com.rncoding.testvineshield.core.domain.repository.HarvestRepository
 import com.rncoding.testvineshield.core.domain.usecases.disease.CreateDiseaseUseCase
 import com.rncoding.testvineshield.core.domain.usecases.disease.DeleteDiseaseUseCase
@@ -979,4 +983,9 @@ val commonModule =
         viewModel { (scope: ActivityScope) -> ActivityListViewModel(scope,get()) }
         viewModel { (key: ActivityKey) -> ActivityDetailsViewModel(key,get(),get(),get()) }
         viewModel { (request: ActivityEditorRequest) -> ActivityEditorViewModel(request,get(),get(),get(),get(),get()) }
+        factory { ObserveOwnedHarvestsUseCase(get(), get(), get(), get()) }
+        factory { GetHarvestDetailsUseCase(get(), get()) }
+        viewModel { (scope: HarvestScope) -> HarvestListViewModel(scope, get()) }
+        viewModel { (key: HarvestKey) -> HarvestDetailsViewModel(key, get(), get()) }
+        viewModel { (request: HarvestEditorRequest) -> HarvestEditorViewModel(request, get(), get(), get(), get()) }
     }

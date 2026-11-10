@@ -3,6 +3,7 @@ package com.rncoding.testvineshield.core.domain.usecases.harvest
 
 import com.rncoding.testvineshield.core.domain.auth.AuthenticatedUserProvider
 import com.rncoding.testvineshield.core.domain.datamodels.HarvestDomainModel
+import com.rncoding.testvineshield.core.domain.datamodels.BlockDomainModel
 import com.rncoding.testvineshield.core.domain.datamodels.UserDomainModel
 import com.rncoding.testvineshield.core.domain.datamodels.VineyardDomainModel
 import com.rncoding.testvineshield.core.domain.error.AppError
@@ -357,5 +358,19 @@ class CreateHarvestUseCaseTest {
         }
     }
 
+
+    @Test
+    fun unmeasuredBrixReachesStorageAsNull(): Unit = runBlocking {
+        givenOwnedVineyard()
+        val block = mockk<BlockDomainModel>()
+        every { block.blockId } returns 20L
+        coEvery { blockRepository.getBlock(10L, 20L) } returns block
+        val captured = io.mockk.slot<HarvestDomainModel>()
+        coEvery { harvestRepository.createHarvest(capture(captured)) } returns 100L
+        val requested = harvest().copy(brixSugarContent = null)
+
+        assertIs<Result.Success<Long>>(useCase(requested, 10L))
+        assertEquals(requested, captured.captured)
+    }
 
 }

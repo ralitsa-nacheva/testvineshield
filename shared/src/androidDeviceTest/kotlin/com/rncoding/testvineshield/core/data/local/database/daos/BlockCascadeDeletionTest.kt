@@ -511,7 +511,7 @@ class BlockCascadeDeletionTest {
             .single()
 
         assertEquals(1250.75, savedHarvest.quantity, 0.000001)
-        assertEquals(22.5, savedHarvest.brixSugarContent, 0.000001)
+        assertEquals(22.5, assertNotNull(savedHarvest.brixSugarContent), 0.000001)
     }
 
 

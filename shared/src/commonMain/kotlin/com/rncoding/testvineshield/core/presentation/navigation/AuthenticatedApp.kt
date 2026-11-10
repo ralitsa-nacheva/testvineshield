@@ -3,6 +3,8 @@ package com.rncoding.testvineshield.core.presentation.navigation
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
+import com.rncoding.testvineshield.core.presentation.harvest.*
+import com.rncoding.testvineshield.core.domain.usecases.harvest.HarvestScope
 import com.rncoding.testvineshield.core.presentation.activities.*
 import com.rncoding.testvineshield.core.domain.usecases.activity.ActivityScope
 import com.rncoding.testvineshield.core.presentation.blocks.*
@@ -158,11 +160,31 @@ fun AuthenticatedApp(
                             onEdit={navigationState.navigate(BlockEditorRoute(route.vineyardId,route.blockId))},
                             onDeleted={navigationState.goBack()},
                             onActivities={navigationState.navigate(ActivityListRoute(route.vineyardId,route.blockId))},
+                            onHarvests={navigationState.navigate(HarvestListRoute(route.vineyardId,route.blockId))},
                             onBusyChanged={ if(it) busyRecordRoute=route else if(busyRecordRoute==route) busyRecordRoute=null })
                     }
                     entry<BlockEditorRoute> { route ->
                         BlockEditorScreenRoot(route.vineyardId,route.blockId,userId,onBack={navigationState.goBack()},
                             onSaved={navigationState.goBack()},onBusyChanged={ if(it) busyRecordRoute=route else if(busyRecordRoute==route) busyRecordRoute=null })
+                    }
+
+                    entry<HarvestListRoute> { route ->
+                        HarvestListScreenRoot(userId, HarvestScope(route.vineyardId, route.blockId),
+                            onBack = { navigationState.goBack() },
+                            onCreate = { navigationState.navigate(HarvestEditorRoute(route.vineyardId, route.blockId)) },
+                            onOpen = { navigationState.navigate(HarvestDetailsRoute(route.vineyardId, route.blockId, it)) })
+                    }
+                    entry<HarvestDetailsRoute> { route ->
+                        HarvestDetailsScreenRoot(userId, HarvestKey(HarvestScope(route.vineyardId, route.blockId), route.harvestId),
+                            onBack = { navigationState.goBack() },
+                            onEdit = { navigationState.navigate(HarvestEditorRoute(route.vineyardId, route.blockId, route.harvestId)) },
+                            onDeleted = { navigationState.goBack() },
+                            onBusyChanged = { if (it) busyRecordRoute = route else if (busyRecordRoute == route) busyRecordRoute = null })
+                    }
+                    entry<HarvestEditorRoute> { route ->
+                        HarvestEditorScreenRoot(userId, HarvestKey(HarvestScope(route.vineyardId, route.blockId), route.harvestId),
+                            onBack = { navigationState.goBack() }, onSaved = { navigationState.goBack() },
+                            onBusyChanged = { if (it) busyRecordRoute = route else if (busyRecordRoute == route) busyRecordRoute = null })
                     }
 
                     entry<ActivitiesRoute> {

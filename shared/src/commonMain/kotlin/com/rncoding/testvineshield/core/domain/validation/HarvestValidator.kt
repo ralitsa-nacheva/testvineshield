@@ -34,9 +34,8 @@ class HarvestValidator {
             )
         }
 
-        if (!harvest.brixSugarContent.isFinite() ||
-            harvest.brixSugarContent !in 0.0..100.0
-        ) {
+        val brix = harvest.brixSugarContent
+        if (brix != null && (!brix.isFinite() || brix !in 0.0..100.0)) {
             return HarvestError.InvalidInput(
                 "Brix sugar content must be a finite value between 0 and 100."
             )

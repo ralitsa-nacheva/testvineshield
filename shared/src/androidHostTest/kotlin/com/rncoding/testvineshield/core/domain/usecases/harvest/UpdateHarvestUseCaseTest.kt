@@ -406,4 +406,15 @@ class UpdateHarvestUseCaseTest {
 
 
 
+    @Test
+    fun measuredBrixCanBeExplicitlyClearedWithoutChangingOtherValues(): Unit = runBlocking {
+        givenExistingHarvest()
+        val captured = slot<HarvestDomainModel>()
+        coEvery { harvestRepository.updateHarvest(capture(captured)) } returns true
+        val requested = harvest().copy(brixSugarContent = null)
+
+        assertIs<Result.Success<Unit>>(useCase(requested, 10L))
+        assertEquals(requested, captured.captured)
+    }
+
 }

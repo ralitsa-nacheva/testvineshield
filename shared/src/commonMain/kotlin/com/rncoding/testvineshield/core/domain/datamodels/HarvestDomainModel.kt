@@ -10,5 +10,5 @@ data class HarvestDomainModel(
     val harvestDate: LocalDate,
     val units: String,
     val quantity: Double,
-    val brixSugarContent: Double
+    val brixSugarContent: Double?
 )

@@ -28,5 +28,5 @@ data class HarvestEntity(
     val units: String,
     val quantity: Double,
     @ColumnInfo(name = "brix_sugar_content")
-    val brixSugarContent: Double
+    val brixSugarContent: Double?
 )

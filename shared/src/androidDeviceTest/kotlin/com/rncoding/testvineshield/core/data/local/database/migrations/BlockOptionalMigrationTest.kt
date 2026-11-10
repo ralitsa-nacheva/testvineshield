@@ -92,7 +92,7 @@ class BlockOptionalMigrationTest {
         val fail = object : Migration(4,5) {
             override fun migrate(connection: SQLiteConnection) { MIGRATION_4_5.migrate(connection); error("Injected failure") }
         }
-        val db = Room.databaseBuilder<VineshieldDatabase>(context,name).setDriver(BundledSQLiteDriver()).addMigrations(fail, MIGRATION_5_6).build()
+        val db = Room.databaseBuilder<VineshieldDatabase>(context,name).setDriver(BundledSQLiteDriver()).addMigrations(fail, MIGRATION_5_6, MIGRATION_6_7).build()
         try {
             var failed=false; try { db.blockDao().getBlockById(10,20) } catch (_: Exception) { failed=true }
             assertTrue(failed); db.close()
