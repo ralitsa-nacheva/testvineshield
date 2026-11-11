@@ -18,5 +18,6 @@ data class BlockDomainModel(
     val plantedAt: LocalDate?,
     val phenologicalStage: PhenologicalStage?,
     val areaUnit: AreaUnit? = null,
-    val rowSpacingUnit: LengthUnit? = null
+    val rowSpacingUnit: LengthUnit? = null,
+    val stageObservedOn: LocalDate? = null
 )

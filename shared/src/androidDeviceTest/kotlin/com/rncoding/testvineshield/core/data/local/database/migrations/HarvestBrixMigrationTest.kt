@@ -93,7 +93,7 @@ class HarvestBrixMigrationTest {
         val fail = object : Migration(6, 7) {
             override fun migrate(connection: SQLiteConnection) { MIGRATION_6_7.migrate(connection); error("Injected failure") }
         }
-        val db = Room.databaseBuilder<VineshieldDatabase>(context, name).setDriver(BundledSQLiteDriver()).addMigrations(fail, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10).build()
+        val db = Room.databaseBuilder<VineshieldDatabase>(context, name).setDriver(BundledSQLiteDriver()).addMigrations(fail, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11).build()
         try {
             var failed = false
             try { db.harvestDao().getHarvestForBlock(20, 41) } catch (_: Exception) { failed = true }

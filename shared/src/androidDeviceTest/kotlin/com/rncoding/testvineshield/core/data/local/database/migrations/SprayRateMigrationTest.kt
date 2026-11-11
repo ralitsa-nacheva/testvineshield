@@ -84,7 +84,7 @@ class SprayRateMigrationTest {
         val name = "r05a4-rollback-${UUID.randomUUID()}.db"; seed(name)
         var before: Map<String, List<List<String>>>? = null; raw(name) { before = snapshot(it) }
         val fail = object : Migration(8, 9) { override fun migrate(connection: SQLiteConnection) { MIGRATION_8_9.migrate(connection); error("Injected failure") } }
-        val db = Room.databaseBuilder<VineshieldDatabase>(context, name).setDriver(BundledSQLiteDriver()).addMigrations(fail, MIGRATION_9_10).build()
+        val db = Room.databaseBuilder<VineshieldDatabase>(context, name).setDriver(BundledSQLiteDriver()).addMigrations(fail, MIGRATION_9_10, MIGRATION_10_11).build()
         try {
             var failed = false; try { db.sprayDao().get(10, 30) } catch (_: Exception) { failed = true }
             assertTrue(failed); db.close()

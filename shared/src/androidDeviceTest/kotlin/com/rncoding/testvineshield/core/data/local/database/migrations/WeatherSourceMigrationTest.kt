@@ -35,7 +35,10 @@ class WeatherSourceMigrationTest {
         try { while(q.step()) names.add(q.getText(0)) } finally { q.close() }
         return names.associateWith { table ->
             val fields=mutableListOf<String>(); val info=c.prepare("PRAGMA table_info(`$table`)")
-            try { while(info.step()) fields.add(info.getText(1)) } finally { info.close() }
+            try { while(info.step()) {
+                val field = info.getText(1)
+                if (table != "block" || field != "stage_observed_on") fields.add(field)
+            } } finally { info.close() }
             val rows=c.prepare("SELECT "+fields.joinToString { "quote(`$it`)" }+" FROM `$table`")
             try { buildList { while(rows.step()) add(fields.indices.map { rows.getText(it) }) }.sortedBy { it.toString() } } finally { rows.close() }
         }
@@ -54,6 +57,31 @@ class WeatherSourceMigrationTest {
             db.close(); raw(name) { assertEquals(before,snapshot(it)) }
         } finally { db.close(); context.deleteDatabase(name) }
     }
+    @Test fun schemaTenUpgradeKeepsLegacyStageAndPersistsAnExplicitDate(): Unit = runBlocking {
+        val name = "r07a-stage-${UUID.randomUUID()}.db"
+        seed(name)
+        raw(name) { connection ->
+            MIGRATION_9_10.migrate(connection)
+            connection.execSQL("UPDATE block SET phenological_stage = 'flowering' WHERE block_id = 20")
+            connection.execSQL("PRAGMA user_version=10")
+        }
+        val date = kotlinx.datetime.LocalDate(2024, 5, 17)
+        val db = open(name)
+        try {
+            val dao = db.blockDao()
+            val original = assertNotNull(dao.getBlockById(10, 20))
+            assertEquals(com.rncoding.testvineshield.core.domain.datamodels.enums.PhenologicalStage.FLOWERING, original.phenologicalStage)
+            assertNull(original.stageObservedOn)
+            val recorded = original.copy(stageObservedOn = date)
+            val repo = com.rncoding.testvineshield.core.data.repository.BlockRepositoryImpl(dao, BlockMapper())
+            assertTrue(repo.updateBlock(BlockMapper().toDomain(recorded)))
+            assertEquals(recorded, dao.getBlockById(10, 20))
+        } finally {
+            db.close()
+            context.deleteDatabase(name)
+        }
+    }
+
     @Test fun locationABAAndNewerRequestsRejectOldCommitsWithoutDeletingHistory(): Unit=runBlocking {
         val name="r06b2-aba-${UUID.randomUUID()}.db"; seed(name); val db=open(name)
         try {
@@ -102,7 +130,7 @@ class WeatherSourceMigrationTest {
         val failing=object: androidx.room.migration.Migration(9,10) {
             override fun migrate(connection: SQLiteConnection) { MIGRATION_9_10.migrate(connection); error("Injected migration failure") }
         }
-        val bad=Room.databaseBuilder<VineshieldDatabase>(context,name).setDriver(BundledSQLiteDriver()).addMigrations(failing).build()
+        val bad=Room.databaseBuilder<VineshieldDatabase>(context,name).setDriver(BundledSQLiteDriver()).addMigrations(failing, MIGRATION_10_11).build()
         try { assertFailsWith<Exception> { bad.weatherCacheDao().generation(10) } } finally { bad.close() }
         raw(name) { c ->
             val q=c.prepare("SELECT count(*) FROM sqlite_master WHERE name='weather_source'")

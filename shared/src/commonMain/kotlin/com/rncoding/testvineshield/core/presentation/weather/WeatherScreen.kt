@@ -98,7 +98,11 @@ fun WeatherScreen(state: WeatherScreenState, onBack: () -> Unit, onRetry: () -> 
                         Text("Block: ${snapshot.blocks.firstOrNull { it.blockId == config.blockId }?.name ?: "Unavailable"}")
                         Text("Monitoring start: ${config.monitoringStartDate}")
                         Text(if (config.enabled) "Saved setting: enabled" else "Saved setting: disabled")
-                        Text("Current block stage: ${snapshot.blocks.firstOrNull { it.blockId == config.blockId }?.phenologicalStage?.name ?: "Unknown"} (observation date unavailable)")
+                        val block = snapshot.blocks.firstOrNull { it.blockId == config.blockId }
+                        Text("Recorded block stage: ${block?.phenologicalStage?.dbValue?.replace('_', ' ') ?: "Unknown"}")
+                        if (block?.phenologicalStage != null) {
+                            Text("Observed on: ${block.stageObservedOn ?: "Date unknown"}")
+                        }
                     } }
                 }
             }

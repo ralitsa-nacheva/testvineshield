@@ -152,7 +152,8 @@ interface BlockDao {
         planted_at = :plantedAt,
         phenological_stage = :phenologicalStage,
         area_unit = :areaUnit,
-        row_spacing_unit = :rowSpacingUnit
+        row_spacing_unit = :rowSpacingUnit,
+        stage_observed_on = :stageObservedOn
     WHERE block_id = :blockId
       AND vineyard_id = :vineyardId
     """
@@ -170,7 +171,8 @@ interface BlockDao {
         plantedAt: kotlinx.datetime.LocalDate?,
         phenologicalStage: com.rncoding.testvineshield.core.domain.datamodels.enums.PhenologicalStage?,
         areaUnit: AreaUnit? = null,
-        rowSpacingUnit: LengthUnit? = null
+        rowSpacingUnit: LengthUnit? = null,
+        stageObservedOn: kotlinx.datetime.LocalDate? = null
     ): Int
 
     @Query(

@@ -73,7 +73,8 @@ class BlockRepositoryImpl(
             plantedAt = block.plantedAt,
             phenologicalStage = block.phenologicalStage,
             areaUnit = block.areaUnit,
-            rowSpacingUnit = block.rowSpacingUnit
+            rowSpacingUnit = block.rowSpacingUnit,
+            stageObservedOn = block.stageObservedOn
         )
 
         return affectedRows > 0

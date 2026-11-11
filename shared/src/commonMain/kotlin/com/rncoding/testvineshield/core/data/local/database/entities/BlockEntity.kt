@@ -40,6 +40,8 @@ data class BlockEntity(
     @ColumnInfo(name = "area_unit", defaultValue = "NULL")
     val areaUnit: AreaUnit? = null,
     @ColumnInfo(name = "row_spacing_unit", defaultValue = "NULL")
-    val rowSpacingUnit: LengthUnit? = null
+    val rowSpacingUnit: LengthUnit? = null,
+    @ColumnInfo(name = "stage_observed_on", defaultValue = "NULL")
+    val stageObservedOn: LocalDate? = null
 
 )

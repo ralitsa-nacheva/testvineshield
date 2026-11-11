@@ -61,4 +61,22 @@ class BlockDraftTest {
         assertTrue(BlockField.Variety in result.errors)
         assertNotNull(draft().parsed(10, 0).block)
     }
+
+    @Test fun observationDateSurvivesDraftRestoreAndUnrelatedEdit() {
+        val original = draft().copy(stage = PhenologicalStage.FLOWERING, stageObservedOn = "2024-05-17")
+        val restored = assertNotNull(BlockDraft.restored(original.savedValues()))
+        val block = assertNotNull(restored.parsed(10, 20).block)
+        val renamed = assertNotNull(BlockDraft.from(block).copy(name = "South").parsed(10, 20).block)
+        assertEquals(LocalDate(2024, 5, 17), renamed.stageObservedOn)
+        val oldDraft = assertNotNull(BlockDraft.restored(original.savedValues().dropLast(1)))
+        assertEquals(PhenologicalStage.FLOWERING, oldDraft.stage)
+        assertNull(oldDraft.parsed(10, 20).block?.stageObservedOn)
+    }
+
+    @Test fun observationDateRequiresAStageAndARealCalendarDate() {
+        val dated = draft().copy(stageObservedOn = "2024-02-29")
+        assertTrue(BlockField.StageObservedOn in dated.parsed(10, 20).errors)
+        val invalid = dated.copy(stage = PhenologicalStage.FLOWERING, stageObservedOn = "2023-02-29")
+        assertTrue(BlockField.StageObservedOn in invalid.parsed(10, 20).errors)
+    }
 }

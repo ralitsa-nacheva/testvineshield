@@ -80,7 +80,12 @@ fun BlockDetailsScreenRoot(vineyardId: Long, blockId: Long, ownerId: Long, onBac
                 item { Text("Rows: ${block.rowCount?.toString() ?: "Unknown"}") }
                 item { Text("Row spacing: ${block.rowSpacing?.let { "${formatPlainDecimal(it)} ${block.rowSpacingUnit?.symbol ?: "(unit unknown)"}" } ?: "Unknown"}") }
                 item { Text("Planted: ${block.plantedAt?.toString() ?: "Unknown"}") }
-                item { Text("Stage (manual): ${stageLabel(block.phenologicalStage)}") }
+                item {
+                    Text("Stage (manual): ${stageLabel(block.phenologicalStage)}")
+                    if (block.phenologicalStage != null) {
+                        Text("Observed on: ${block.stageObservedOn ?: "Date unknown"}")
+                    }
+                }
                 item { Text("Rootstock: ${block.rootStock.ifBlank { "Unknown" }}") }
                 item { Text("Colour: ${block.color.ifBlank { "Unknown" }}") }
                 item { Button(onClick = userAction(onEdit), enabled = !state.deleting, modifier = Modifier.fillMaxWidth()) { Text("Edit block") } }
@@ -139,8 +144,9 @@ fun BlockEditorScreen(state: BlockEditorState, editing: Boolean, onBack: ()->Uni
             if (state.loading || state.saving) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
             state.error?.let { error -> item { ErrorNotice(error, if (!state.ready) onRetry else null) } }
             item { Text("Save to keep changes. Back discards unsaved changes. Leave optional measurements and planting date blank when unknown.") }
-            items(BlockField.entries, key = {it.name}) { field ->
+            items(BlockField.entries.filter { it != BlockField.StageObservedOn }, key = { it.name }) { field ->
                 val (label, help, keyboard) = when (field) {
+                    BlockField.StageObservedOn -> error("Observation date is rendered with the stage picker.")
                     BlockField.Name -> Triple("Block name *", "Required", KeyboardType.Text)
                     BlockField.Variety -> Triple("Vine variety *", "Required", KeyboardType.Text)
                     BlockField.Color -> Triple("Colour", "Optional description", KeyboardType.Text)
@@ -155,7 +161,27 @@ fun BlockEditorScreen(state: BlockEditorState, editing: Boolean, onBack: ()->Uni
                 if (field==BlockField.Area) RecordChoice("Area unit", state.draft.areaUnit, AreaUnit.entries, state.canEdit, {it.symbol}, onAreaUnit)
                 if (field==BlockField.Spacing) RecordChoice("Spacing unit", state.draft.spacingUnit, LengthUnit.entries, state.canEdit, {it.symbol}, onSpacingUnit)
             }
-            item { RecordChoice("Current stage (manual)", state.draft.stage, PhenologicalStage.entries, state.canEdit, {stageLabel(it)}, onStage) }
+            item {
+                RecordChoice("Observed growth stage", state.draft.stage, PhenologicalStage.entries, state.canEdit, { stageLabel(it) }, onStage)
+                if (state.draft.stage != null) {
+                    OutlinedTextField(
+                        value = state.draft.stageObservedOn,
+                        onValueChange = {
+                            activity()
+                            onText(BlockField.StageObservedOn, it)
+                        },
+                        label = { Text("Stage observation date") },
+                        supportingText = {
+                            Text(state.errors[BlockField.StageObservedOn] ?: "Optional. Use YYYY-MM-DD.")
+                        },
+                        isError = BlockField.StageObservedOn in state.errors,
+                        enabled = state.canEdit,
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii)
+                    )
+                }
+            }
             item { Text("No stage is inferred from planting age. Unknown units never imply metres or hectares.") }
             item { Button(onClick = userAction(onSave), enabled = state.canEdit, modifier = Modifier.fillMaxWidth()) { Text(if (state.saving) "Saving…" else "Save block") } }
         }

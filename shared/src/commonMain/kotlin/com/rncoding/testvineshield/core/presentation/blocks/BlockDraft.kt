@@ -6,7 +6,7 @@ import com.rncoding.testvineshield.core.domain.datamodels.units.*
 import com.rncoding.testvineshield.core.presentation.formatting.*
 import kotlinx.datetime.LocalDate
 
-enum class BlockField { Name, Variety, Color, RootStock, Area, Rows, Spacing, Planted }
+enum class BlockField { Name, Variety, Color, RootStock, Area, Rows, Spacing, Planted, StageObservedOn }
 
 data class BlockDraft(
     val name: String = "",
@@ -19,7 +19,8 @@ data class BlockDraft(
     val planted: String = "",
     val areaUnit: AreaUnit? = null,
     val spacingUnit: LengthUnit? = null,
-    val stage: PhenologicalStage? = null
+    val stage: PhenologicalStage? = null,
+    val stageObservedOn: String = ""
 ) {
     fun text(field: BlockField): String = when (field) {
         BlockField.Name -> name
@@ -30,6 +31,7 @@ data class BlockDraft(
         BlockField.Rows -> rows
         BlockField.Spacing -> spacing
         BlockField.Planted -> planted
+        BlockField.StageObservedOn -> stageObservedOn
     }
     fun changed(field: BlockField, value: String): BlockDraft = when (field) {
         BlockField.Name -> copy(name = value)
@@ -40,9 +42,10 @@ data class BlockDraft(
         BlockField.Rows -> copy(rows = value)
         BlockField.Spacing -> copy(spacing = value)
         BlockField.Planted -> copy(planted = value)
+        BlockField.StageObservedOn -> copy(stageObservedOn = value)
     }
     // Primitive state only; stable unit codes, never enum ordinals. Not a database write.
-    fun savedValues(): ArrayList<String> = arrayListOf(name, variety, color, rootStock, area, rows, spacing, planted, areaUnit?.code.orEmpty(), spacingUnit?.code.orEmpty(), stage?.dbValue.orEmpty())
+    fun savedValues(): ArrayList<String> = arrayListOf(name, variety, color, rootStock, area, rows, spacing, planted, areaUnit?.code.orEmpty(), spacingUnit?.code.orEmpty(), stage?.dbValue.orEmpty(), stageObservedOn)
     companion object {
         fun from(block: BlockDomainModel) = BlockDraft(
             name = block.name,
@@ -55,11 +58,12 @@ data class BlockDraft(
             planted = block.plantedAt?.toString().orEmpty(),
             areaUnit = block.areaUnit,
             spacingUnit = block.rowSpacingUnit,
-            stage = block.phenologicalStage
+            stage = block.phenologicalStage,
+            stageObservedOn = block.stageObservedOn?.toString().orEmpty()
         )
         fun restored(values: List<String>): BlockDraft? {
-            if (values.size != 11) return null
-            return try { BlockDraft(values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8].takeIf { it.isNotEmpty() }?.let(AreaUnit::fromCode), values[9].takeIf { it.isNotEmpty() }?.let(LengthUnit::fromCode), values[10].takeIf { it.isNotEmpty() }?.let(PhenologicalStage::fromDbValue)) }
+            if (values.size !in 11..12) return null
+            return try { BlockDraft(values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8].takeIf { it.isNotEmpty() }?.let(AreaUnit::fromCode), values[9].takeIf { it.isNotEmpty() }?.let(LengthUnit::fromCode), values[10].takeIf { it.isNotEmpty() }?.let(PhenologicalStage::fromDbValue), values.getOrNull(11).orEmpty()) }
             catch (_: IllegalArgumentException) { null }
         }
     }
@@ -82,5 +86,16 @@ internal fun BlockDraft.parsed(vineyardId: Long, blockId: Long): BlockDraftResul
     val date = if (planted.isBlank()) null else try { LocalDate.parse(planted.trim()) }
     catch (_: IllegalArgumentException) { errors[BlockField.Planted] = "Use a valid ISO date, e.g. 2020-04-15, or leave blank."
         null }
-    return BlockDraftResult(if (errors.isEmpty()) BlockDomainModel(blockId, vineyardId, name.trim(), areaValue, variety.trim(), color.trim(), rootStock.trim(), count, spacingValue, date, stage, areaUnit, spacingUnit) else null, errors)
+    val observedOn = if (stageObservedOn.isBlank()) null else if (stage == null) {
+        errors[BlockField.StageObservedOn] = "Choose an observed stage first."
+        null
+    } else {
+        try {
+            LocalDate.parse(stageObservedOn.trim())
+        } catch (_: IllegalArgumentException) {
+            errors[BlockField.StageObservedOn] = "Enter a valid observation date in YYYY-MM-DD format."
+            null
+        }
+    }
+    return BlockDraftResult(if (errors.isEmpty()) BlockDomainModel(blockId, vineyardId, name.trim(), areaValue, variety.trim(), color.trim(), rootStock.trim(), count, spacingValue, date, stage, areaUnit, spacingUnit, observedOn) else null, errors)
 }

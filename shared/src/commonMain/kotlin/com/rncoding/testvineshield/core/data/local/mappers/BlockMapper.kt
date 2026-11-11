@@ -21,7 +21,8 @@ class BlockMapper {
             plantedAt = entity.plantedAt,
             phenologicalStage = entity.phenologicalStage,
             areaUnit = entity.areaUnit,
-            rowSpacingUnit = entity.rowSpacingUnit
+            rowSpacingUnit = entity.rowSpacingUnit,
+            stageObservedOn = entity.stageObservedOn
         )
     }
 
@@ -41,7 +42,8 @@ class BlockMapper {
             plantedAt = domain.plantedAt,
             phenologicalStage = domain.phenologicalStage,
             areaUnit = domain.areaUnit,
-            rowSpacingUnit = domain.rowSpacingUnit
+            rowSpacingUnit = domain.rowSpacingUnit,
+            stageObservedOn = domain.stageObservedOn
         )
     }
 }

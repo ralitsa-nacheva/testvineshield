@@ -105,7 +105,9 @@ private val request: BlockEditorRequest, private val create: CreateBlockUseCase,
     fun text(field: BlockField, value: String) = change(field) { it.changed(field, value) }
     fun areaUnit(value: AreaUnit?) = change { it.copy(areaUnit = value) }
     fun spacingUnit(value: LengthUnit?) = change { it.copy(spacingUnit = value) }
-    fun stage(value: PhenologicalStage?) = change { it.copy(stage = value) }
+    fun stage(value: PhenologicalStage?) = change { draft ->
+        if (draft.stage == value) draft else draft.copy(stage = value, stageObservedOn = "")
+    }
     fun save() {
         if (!_state.value.canEdit) return
         val parsed = _state.value.draft.parsed(request.vineyardId, request.blockId)

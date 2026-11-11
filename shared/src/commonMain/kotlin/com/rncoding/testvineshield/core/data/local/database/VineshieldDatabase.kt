@@ -59,7 +59,7 @@ import com.rncoding.testvineshield.core.data.local.database.daos.WeatherCacheDao
     HarvestEntity::class, ObservedSymptomEntity::class, OccurrenceActivityCrossRef::class,
     OccurrenceSymptomCrossRef::class, SecuritySettingsEntity::class, SymptomEntity::class, UserEntity::class,
     VineyardEntity::class, WeatherCalculationEntity::class, WeatherHistoryEntity::class, WeatherForecastEntity::class, SprayApplicationEntity::class, SprayProductEntity::class, WeatherSourceEntity::class, WeatherHistorySourceEntity::class, WeatherCacheStatusEntity::class, WeatherHistoryArchiveEntity::class],
-    version = 10)
+    version = 11)
 @TypeConverters(LocalDateRoomConverters::class, DomainEnumRoomConverters::class, MeasurementUnitRoomConverters::class)
 @ConstructedBy(VineshieldConstructor::class)
 
