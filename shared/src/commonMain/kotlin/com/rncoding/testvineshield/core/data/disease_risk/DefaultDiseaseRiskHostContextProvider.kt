@@ -50,6 +50,8 @@ class DefaultDiseaseRiskHostContextProvider(
             phenologicalStage =
                 block.phenologicalStage,
 
+            stageObservedOn = block.stageObservedOn,
+
             activeOccurrence =
                 occurrence?.toRiskEvidence(),
 

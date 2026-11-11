@@ -51,7 +51,7 @@ class DiseaseRiskInputFactoryImpl(
                 vineyardId = vineyardId
             )
 
-            try {
+            val timeZone = try {
                 TimeZone.of(timeZoneString)
             } catch (_: IllegalArgumentException) {
                 return DiseaseRiskInputResult.InvalidTimeZone(
@@ -97,6 +97,12 @@ class DiseaseRiskInputFactoryImpl(
                 blockId = blockId,
                 diseaseId = diseaseId
             )
+
+            if (modelType == DiseaseRiskModelType.BOTRYTIS &&
+                !hostContext.hasStageObservationFor(window, timeZone)
+            ) {
+                return DiseaseRiskInputResult.InsufficientStageEvidence
+            }
 
             // 6. Construct the model input.
             val input = DiseaseRiskInput(

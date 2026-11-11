@@ -327,6 +327,17 @@ class DiseaseRiskEngineImplTest {
 
 
     @Test
+    fun insufficientStageEvidenceDoesNotRunOrPersistAnEvaluation() = runBlocking {
+        val fixture = Fixture()
+        fixture.factory.result = DiseaseRiskInputResult.InsufficientStageEvidence
+
+        val skipped = assertIs<DiseaseRiskEngineResult.Skipped>(fixture.evaluate())
+        assertEquals(DiseaseRiskEngineResult.Skipped.SkipReason.INSUFFICIENT_STAGE_EVIDENCE, skipped.reason)
+        assertEquals(0, fixture.model.callCount)
+        assertEquals(0, fixture.persistence.saveCount)
+    }
+
+    @Test
     fun persistenceFailureIsReported() = runBlocking {
         val fixture = Fixture()
 

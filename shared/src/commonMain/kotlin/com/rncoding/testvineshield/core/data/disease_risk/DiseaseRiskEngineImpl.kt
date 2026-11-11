@@ -114,6 +114,12 @@ class DiseaseRiskEngineImpl(
                             .SkipReason.MONITORING_DISABLED
                     )
 
+                DiseaseRiskInputResult.InsufficientStageEvidence ->
+                    return DiseaseRiskEngineResult.Skipped(
+                        reason = DiseaseRiskEngineResult.Skipped
+                            .SkipReason.INSUFFICIENT_STAGE_EVIDENCE
+                    )
+
                 DiseaseRiskInputResult.NoNewWeather ->
                     return DiseaseRiskEngineResult.Skipped(
                         reason = DiseaseRiskEngineResult.Skipped
