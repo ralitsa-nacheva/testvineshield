@@ -266,6 +266,6 @@ class BotrytisDiseaseRiskModel(
 
     companion object {
         const val MODEL_VERSION =
-            "NAIR_ALLEN_FLOWER_BERRY_V2"
+            "NAIR_ALLEN_FLOWER_BERRY_V2_LOCAL_DAY"
     }
 }

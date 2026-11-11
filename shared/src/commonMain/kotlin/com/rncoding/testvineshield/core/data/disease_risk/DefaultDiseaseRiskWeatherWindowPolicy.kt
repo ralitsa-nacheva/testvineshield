@@ -50,9 +50,11 @@ class DefaultDiseaseRiskWeatherWindowPolicy :
                     previousState = previousState
                 )
 
-            DiseaseRiskModelType.POWDERY_MILDEW_ASCOSPORE,
-            DiseaseRiskModelType.DOWNY_MILDEW_SECONDARY,
             DiseaseRiskModelType.BOTRYTIS ->
+                getBotrytisWindow(calculatedAt, zone, monitoringStartDate, previousState)
+
+            DiseaseRiskModelType.POWDERY_MILDEW_ASCOSPORE,
+            DiseaseRiskModelType.DOWNY_MILDEW_SECONDARY ->
                 getStatelessWindow(
                     calculatedAt = calculatedAt,
                     timeZone = zone,
@@ -198,6 +200,25 @@ class DefaultDiseaseRiskWeatherWindowPolicy :
             startTimestamp = startTimestamp,
             endTimestamp = endTimestamp
         )
+    }
+
+    private fun getBotrytisWindow(
+        calculatedAt: Long,
+        timeZone: TimeZone,
+        monitoringStartDate: LocalDate?,
+        previousState: DiseaseRiskModelState?
+    ): DiseaseRiskWeatherWindow {
+        require(previousState == null) { "Botrytis must not have persisted model state." }
+
+        val today = Instant.fromEpochMilliseconds(calculatedAt).toLocalDateTime(timeZone).date
+        val observationDate = today.plus(-1, DateTimeUnit.DAY)
+        val end = today.atStartOfDayIn(timeZone).toEpochMilliseconds()
+        if (monitoringStartDate != null && observationDate < monitoringStartDate) {
+            return DiseaseRiskWeatherWindow(end, end)
+        }
+
+        val start = observationDate.atStartOfDayIn(timeZone).toEpochMilliseconds()
+        return DiseaseRiskWeatherWindow(start, end)
     }
 
     private fun getStatelessWindow(

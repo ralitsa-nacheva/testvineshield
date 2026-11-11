@@ -1,6 +1,7 @@
 package com.rncoding.testvineshield.core.data.disease_risk
 
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskModelType
+import com.rncoding.testvineshield.core.domain.disease_risk.HourlyWeatherContinuityValidator
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
@@ -81,6 +82,57 @@ class DefaultDiseaseRiskWeatherWindowPolicyTest {
     }
 
     @Test
+    fun botrytisUsesPreviousCompleteLocalDayAtMidday() {
+        val zone = "Asia/Kolkata"
+        val window = botrytisWindow(2026, 6, 16, zone)
+        assertEquals(localTimestamp(2026, 6, 15, 0, zone), window.startTimestamp)
+        assertEquals(localTimestamp(2026, 6, 16, 0, zone), window.endTimestamp)
+    }
+
+    @Test
+    fun botrytisUsesActualLocalDayLengthAcrossClockChanges() {
+        val zone = "Europe/Sofia"
+        val spring = botrytisWindow(2026, 3, 30, zone)
+        assertEquals(23L * oneHourMillis, spring.endTimestamp - spring.startTimestamp)
+        assertEquals(LocalDate(2026, 3, 29), spring.singleLocalDate(TimeZone.of(zone)))
+
+        val autumn = botrytisWindow(2026, 10, 26, zone)
+        assertEquals(25L * oneHourMillis, autumn.endTimestamp - autumn.startTimestamp)
+        assertEquals(LocalDate(2026, 10, 25), autumn.singleLocalDate(TimeZone.of(zone)))
+    }
+
+    @Test
+    fun botrytisWaitsForACompleteDayAtOrAfterMonitoringStart() {
+        val zone = "Europe/Sofia"
+        val start = LocalDate(2026, 6, 16)
+        val before = botrytisWindow(2026, 6, 16, zone, start)
+        assertEquals(before.endTimestamp, before.startTimestamp)
+
+        val after = botrytisWindow(2026, 6, 17, zone, start)
+        assertEquals(start, after.singleLocalDate(TimeZone.of(zone)))
+    }
+
+    @Test
+    fun botrytisHalfHourClockChangeKeepsBoundariesAndRejectsPartialHours() {
+        val window = botrytisWindow(2026, 10, 5, "Australia/Lord_Howe")
+        assertEquals(23L * oneHourMillis + oneHourMillis / 2, window.endTimestamp - window.startTimestamp)
+        assertEquals(
+            "Weather window must contain complete hourly intervals.",
+            HourlyWeatherContinuityValidator.validateWindowCompleteness(emptyList(), window)
+        )
+    }
+
+    private fun botrytisWindow(
+        year: Int, month: Int, day: Int, zone: String, start: LocalDate? = null
+    ) = policy.getWindow(
+        modelType = DiseaseRiskModelType.BOTRYTIS,
+        calculatedAt = localTimestamp(year, month, day, 12, zone),
+        timeZone = zone,
+        monitoringStartDate = start,
+        previousState = null
+    )
+
+    @Test
     fun statelessWindowUsesVineyardHourlyGrid() {
         val zone = "Asia/Kolkata"
 
@@ -89,7 +141,7 @@ class DefaultDiseaseRiskWeatherWindowPolicyTest {
         )
 
         val window = policy.getWindow(
-            modelType = DiseaseRiskModelType.BOTRYTIS,
+            modelType = DiseaseRiskModelType.DOWNY_MILDEW_SECONDARY,
             calculatedAt = calculatedAt,
             timeZone = zone,
             monitoringStartDate = null,
@@ -121,7 +173,7 @@ class DefaultDiseaseRiskWeatherWindowPolicyTest {
         )
 
         val window = policy.getWindow(
-            modelType = DiseaseRiskModelType.BOTRYTIS,
+            modelType = DiseaseRiskModelType.DOWNY_MILDEW_SECONDARY,
             calculatedAt = calculatedAt,
             timeZone = zone,
             monitoringStartDate = null,
