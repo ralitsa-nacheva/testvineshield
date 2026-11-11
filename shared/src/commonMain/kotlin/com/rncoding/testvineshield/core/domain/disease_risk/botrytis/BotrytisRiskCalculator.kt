@@ -1,6 +1,7 @@
 package com.rncoding.testvineshield.core.domain.disease_risk.botrytis
 
 import com.rncoding.testvineshield.core.domain.disease_risk.ContinuousWetPeriodExtractor
+import com.rncoding.testvineshield.core.domain.disease_risk.HourlyWeatherContinuityValidator
 import kotlin.math.exp
 import kotlin.math.pow
 
@@ -20,22 +21,18 @@ class BotrytisRiskCalculator {
             )
         }
 
-        if (input.weather.isEmpty()) {
-            return unavailableResult(
-                hostTissue =
-                    input.hostTissue
-            )
+        val weather = input.weather
+        if (!HourlyWeatherContinuityValidator.isStrictlyContinuous(weather) ||
+            weather.any { it.leafWetness?.value == null }
+        ) {
+            return unavailableResult(input.hostTissue)
         }
 
-        if (
-            input.weather.any {
-                it.leafWetness?.value == null
-            }
+        // Wetness at either edge could be part of an event outside this window.
+        if (weather.first().leafWetness?.value == true ||
+            weather.last().leafWetness?.value == true
         ) {
-            return unavailableResult(
-                hostTissue =
-                    input.hostTissue
-            )
+            return unavailableResult(input.hostTissue)
         }
 
         val wetPeriods =

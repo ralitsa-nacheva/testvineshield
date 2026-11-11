@@ -70,6 +70,41 @@ class BotrytisStageAvailabilityTest {
         assertNull(result.nativeRiskValue)
     }
 
+    @Test
+    fun wetnessTouchingEitherBoundaryMakesTheDayInsufficient() {
+        val wetRuns = listOf(0..3, 20..23, 0..23)
+        for (run in wetRuns) {
+            val result = evaluate(PhenologicalStage.FLOWERING, wetWeather(run)).result
+            assertEquals(DiseaseRiskEvaluationStatus.INSUFFICIENT_DATA, result.evaluationStatus)
+            assertNull(result.nativeRiskValue)
+        }
+    }
+
+    @Test
+    fun aWetPeriodBetweenDryHoursCanBeEvaluated() {
+        val result = evaluate(PhenologicalStage.FLOWERING, wetWeather(5..12)).result
+        assertEquals(DiseaseRiskEvaluationStatus.CALCULATED, result.evaluationStatus)
+        assertTrue(checkNotNull(result.nativeRiskValue) > 0.0)
+    }
+
+    @Test
+    fun missingWetnessAndMissingHoursDoNotLookLikeDryWeather() {
+        val dry = dryWeather()
+        val unknown = dry.mapIndexed { index, point ->
+            if (index == 8) point.copy(leafWetness = null) else point
+        }
+        val gap = dry.filterIndexed { index, _ -> index != 8 }
+        for (weather in listOf(unknown, gap)) {
+            val result = evaluate(PhenologicalStage.FLOWERING, weather).result
+            assertEquals(DiseaseRiskEvaluationStatus.INSUFFICIENT_DATA, result.evaluationStatus)
+            assertNull(result.nativeRiskValue)
+        }
+    }
+
+    private fun wetWeather(run: IntRange) = dryWeather().mapIndexed { index, point ->
+        point.copy(leafWetness = checkNotNull(point.leafWetness).copy(value = index in run))
+    }
+
     private fun evaluate(stage: PhenologicalStage?, weather: List<DiseaseRiskWeatherPoint>) =
         model.evaluate(
             input = DiseaseRiskInput(
