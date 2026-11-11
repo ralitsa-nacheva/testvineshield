@@ -56,6 +56,12 @@ kotlin {
 
     // Configure the generated iOS frameworks.
     iosTargets.forEach { target ->
+        // Native test binaries also need MapLibre runtime system libraries (Xcode app flags are separate).
+        target.binaries.all {
+            linkerOpts("-lc++", "-lz", "-framework", "CoreFoundation", "-framework", "CoreGraphics",
+                "-framework", "CoreText", "-framework", "Foundation", "-framework", "ImageIO",
+                "-framework", "Metal", "-framework", "QuartzCore")
+        }
         target.binaries.framework {
             baseName = "Shared"
             isStatic = true
@@ -80,6 +86,7 @@ kotlin {
         // =====================================================================
 
         commonMain.dependencies {
+            implementation(libs.maplibre.compose)
 
             // Compose Multiplatform
             implementation(compose.runtime)
@@ -127,6 +134,7 @@ kotlin {
         // =====================================================================
 
         androidMain.dependencies {
+            runtimeOnly(libs.maplibre.runtime)
 
             // Android Activity
             implementation(libs.androidx.activity.compose)
@@ -163,6 +171,7 @@ kotlin {
         // =====================================================================
 
         commonTest.dependencies {
+            implementation(libs.ktor.client.mock)
             implementation(libs.kotlin.test)
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:${libs.versions.kotlinx.coroutines.get()}")
         }

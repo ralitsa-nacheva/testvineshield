@@ -51,8 +51,9 @@ class WeatherCachePresentationIntegrationTest {
                 override suspend fun fetchWeatherForecast(latitude: Double, longitude: Double, timeZone: String): WeatherDto = error("Unexpected forecast request")
             }
             val first = WeatherForecastEntity(0,10,2_000_000_000_000L,18.0,60.0,10.0,20.0,4.0,0.0,0.0,0.0,0.0,0.0,0,2000.0,10000.0,12.0,10.0,0.3,0.3,true,1_999_999_000_000L)
-            db.weatherForecastDao().replaceForecast(10,listOf(first.copy(timestamp = first.timestamp+3_600_000L),first))
-            val repo = WeatherForecastRepositoryImpl(noNetwork, db.vineyardDao(), db.weatherForecastDao(), WeatherForecastMapper())
+            val request=assertNotNull(db.weatherCacheDao().begin(10,42.1,24.7,"Europe/Sofia","forecast",first.forecastCreatedAt))
+            assertTrue(db.weatherCacheDao().completeForecast(request,listOf(first,first.copy(timestamp=first.timestamp+3_600_000L)),first.forecastCreatedAt))
+            val repo = WeatherForecastRepositoryImpl(noNetwork, db.vineyardDao(), WeatherForecastMapper(),db.weatherCacheDao())
             val rows = repo.observeCachedForecast(10).first()
             assertEquals(2, rows.size); assertEquals(first.timestamp,rows.first().weather.timestamp)
             assertTrue(rows.all { it.fetchedAt == first.forecastCreatedAt && it.weather.vineyardId == 10L })

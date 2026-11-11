@@ -4,6 +4,8 @@ package com.rncoding.testvineshield.core.data.repository
 import com.rncoding.testvineshield.core.data.datasource.WeatherRemoteDataSource
 import com.rncoding.testvineshield.core.data.local.database.daos.VineyardDao
 import com.rncoding.testvineshield.core.data.local.database.daos.WeatherHistoryDao
+import com.rncoding.testvineshield.core.data.local.database.daos.WeatherCacheDao
+import com.rncoding.testvineshield.core.data.local.database.daos.WeatherCacheRequest
 import com.rncoding.testvineshield.core.data.local.database.entities.WeatherHistoryEntity
 import com.rncoding.testvineshield.core.data.local.mappers.WeatherHistoryMapper
 import com.rncoding.testvineshield.core.data.remote.dto.WeatherDto
@@ -41,10 +43,12 @@ class WeatherHistoryRepositoryImplHostTest {
     private val remoteDataSource = mockk<WeatherRemoteDataSource>()
     private val mapper = mockk<WeatherHistoryMapper>()
 
+    private val store = mockk<WeatherCacheDao>(relaxed=true)
+
     private val repository = WeatherHistoryRepositoryImpl(
         remoteDataSource = remoteDataSource,
         vineyardDao = vineyardDao,
-        weatherHistoryDao = weatherHistoryDao,
+        cacheDao = store,
         weatherHistoryMapper = mapper
     )
 
@@ -54,6 +58,9 @@ class WeatherHistoryRepositoryImplHostTest {
     private val timeZone = "Europe/Sofia"
 
     private fun stubTimeZone() {
+        coEvery { store.completeHistory(any(),any(),any()) } returns 0
+        coEvery { store.begin(vineyardId,latitude,longitude,timeZone,"history",any()) } returns
+            WeatherCacheRequest(vineyardId,1,"generation","token","history",latitude,longitude,timeZone,1)
         coEvery {
             vineyardDao.getVineyardTimeZone(vineyardId)
         } returns timeZone
@@ -246,8 +253,8 @@ class WeatherHistoryRepositoryImplHostTest {
         stubMapping(response, entities)
 
         coEvery {
-            weatherHistoryDao.insertMissingWeather(entities)
-        } returns listOf(11L, -1L, 13L)
+            store.completeHistory(any(),entities,any())
+        } returns 2
 
         val result = repository.refreshWeatherHistory(
             vineyardId, latitude, longitude
@@ -264,7 +271,7 @@ class WeatherHistoryRepositoryImplHostTest {
         assertTrue(refresh.hasNewWeather)
 
         coVerify(exactly = 1) {
-            weatherHistoryDao.insertMissingWeather(entities)
+            store.completeHistory(any(),entities,any())
         }
     }
 
@@ -281,7 +288,7 @@ class WeatherHistoryRepositoryImplHostTest {
         stubMapping(response, entities)
 
         coEvery {
-            weatherHistoryDao.insertMissingWeather(entities)
+            store.completeHistory(any(),entities,any())
         } throws CancellationException("Insert cancelled")
 
         assertFailsWith<CancellationException> {
@@ -397,7 +404,7 @@ class WeatherHistoryRepositoryImplHostTest {
         stubMapping(response, entities)
 
         coEvery {
-            weatherHistoryDao.insertMissingWeather(entities)
+            store.completeHistory(any(),entities,any())
         } throws IllegalStateException("Database unavailable")
 
         val result = repository.refreshWeatherHistory(

@@ -44,7 +44,7 @@ class WeatherForecastValidationIntegrationTest {
         val name="r06b1-invalid-${UUID.randomUUID()}.db"; val db=open(name)
         try {
             val (id,other)=seed(db); val dao=db.weatherForecastDao(); val before=dao.observeForecastWeather(id).first(); val otherBefore=dao.observeForecastWeather(other).first()
-            val remote=Remote(); val repo=WeatherForecastRepositoryImpl(remote,db.vineyardDao(),dao,WeatherForecastMapper())
+            val remote=Remote(); val repo=WeatherForecastRepositoryImpl(remote,db.vineyardDao(),WeatherForecastMapper(),db.weatherCacheDao())
             val good=WeatherResponseFixtures.response()
             for (invalid in listOf(good.copy(hourlyUnits=good.hourlyUnits!! + ("wind_speed_10m" to "mph")),
                 good.copy(hourlyWeather=good.hourlyWeather.copy(hourlyTemp2m=List(48) { Double.NaN })),WeatherResponseFixtures.response(23))) {
@@ -58,7 +58,7 @@ class WeatherForecastValidationIntegrationTest {
         val name="r06b1-success-${UUID.randomUUID()}.db"; val db=open(name)
         try {
             val (id,other)=seed(db); val dao=db.weatherForecastDao(); val otherBefore=dao.observeForecastWeather(other).first()
-            val repo=WeatherForecastRepositoryImpl(Remote(),db.vineyardDao(),dao,WeatherForecastMapper())
+            val repo=WeatherForecastRepositoryImpl(Remote(),db.vineyardDao(),WeatherForecastMapper(),db.weatherCacheDao())
             assertIs<Result.Success<Unit>>(repo.refreshForecast(id,42.7,23.3,fetchedAt))
             val rows=dao.observeForecastWeather(id).first(); assertEquals(48,rows.size)
             assertTrue(rows.all { it.vineyardId==id && it.forecastCreatedAt==fetchedAt })
@@ -74,7 +74,7 @@ class WeatherForecastValidationIntegrationTest {
             val raw=BundledSQLiteDriver().open(context.getDatabasePath(name).absolutePath)
             try { raw.execSQL("CREATE TRIGGER r06b1_fail_forecast BEFORE INSERT ON weather_forecast BEGIN SELECT RAISE(ABORT, 'Injected write failure'); END") } finally { raw.close() }
             db=open(name)
-            val repo=WeatherForecastRepositoryImpl(Remote(),db.vineyardDao(),db.weatherForecastDao(),WeatherForecastMapper())
+            val repo=WeatherForecastRepositoryImpl(Remote(),db.vineyardDao(),WeatherForecastMapper(),db.weatherCacheDao())
             assertIs<Result.Error<*>>(repo.refreshForecast(id,42.7,23.3,fetchedAt))
             assertEquals(before,db.weatherForecastDao().observeForecastWeather(id).first())
             assertEquals(otherBefore,db.weatherForecastDao().observeForecastWeather(other).first())

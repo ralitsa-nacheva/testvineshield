@@ -43,7 +43,8 @@ class VineyardRepositoryImpl(
     private val vineyardWeatherSummaryMapper: VineyardWeatherSummaryMapper,
     private val vineyardWeatherRiskSummaryMapper: VineyardWeatherRiskSummaryMapper,
     private val diseaseOccurrenceSummaryMapper: DiseaseOccurrenceSummaryMapper,
-    private val diseaseAlertSummaryMapper: DiseaseAlertSummaryMapper
+    private val diseaseAlertSummaryMapper: DiseaseAlertSummaryMapper,
+    private val evaluationCoordinator: com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskEvaluationCoordinator = com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskEvaluationCoordinator()
 ) : VineyardRepository {
 
     override fun observeVineyards(
@@ -152,7 +153,7 @@ class VineyardRepositoryImpl(
         return try {
 
             val rowsUpdated =
-                vineyardDao.updateVineyard(
+                evaluationCoordinator.withExclusiveEvaluation { vineyardDao.updateVineyard(
                     vineyardId = vineyard.vineyardId,
                     userId = vineyard.userId,
                     name = vineyard.name,
@@ -165,7 +166,7 @@ class VineyardRepositoryImpl(
                     elevation = vineyard.elevation,
                     updatedAt = vineyard.updatedAt,
                     sizeUnit = vineyard.sizeUnit
-                )
+                ) }
 
             if (rowsUpdated == 0) {
                 Result.Error(

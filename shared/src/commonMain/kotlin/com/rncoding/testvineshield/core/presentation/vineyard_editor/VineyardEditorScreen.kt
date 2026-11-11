@@ -48,7 +48,8 @@ fun VineyardEditorScreen(
     onTimeZoneChange: (String) -> Unit,
     onElevationChange: (String) -> Unit,
     onSave: () -> Unit,
-    onSizeUnitChange: (AreaUnit?) -> Unit
+    onSizeUnitChange: (AreaUnit?) -> Unit,
+    onMap: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -136,7 +137,8 @@ fun VineyardEditorScreen(
                     onElevationChange =
                         onElevationChange,
                     onSave = onSave,
-                    onSizeUnitChange = onSizeUnitChange
+                    onSizeUnitChange = onSizeUnitChange,
+                    onMap = onMap
                 )
             }
         }
@@ -156,7 +158,8 @@ private fun VineyardEditorForm(
     onTimeZoneChange: (String) -> Unit,
     onElevationChange: (String) -> Unit,
     onSave: () -> Unit,
-    onSizeUnitChange: (AreaUnit?) -> Unit
+    onSizeUnitChange: (AreaUnit?) -> Unit,
+    onMap: () -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -231,9 +234,14 @@ private fun VineyardEditorForm(
                 enabled = state.canEdit,
                 value = state.city,
                 onValueChange = onCityChange,
-                label = "City",
+                label = "City / town / village",
                 error = state.cityError
             )
+        }
+
+        item {
+            TextButton(onClick=userAction(onMap),enabled=state.canEdit) { Text("Choose location on online map") }
+            Text("Saving changed coordinates or time zone resets calculated risk progress and invalidates previous active alerts. Farm records and historical weather remain stored.")
         }
 
         item {

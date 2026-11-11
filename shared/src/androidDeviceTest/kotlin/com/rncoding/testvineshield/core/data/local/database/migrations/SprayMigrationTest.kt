@@ -122,7 +122,7 @@ class SprayMigrationTest {
         val fail = object : Migration(7, 8) {
             override fun migrate(connection: SQLiteConnection) { MIGRATION_7_8.migrate(connection); error("Injected migration failure") }
         }
-        val db = Room.databaseBuilder<VineshieldDatabase>(context, name).setDriver(BundledSQLiteDriver()).addMigrations(fail, MIGRATION_8_9).build()
+        val db = Room.databaseBuilder<VineshieldDatabase>(context, name).setDriver(BundledSQLiteDriver()).addMigrations(fail, MIGRATION_8_9, MIGRATION_9_10).build()
         try {
             var failed = false; try { db.sprayDao().get(10, 30) } catch (_: Exception) { failed = true }
             assertTrue(failed); db.close()

@@ -78,7 +78,7 @@ class RefreshWeatherHistoryAndEvaluateRiskIntegrationTest {
 
             val database =
                 Room.inMemoryDatabaseBuilder<VineshieldDatabase>(context)
-                    .setDriver(BundledSQLiteDriver())
+                    .setDriver(BundledSQLiteDriver()).addCallback(com.rncoding.testvineshield.core.data.local.database.migrations.WEATHER_SOURCE_CALLBACK)
                     .build()
 
             val monitoringDate = LocalDate(2026, 10, 19)
@@ -152,12 +152,11 @@ class RefreshWeatherHistoryAndEvaluateRiskIntegrationTest {
                     )
                 }
 
-                val insertResults = database.weatherHistoryDao()
-                    .insertMissingWeather(weather)
+                val insertResults = database.insertVerifiedWeatherFixture(weather)
 
                 assertEquals(
                     24,
-                    insertResults.count { it != -1L }
+                    insertResults
                 )
 
                 // Resolve the real combined use case through Koin.

@@ -1,0 +1,161 @@
+package com.rncoding.testvineshield.core.data.local.database.migrations
+
+import androidx.room.Room
+import androidx.sqlite.SQLiteConnection
+import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import androidx.sqlite.execSQL
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import com.rncoding.testvineshield.core.data.local.database.*
+import com.rncoding.testvineshield.core.data.local.mappers.*
+import com.rncoding.testvineshield.core.data.remote.WeatherResponseFixtures
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.first
+import org.junit.Test
+import org.junit.runner.RunWith
+import java.util.UUID
+import kotlin.test.*
+
+@RunWith(AndroidJUnit4::class)
+class WeatherSourceMigrationTest {
+    private val context get()=InstrumentationRegistry.getInstrumentation().targetContext
+    private fun raw(name: String,action: (SQLiteConnection)->Unit) {
+        context.getDatabasePath(name).parentFile?.mkdirs()
+        val c=BundledSQLiteDriver().open(context.getDatabasePath(name).absolutePath)
+        try { action(c) } finally { c.close() }
+    }
+    private fun seed(name: String) { raw(name) { c ->
+        SchemaV2Fixture.create(c); MIGRATION_2_3.migrate(c); MIGRATION_3_4.migrate(c); MIGRATION_4_5.migrate(c)
+        MIGRATION_5_6.migrate(c); MIGRATION_6_7.migrate(c); MIGRATION_7_8.migrate(c); MIGRATION_8_9.migrate(c)
+        c.execSQL("PRAGMA user_version=9")
+    } }
+    private fun open(name: String)=buildVineshieldDatabase(Room.databaseBuilder<VineshieldDatabase>(context,name))
+    private fun snapshot(c: SQLiteConnection): Map<String,List<List<String>>> {
+        val names=mutableListOf<String>(); val q=c.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name!='room_master_table' AND name NOT LIKE 'weather_source' AND name NOT LIKE 'weather_history_source' AND name NOT LIKE 'weather_cache_status' AND name NOT LIKE 'weather_history_archive' ORDER BY name")
+        try { while(q.step()) names.add(q.getText(0)) } finally { q.close() }
+        return names.associateWith { table ->
+            val fields=mutableListOf<String>(); val info=c.prepare("PRAGMA table_info(`$table`)")
+            try { while(info.step()) fields.add(info.getText(1)) } finally { info.close() }
+            val rows=c.prepare("SELECT "+fields.joinToString { "quote(`$it`)" }+" FROM `$table`")
+            try { buildList { while(rows.step()) add(fields.indices.map { rows.getText(it) }) }.sortedBy { it.toString() } } finally { rows.close() }
+        }
+    }
+    private suspend fun move(db: VineshieldDatabase,latitude: Double) {
+        val v=assertNotNull(db.vineyardDao().getVineyard(1,10))
+        assertEquals(1,db.vineyardDao().updateVineyard(10,1,v.name,v.size,v.country,v.city,latitude,v.longitude,v.timeZone,v.elevation,v.updatedAt,v.sizeUnit))
+    }
+    @Test fun installedUpgradePreservesAllOldTablesAndDoesNotGuessLegacyProvenance(): Unit=runBlocking {
+        val name="r06b2-preserve-${UUID.randomUUID()}.db"; seed(name); var before: Map<String,List<List<String>>>?=null
+        raw(name) { before=snapshot(it) }; val db=open(name)
+        try {
+            assertNotNull(db.weatherCacheDao().generation(10))
+            assertTrue(db.weatherCacheDao().observeHistory(10,0).first().isEmpty())
+            assertNotNull(db.weatherHistoryDao().getLatestWeatherByVineyard(10))
+            db.close(); raw(name) { assertEquals(before,snapshot(it)) }
+        } finally { db.close(); context.deleteDatabase(name) }
+    }
+    @Test fun locationABAAndNewerRequestsRejectOldCommitsWithoutDeletingHistory(): Unit=runBlocking {
+        val name="r06b2-aba-${UUID.randomUUID()}.db"; seed(name); val db=open(name)
+        try {
+            val dao=db.weatherCacheDao(); val old=assertNotNull(dao.begin(10,42.1,24.7,"Europe/Sofia","forecast",1000))
+            val rows=WeatherForecastMapper().weatherDtoToEntities(WeatherResponseFixtures.response(),10,1000,0)
+            move(db,43.1); move(db,42.1)
+            assertFalse(dao.completeForecast(old,rows,2000)); assertNotEquals(old.generation,dao.generation(10))
+            assertNotNull(db.weatherHistoryDao().getLatestWeatherByVineyard(10))
+            val next=assertNotNull(dao.begin(10,42.1,24.7,"Europe/Sofia","forecast",3000))
+            val latest=assertNotNull(dao.begin(10,42.1,24.7,"Europe/Sofia","forecast",4000))
+            assertFalse(dao.completeForecast(next,rows,5000)); assertTrue(dao.completeForecast(latest,rows,5000))
+            assertFalse(dao.completeForecast(latest,rows,6000))
+        } finally { db.close(); context.deleteDatabase(name) }
+    }
+    @Test fun legacySameHourIsRefetchedWithStableIdAndCurrentSourceRowsStayStable(): Unit=runBlocking {
+        val name="r06b2-history-${UUID.randomUUID()}.db"; seed(name); val db=open(name)
+        try {
+            val dao=db.weatherCacheDao(); val old=assertNotNull(db.weatherHistoryDao().getLatestWeatherByVineyard(10))
+            val dto=WeatherResponseFixtures.response(2,old.timestamp/1000)
+            val rows=WeatherHistoryMapper().weatherDtoToEntity(dto,10,Long.MAX_VALUE)
+            val request=assertNotNull(dao.begin(10,42.1,24.7,"Europe/Sofia","history",1000))
+            assertEquals(1,dao.completeHistory(request,rows,2000))
+            val stored=assertNotNull(dao.historyAt(10,old.timestamp)); assertEquals(old.weatherId,stored.weatherId); assertEquals(18.0,stored.hourlyTemp2m)
+            assertEquals(2,dao.observeHistory(10,0).first().size)
+            val archive=dao.archives(10).single(); assertNull(archive.generation); assertTrue(archive.rowJson.contains("0.0"))
+            assertEquals(old.weatherId,archive.weatherId)
+            val next=assertNotNull(dao.begin(10,42.1,24.7,"Europe/Sofia","history",3000))
+            assertEquals(0,dao.completeHistory(next,rows.map { it.copy(hourlyTemp2m=19.0) },4000))
+            assertEquals(18.0,dao.historyAt(10,old.timestamp)?.hourlyTemp2m)
+        } finally { db.close(); context.deleteDatabase(name) }
+    }
+    @Test fun failedAttemptSurvivesRestartAndRetainsPreviousCurrentSourceForecast(): Unit=runBlocking {
+        val name="r06b2-status-${UUID.randomUUID()}.db"; seed(name); var db=open(name)
+        try {
+            var dao=db.weatherCacheDao(); val rows=WeatherForecastMapper().weatherDtoToEntities(WeatherResponseFixtures.response(),10,1000,0)
+            val first=assertNotNull(dao.begin(10,42.1,24.7,"Europe/Sofia","forecast",1000)); assertTrue(dao.completeForecast(first,rows,2000))
+            val failed=assertNotNull(dao.begin(10,42.1,24.7,"Europe/Sofia","forecast",3000)); dao.fail(failed,"timeout")
+            db.close(); db=open(name); dao=db.weatherCacheDao()
+            assertEquals("failed",dao.status(10,"forecast")?.state); assertEquals(2000L,dao.status(10,"forecast")?.succeededAt)
+            assertEquals(48,dao.observeForecast(10).first().size)
+            move(db,43.1); assertTrue(dao.observeForecast(10).first().isEmpty()); assertTrue(dao.observeStatus(10).first().isEmpty())
+        } finally { db.close(); context.deleteDatabase(name) }
+    }
+    @Test fun migrationFailureRollsBackAndFreshCreationInstallsTheSameTriggers(): Unit=runBlocking {
+        val name="r06b2-rollback-${UUID.randomUUID()}.db"; seed(name)
+        val failing=object: androidx.room.migration.Migration(9,10) {
+            override fun migrate(connection: SQLiteConnection) { MIGRATION_9_10.migrate(connection); error("Injected migration failure") }
+        }
+        val bad=Room.databaseBuilder<VineshieldDatabase>(context,name).setDriver(BundledSQLiteDriver()).addMigrations(failing).build()
+        try { assertFailsWith<Exception> { bad.weatherCacheDao().generation(10) } } finally { bad.close() }
+        raw(name) { c ->
+            val q=c.prepare("SELECT count(*) FROM sqlite_master WHERE name='weather_source'")
+            try { assertTrue(q.step()); assertEquals(0L,q.getLong(0)) } finally { q.close() }
+        }
+        val db=open(name)
+        try { assertNotNull(db.weatherCacheDao().generation(10)) } finally { db.close(); context.deleteDatabase(name) }
+        val fresh="r06b2-fresh-${UUID.randomUUID()}.db"; val empty=open(fresh)
+        try { empty.weatherCacheDao().generation(10); empty.close()
+            raw(fresh) { c -> val q=c.prepare("SELECT count(*) FROM sqlite_master WHERE type='trigger' AND name LIKE 'weather_source_%'")
+                try { assertTrue(q.step()); assertEquals(2L,q.getLong(0)) } finally { q.close() }
+            }
+        } finally { empty.close(); context.deleteDatabase(fresh) }
+    }
+    @Test fun bookkeepingFailureRollsBackForecastReplacementAndCanBeRetried(): Unit=runBlocking {
+        val name="r06b2-write-${UUID.randomUUID()}.db"; seed(name); var db=open(name)
+        try {
+            var dao=db.weatherCacheDao(); val rows=WeatherForecastMapper().weatherDtoToEntities(WeatherResponseFixtures.response(),10,1000,0)
+            val first=assertNotNull(dao.begin(10,42.1,24.7,"Europe/Sofia","forecast",1000)); assertTrue(dao.completeForecast(first,rows,2000))
+            val before=dao.observeForecast(10).first(); val pending=assertNotNull(dao.begin(10,42.1,24.7,"Europe/Sofia","forecast",3000))
+            db.close(); raw(name) { it.execSQL("CREATE TRIGGER r06b2_fail_status BEFORE UPDATE ON weather_cache_status WHEN NEW.state='succeeded' BEGIN SELECT RAISE(ABORT,'Injected status failure'); END") }
+            db=open(name); dao=db.weatherCacheDao()
+            assertFailsWith<Exception> { dao.completeForecast(pending,rows.map { it.copy(hourlyTemp2m=19.0) },4000) }
+            assertEquals(before,dao.observeForecast(10).first()); assertEquals("started",dao.status(10,"forecast")?.state)
+            db.close(); raw(name) { it.execSQL("DROP TRIGGER r06b2_fail_status") }; db=open(name); dao=db.weatherCacheDao()
+            assertTrue(dao.completeForecast(pending,rows,5000)); assertEquals("succeeded",dao.status(10,"forecast")?.state)
+        } finally { db.close(); context.deleteDatabase(name) }
+    }
+
+    @Test fun archiveAndHistoryRepairRollBackTogetherOnProvenanceFailure(): Unit=runBlocking {
+        val name="r06b2-archive-${UUID.randomUUID()}.db"; seed(name); var db=open(name)
+        try {
+            var dao=db.weatherCacheDao(); val old=assertNotNull(db.weatherHistoryDao().getLatestWeatherByVineyard(10))
+            val rows=WeatherHistoryMapper().weatherDtoToEntity(WeatherResponseFixtures.response(1,old.timestamp/1000),10,Long.MAX_VALUE)
+            val pending=assertNotNull(dao.begin(10,42.1,24.7,"Europe/Sofia","history",1000))
+            db.close(); raw(name) { it.execSQL("CREATE TRIGGER r06b2_fail_provenance BEFORE INSERT ON weather_history_source BEGIN SELECT RAISE(ABORT,'Injected provenance failure'); END") }
+            db=open(name); dao=db.weatherCacheDao()
+            assertFailsWith<Exception> { dao.completeHistory(pending,rows,2000) }
+            assertEquals(old,dao.historyAt(10,old.timestamp)); assertTrue(dao.archives(10).isEmpty())
+            assertEquals("started",dao.status(10,"history")?.state)
+        } finally { db.close(); context.deleteDatabase(name) }
+    }
+    @Test fun deletionAndSameIdRecreationCannotAcceptPreviousRequest(): Unit=runBlocking {
+        val name="r06b2-recreate-${UUID.randomUUID()}.db"; seed(name); val db=open(name)
+        try {
+            val dao=db.weatherCacheDao(); val old=assertNotNull(dao.vineyard(10))
+            val pending=assertNotNull(dao.begin(10,42.1,24.7,"Europe/Sofia","forecast",1000))
+            val rows=WeatherForecastMapper().weatherDtoToEntities(WeatherResponseFixtures.response(),10,1000,0)
+            assertEquals(1,db.vineyardDao().deleteVineyard(1,10)); assertFalse(dao.completeForecast(pending,rows,2000))
+            db.vineyardDao().insertVineyard(old)
+            assertNotEquals(pending.generation,dao.generation(10)); assertFalse(dao.completeForecast(pending,rows,3000))
+            assertTrue(dao.observeForecast(10).first().isEmpty())
+        } finally { db.close(); context.deleteDatabase(name) }
+    }
+
+}

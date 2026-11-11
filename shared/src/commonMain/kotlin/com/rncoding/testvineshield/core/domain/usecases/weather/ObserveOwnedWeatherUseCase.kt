@@ -18,7 +18,8 @@ data class VineyardWeatherSnapshot(
     val forecast: List<CachedForecastHour>,
     val configurations: List<DiseaseRiskMonitoringConfiguration>,
     val blocks: List<BlockDomainModel>,
-    val monitoringError: AppError? = null
+    val monitoringError: AppError? = null,
+    val cacheStatus: List<WeatherCacheStatus> = emptyList()
 )
 
 /** Subscribe to child caches only after resolving the current owner's vineyard. */
@@ -29,7 +30,8 @@ class ObserveOwnedWeatherUseCase(
     private val forecast: WeatherForecastRepository,
     private val configurations: DiseaseRiskMonitoringConfigurationRepository,
     private val blocks: BlockRepository,
-    private val clock: AppClock
+    private val clock: AppClock,
+    private val cacheStatus: WeatherCacheStatusRepository
 ) {
     @OptIn(ExperimentalCoroutinesApi::class)
     operator fun invoke(vineyardId: Long): Flow<Result<VineyardWeatherSnapshot, AppError>> {
@@ -47,8 +49,9 @@ class ObserveOwnedWeatherUseCase(
                             if (error is CancellationException) throw error
                             emit(Result.Error(UnexpectedError()))
                         },
-                    blocks.observeBlocks(vineyardId)
-                ) { past, future, configs, children ->
+                    blocks.observeBlocks(vineyardId),
+                    cacheStatus.observe(vineyardId)
+                ) { past, future, configs, children, status ->
                     // A repository contract violation must never expose another vineyard's rows.
                     check(past.all { it.vineyardId == vineyardId } && future.all { it.weather.vineyardId == vineyardId })
                     val savedConfigs = when (configs) {
@@ -61,7 +64,7 @@ class ObserveOwnedWeatherUseCase(
                     }
                     check(savedConfigs.all { it.vineyardId == vineyardId } && children.all { it.vineyardId == vineyardId })
                     val snapshot: Result<VineyardWeatherSnapshot, AppError> =
-                        Result.Success(VineyardWeatherSnapshot(parent, past, future, savedConfigs, children, monitoringError))
+                        Result.Success(VineyardWeatherSnapshot(parent, past, future, savedConfigs, children, monitoringError,status))
                     snapshot
                 }
             }

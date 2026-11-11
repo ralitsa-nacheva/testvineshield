@@ -4,6 +4,7 @@ enum class AlertStatus(
     val dbValue: String
 ) {
     ACTIVE("active"),
+    INVALIDATED("invalidated"),
     ACKNOWLEDGED("acknowledged"),
     RESOLVED("resolved");
 

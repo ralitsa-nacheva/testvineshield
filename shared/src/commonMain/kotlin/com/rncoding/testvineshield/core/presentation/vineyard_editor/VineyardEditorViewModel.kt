@@ -53,6 +53,14 @@ class VineyardEditorViewModel(
         }
     }
 
+    fun applyMapPoint(point: com.rncoding.testvineshield.core.domain.datamodels.VineyardMapPoint,timeZone: String?) {
+        if(!_state.value.canEdit) return
+        val suggested=timeZone?.takeIf(timeZoneCatalog::contains)
+        _state.update { it.copy(latitude=formatPlainDecimal(point.latitude),longitude=formatPlainDecimal(point.longitude),
+            latitudeError=null,longitudeError=null,timeZone=suggested ?: it.timeZone,
+            timeZoneError=if(suggested!=null) null else it.timeZoneError) }
+    }
+
     fun onNameChange(value: String) {
         _state.update {
             it.copy(

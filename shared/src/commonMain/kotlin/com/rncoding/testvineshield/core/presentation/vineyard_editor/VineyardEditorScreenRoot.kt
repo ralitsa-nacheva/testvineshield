@@ -1,10 +1,8 @@
 package com.rncoding.testvineshield.core.presentation.vineyard_editor
 
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
+import com.rncoding.testvineshield.core.domain.datamodels.VineyardMapPoint
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -52,6 +50,14 @@ fun VineyardEditorScreenRoot(
         }
     }
 
+    var mapOpen by remember { mutableStateOf(false) }
+    LaunchedEffect(state.canEdit) { if(!state.canEdit) mapOpen=false }
+    if(mapOpen && state.canEdit) {
+        val lat=state.latitude.toDoubleOrNull(); val lon=state.longitude.toDoubleOrNull()
+        VineyardMapPicker(if(lat!=null && lon!=null) VineyardMapPoint.from(lat,lon) else null,
+            onDismiss={ mapOpen=false },onUse={ point,zone -> viewModel.applyMapPoint(point,zone); mapOpen=false })
+    }
+
     VineyardEditorScreen(
         state = state,
         snackbarHostState = snackbarHostState,
@@ -73,6 +79,7 @@ fun VineyardEditorScreenRoot(
             viewModel::onTimeZoneChange,
         onElevationChange =
             viewModel::onElevationChange,
+        onMap = { if(state.canEdit) mapOpen=true },
         onSave =
             viewModel::save
     )

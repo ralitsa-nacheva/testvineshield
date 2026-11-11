@@ -25,8 +25,10 @@ class ObserveOwnedWeatherUseCaseTest {
     private val blocks = mockk<BlockRepository>()
     private val clock = mockk<AppClock>()
     private val parent = mockk<VineyardDomainModel>()
-    private val observe = ObserveOwnedWeatherUseCase(users, vineyards, history, forecast, configs, blocks, clock)
+    private val cacheStatus=mockk<WeatherCacheStatusRepository>()
+    private val observe = ObserveOwnedWeatherUseCase(users, vineyards, history, forecast, configs, blocks, clock,cacheStatus)
     private fun setup() {
+        every { cacheStatus.observe(10) } returns flowOf(emptyList())
         every { users.observeUser() } returns flowOf(UserDomainModel(1, "a@example.com"))
         every { vineyards.observeVineyard(1, 10) } returns flowOf(parent)
         every { clock.nowMillis() } returns 2_000_000_000_000L

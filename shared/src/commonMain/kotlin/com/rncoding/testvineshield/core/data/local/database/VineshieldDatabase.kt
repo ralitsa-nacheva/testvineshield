@@ -47,13 +47,19 @@ import com.rncoding.testvineshield.core.data.local.database.entities.DiseaseRisk
 import com.rncoding.testvineshield.core.data.local.database.entities.DiseaseRiskModelStateEntity
 import com.rncoding.testvineshield.core.data.local.database.entities.DiseaseRiskMonitoringConfigurationEntity
 
+import com.rncoding.testvineshield.core.data.local.database.entities.WeatherHistoryArchiveEntity
+import com.rncoding.testvineshield.core.data.local.database.entities.WeatherSourceEntity
+import com.rncoding.testvineshield.core.data.local.database.entities.WeatherHistorySourceEntity
+import com.rncoding.testvineshield.core.data.local.database.entities.WeatherCacheStatusEntity
+import com.rncoding.testvineshield.core.data.local.database.daos.WeatherCacheDao
+
 @Database(entities = [ActivityEntity::class, BlockEntity::class, DiseaseAlertEntity::class,
     DiseaseEntity::class, DiseaseOccurrenceEntity::class, DiseaseRiskMonitoringConfigurationEntity::class,
     DiseaseRiskEvaluationEntity::class, DiseaseRiskModelStateEntity::class, DiseaseSymptomCrossRef::class,
     HarvestEntity::class, ObservedSymptomEntity::class, OccurrenceActivityCrossRef::class,
     OccurrenceSymptomCrossRef::class, SecuritySettingsEntity::class, SymptomEntity::class, UserEntity::class,
-    VineyardEntity::class, WeatherCalculationEntity::class, WeatherHistoryEntity::class, WeatherForecastEntity::class, SprayApplicationEntity::class, SprayProductEntity::class],
-    version = 9)
+    VineyardEntity::class, WeatherCalculationEntity::class, WeatherHistoryEntity::class, WeatherForecastEntity::class, SprayApplicationEntity::class, SprayProductEntity::class, WeatherSourceEntity::class, WeatherHistorySourceEntity::class, WeatherCacheStatusEntity::class, WeatherHistoryArchiveEntity::class],
+    version = 10)
 @TypeConverters(LocalDateRoomConverters::class, DomainEnumRoomConverters::class, MeasurementUnitRoomConverters::class)
 @ConstructedBy(VineshieldConstructor::class)
 
@@ -61,6 +67,7 @@ abstract class VineshieldDatabase: RoomDatabase() {
     companion object {
         const val DB_NAME = "vine_shield.db"
     }
+    abstract fun weatherCacheDao(): WeatherCacheDao
     abstract fun vineyardDao(): VineyardDao
     abstract fun activityDao(): ActivityDao
     abstract fun sprayDao(): SprayDao

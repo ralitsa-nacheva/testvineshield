@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.di
 
+import com.rncoding.testvineshield.core.data.remote.OpenMeteoApi
 import com.rncoding.testvineshield.core.presentation.weather.WeatherViewModel
 import com.rncoding.testvineshield.core.domain.usecases.weather.RefreshOwnedWeatherUseCase
 import com.rncoding.testvineshield.core.domain.usecases.weather.ObserveOwnedWeatherUseCase
@@ -154,6 +155,7 @@ import com.rncoding.testvineshield.core.domain.usecases.activity.PrepareSprayExp
 import com.rncoding.testvineshield.core.domain.repository.SprayRepository
 import com.rncoding.testvineshield.core.data.repository.SprayRepositoryImpl
 import com.rncoding.testvineshield.core.data.local.database.daos.SprayDao
+import com.rncoding.testvineshield.core.data.local.mappers.WeatherHistoryMapper
 import com.rncoding.testvineshield.core.domain.validation.SprayValidator
 import com.rncoding.testvineshield.core.domain.usecases.activity.GetSprayRecordUseCase
 import com.rncoding.testvineshield.core.domain.usecases.activity.SaveSprayRecordUseCase
@@ -206,6 +208,10 @@ val commonModule =
         /*
          * Datasources
          */
+
+        single {
+            OpenMeteoApi(get())
+        }
 
         single<WeatherRemoteDataSource> {
             WeatherRemoteDataSourceImpl(get())
@@ -340,6 +346,7 @@ val commonModule =
         single { SymptomMapper() }
         single { DiseaseOccurrenceMapper() }
         single { DiseaseAlertMapper() }
+        single { WeatherHistoryMapper() }
         single { WeatherForecastMapper() }
         single { HarvestMapper()
         }
@@ -401,7 +408,8 @@ val commonModule =
                 vineyardWeatherSummaryMapper = get(),
                 vineyardWeatherRiskSummaryMapper = get(),
                 diseaseOccurrenceSummaryMapper = get(),
-                diseaseAlertSummaryMapper = get()
+                diseaseAlertSummaryMapper = get(),
+                evaluationCoordinator = get()
             )
         }
 
@@ -431,14 +439,18 @@ val commonModule =
                 coordinator = get()
             )
         }
+        single<com.rncoding.testvineshield.core.domain.repository.LocationMetadataRepository> { com.rncoding.testvineshield.core.data.repository.LocationMetadataRepositoryImpl(get()) }
+        single { get<VineshieldDatabase>().weatherCacheDao() }
+        single<com.rncoding.testvineshield.core.domain.repository.WeatherCacheStatusRepository> { com.rncoding.testvineshield.core.data.repository.WeatherCacheStatusRepositoryImpl(get()) }
         single { com.rncoding.testvineshield.core.data.repository.WeatherRefreshCoordinator() }
         single<WeatherForecastRepository> {
             WeatherForecastRepositoryImpl(
                 remoteDataSource = get(),
                 vineyardDao = get(),
-                forecastDao = get(),
                 forecastMapper = get(),
-                refreshCoordinator = get()
+                cacheDao = get(),
+                refreshCoordinator = get(),
+                evaluationCoordinator = get()
             )
         }
 
@@ -446,9 +458,10 @@ val commonModule =
             WeatherHistoryRepositoryImpl(
                 remoteDataSource = get(),
                 vineyardDao = get(),
-                weatherHistoryDao = get(),
                 weatherHistoryMapper = get(),
-                refreshCoordinator = get()
+                cacheDao = get(),
+                refreshCoordinator = get(),
+                evaluationCoordinator = get()
             )
         }
 
@@ -695,6 +708,7 @@ val commonModule =
         factory {
             UnlockSessionUseCase(
                 sessionManager = get(),
+
                 userRepository = get(),
                 localAuthenticator = get(),
                 securitySettingsRepository = get()
@@ -1021,7 +1035,7 @@ val commonModule =
         factory<SprayExportEncoder> { SprayExportEncoderImpl() }
         factory { PrepareSprayExportUseCase(get(), get(), get(), get(), get(), get()) }
         viewModel { (key: com.rncoding.testvineshield.core.domain.usecases.activity.SprayKey) -> SprayExportViewModel(key, get(), get()) }
-        factory { ObserveOwnedWeatherUseCase(get(), get(), get(), get(), get(), get(), get()) }
+        factory { ObserveOwnedWeatherUseCase(get(), get(), get(), get(), get(), get(), get(),get()) }
         factory { RefreshOwnedWeatherUseCase(get(), get(), get(), get(), get()) }
         viewModel { (vineyardId: Long) -> WeatherViewModel(vineyardId, get(), get(), get()) }
 

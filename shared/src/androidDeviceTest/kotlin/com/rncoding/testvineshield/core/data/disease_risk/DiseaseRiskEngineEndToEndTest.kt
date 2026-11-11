@@ -36,7 +36,7 @@ class DiseaseRiskEngineEndToEndTest {
 
             val database =
                 Room.inMemoryDatabaseBuilder<VineshieldDatabase>(context)
-                    .setDriver(BundledSQLiteDriver())
+                    .setDriver(BundledSQLiteDriver()).addCallback(com.rncoding.testvineshield.core.data.local.database.migrations.WEATHER_SOURCE_CALLBACK)
                     .build()
 
             val testDatabaseModule = module {
@@ -112,8 +112,7 @@ class DiseaseRiskEngineEndToEndTest {
                     )
                 }
 
-                database.weatherHistoryDao()
-                    .insertMissingWeather(weather)
+                database.insertVerifiedWeatherFixture(weather)
 
                 // 4. Resolve the real engine through Koin.
                 val engine = app.koin.get<DiseaseRiskEngine>()
@@ -234,7 +233,7 @@ class DiseaseRiskEngineEndToEndTest {
 
         val database =
             Room.inMemoryDatabaseBuilder<VineshieldDatabase>(context)
-                .setDriver(BundledSQLiteDriver())
+                .setDriver(BundledSQLiteDriver()).addCallback(com.rncoding.testvineshield.core.data.local.database.migrations.WEATHER_SOURCE_CALLBACK)
                 .build()
 
         val testDatabaseModule = module {

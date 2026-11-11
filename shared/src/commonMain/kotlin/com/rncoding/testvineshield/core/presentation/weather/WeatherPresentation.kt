@@ -66,3 +66,12 @@ fun weatherTime(timestamp: Long?, zoneId: String): String {
 
 fun weatherMetric(value: Double, unit: String, range: ClosedFloatingPointRange<Double>? = null): String =
     if (!value.isFinite() || (range != null && value !in range)) "Unavailable" else "$value $unit"
+
+fun savedRefreshMessage(code: String): String = when(code) {
+    "timeout" -> "The previous request timed out. Retry when ready."
+    "network_unavailable" -> "The weather service could not be reached. Retry when ready."
+    "invalid_response" -> "The previous response could not be validated; saved weather was retained."
+    "interrupted" -> "The previous request was interrupted. Retry when ready."
+    "http_429" -> "The weather service rate limit was reached. Try again later."
+    else -> "The previous refresh did not complete. Retry when ready."
+}

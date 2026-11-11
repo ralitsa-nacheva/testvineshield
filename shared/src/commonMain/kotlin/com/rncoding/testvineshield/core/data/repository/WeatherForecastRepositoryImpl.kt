@@ -1,7 +1,6 @@
 package com.rncoding.testvineshield.core.data.repository
 
 import com.rncoding.testvineshield.core.domain.datamodels.CachedForecastHour
-import com.rncoding.testvineshield.core.data.local.database.daos.WeatherForecastDao
 import com.rncoding.testvineshield.core.data.local.database.entities.WeatherForecastEntity
 import com.rncoding.testvineshield.core.data.local.mappers.WeatherForecastMapper
 import com.rncoding.testvineshield.core.data.datasource.WeatherRemoteDataSource
@@ -17,16 +16,20 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import com.rncoding.testvineshield.core.data.local.database.daos.WeatherCacheDao
+import com.rncoding.testvineshield.core.data.local.database.daos.WeatherCacheRequest
+import kotlin.time.Clock
 
 class WeatherForecastRepositoryImpl(
     private val remoteDataSource: WeatherRemoteDataSource,
     private val vineyardDao: VineyardDao,
-    private val forecastDao: WeatherForecastDao,
     private val forecastMapper: WeatherForecastMapper,
-    private val refreshCoordinator: WeatherRefreshCoordinator = WeatherRefreshCoordinator()
+    private val cacheDao: WeatherCacheDao,
+    private val refreshCoordinator: WeatherRefreshCoordinator = WeatherRefreshCoordinator(),
+    private val evaluationCoordinator: com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskEvaluationCoordinator=com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskEvaluationCoordinator()
 ) : WeatherForecastRepository {
     override fun observeCachedForecast(vineyardId: Long): Flow<List<CachedForecastHour>> =
-        forecastDao.observeForecastWeather(vineyardId).map { rows ->
+        cacheDao.observeForecast(vineyardId).map { rows ->
             rows.map { CachedForecastHour(entityToDomain(it), it.forecastCreatedAt) }
         }
 
@@ -34,8 +37,8 @@ class WeatherForecastRepositoryImpl(
     override fun observeForecast(
         vineyardId: Long
     ): Flow<List<WeatherHistoryDomainModel>> {
-        return forecastDao
-            .observeForecastWeather(vineyardId)
+        return cacheDao
+            .observeForecast(vineyardId)
             .map { entities ->
                 entities.map(::entityToDomain)
             }
@@ -45,14 +48,7 @@ class WeatherForecastRepositoryImpl(
         vineyardId: Long,
         fromTimestamp: Long
     ): Flow<WeatherHistoryDomainModel?> {
-        return forecastDao
-            .observeNextForecastWeather(
-                vineyardId = vineyardId,
-                fromTimestamp = fromTimestamp
-            )
-            .map { entity ->
-                entity?.let(::entityToDomain)
-            }
+        return cacheDao.observeForecast(vineyardId).map { rows -> rows.firstOrNull { it.timestamp>=fromTimestamp }?.let(::entityToDomain) }
     }
 
     override suspend fun refreshForecast(
@@ -76,8 +72,24 @@ class WeatherForecastRepositoryImpl(
         catch (e: Exception) { return Result.Error(DatabaseErrorMapper.map(e, DatabaseError.Operation.READ)) }
             ?: return Result.Error(DatabaseError.NotFound("Vineyard"))
         currentCoroutineContext().ensureActive()
+        val request=try { cacheDao.begin(vineyardId,latitude,longitude,timeZone,"forecast",fetchedAt) }
+            catch(e: CancellationException) { throw e }
+            catch(e: Exception) { return Result.Error(DatabaseErrorMapper.map(e,DatabaseError.Operation.READ)) }
+            ?: return Result.Error(WeatherCacheSourceChanged)
+        var finished=false
+        try {
+            val result=fetchAndCommit(request,fetchedAt)
+            if(result is Result.Error) recordWeatherFailure(cacheDao,request,result.error)
+            finished=true
+            return result
+        } finally { if(!finished) recordWeatherFailure(cacheDao,request,null) }
+    }
+    private suspend fun fetchAndCommit(request: WeatherCacheRequest,fetchedAt: Long): Result<Unit,AppError> {
+        val vineyardId=request.vineyardId
+        val timeZone=request.timeZone
+        currentCoroutineContext().ensureActive()
         val response = try {
-            remoteDataSource.fetchWeatherForecast(latitude, longitude, timeZone)
+            remoteDataSource.fetchWeatherForecast(request.latitude, request.longitude, timeZone)
         } catch (e: CancellationException) { throw e }
         catch (e: Exception) { return Result.Error(WeatherNetworkErrorMapper.map(e)) }
         currentCoroutineContext().ensureActive()
@@ -93,7 +105,8 @@ class WeatherForecastRepositoryImpl(
         catch (e: Exception) { return Result.Error(NetworkError.SerializationError(e)) }
         currentCoroutineContext().ensureActive()
         try {
-            forecastDao.replaceForecast(vineyardId, entities)
+            val saved=evaluationCoordinator.withExclusiveEvaluation { cacheDao.completeForecast(request,entities,Clock.System.now().toEpochMilliseconds()) }
+            if(!saved) return Result.Error(WeatherCacheSourceChanged)
         } catch (e: CancellationException) { throw e }
         catch (e: Exception) { return Result.Error(DatabaseErrorMapper.map(e, DatabaseError.Operation.INSERT)) }
         currentCoroutineContext().ensureActive()

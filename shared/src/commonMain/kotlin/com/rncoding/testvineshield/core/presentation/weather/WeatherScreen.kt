@@ -36,14 +36,26 @@ fun WeatherScreen(state: WeatherScreenState, onBack: () -> Unit, onRetry: () -> 
             state.snapshot?.let { snapshot ->
                 val zone = snapshot.vineyard.timeZone
                 val display = presentWeather(snapshot, state.now)
+                val historyRefresh=snapshot.cacheStatus.firstOrNull { it.kind=="history" }
                 item {
                     Text(snapshot.vineyard.name, style = MaterialTheme.typography.headlineSmall)
                     Text("Source: Open-Meteo · modeled weather, not a vineyard sensor measurement.")
                     Text("Vineyard time zone: $zone")
-                    Text("If vineyard coordinates were changed, existing cached history may describe the previous location. Do not use that history for field decisions.")
+                    Text("Only weather attributed to this saved location is shown. Older unattributed/previous-location cache rows are retained but excluded; refresh to obtain current-location data.")
                     Text("Cached records are available offline. A refresh needs internet and sends the vineyard coordinates and time zone to Open-Meteo.")
                     Button(onClick = userAction(onRefresh), enabled = !state.refreshing, modifier = Modifier.fillMaxWidth()) { Text(if (state.refreshing) "Refreshing…" else "Refresh history and forecast") }
                     Text("A failed refresh alone does not establish whether the device is offline. Previously saved data remains visible.")
+                }
+                item {
+                    Text("Saved refresh status",style=MaterialTheme.typography.titleMedium)
+                    if(snapshot.cacheStatus.isEmpty()) Text("No completed refresh is recorded for this location yet.")
+                    snapshot.cacheStatus.forEach { status ->
+                        val label=when(status.state) { "succeeded" -> "completed"; "failed" -> "failed or interrupted"; "started" -> "started; completion not recorded"; else -> "status unavailable" }
+                        Text("${status.kind}: $label")
+                        Text("Attempt: ${weatherTime(status.attemptedAt,zone)} · Last success: ${weatherTime(status.succeededAt,zone)}")
+                        status.errorCode?.let { Text(savedRefreshMessage(it)) }
+                    }
+                    Text("A saved unfinished attempt is not proof that a request is still running. Coverage is cached evidence, not a disease safety assessment.")
                 }
                 state.refreshReport?.let { report -> item {
                     Text("Refresh attempt completed: ${weatherTime(report.completedAt, zone)}")
@@ -57,7 +69,7 @@ fun WeatherScreen(state: WeatherScreenState, onBack: () -> Unit, onRetry: () -> 
                     Text(cacheLabel(display.historyAge))
                     CoverageText(display.historyCoverage, zone)
                     Text("Coverage is the stored part of the last seven elapsed days, not proof of a complete disease-model input window.")
-                    Text("Historical cache fetch time is not stored. The time below is the hour represented by the data.")
+                    Text("Last completed history refresh: ${weatherTime(historyRefresh?.succeededAt,zone)}")
                     if (display.excludedHistoryHours > 0) Text("${display.excludedHistoryHours} incomplete/future history hours excluded; check the device clock.")
                 }
                 display.history.lastOrNull()?.let { hour -> item { WeatherHourCard(hour, zone, "Latest cached time step (at least one hour old)") } }

@@ -1,13 +1,12 @@
 package com.rncoding.testvineshield.core.data.disease_risk
 
-import com.rncoding.testvineshield.core.data.local.database.daos.WeatherHistoryDao
 import com.rncoding.testvineshield.core.data.local.database.entities.WeatherHistoryEntity
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskWeatherPoint
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskWeatherProvider
 import com.rncoding.testvineshield.core.domain.disease_risk.wetness.DiseaseRiskWeatherEnricher
 
 class DefaultDiseaseRiskWeatherProvider(
-    private val weatherHistoryDao: WeatherHistoryDao,
+    private val weatherHistoryDao: com.rncoding.testvineshield.core.data.local.database.daos.WeatherCacheDao,
     private val weatherEnricher: DiseaseRiskWeatherEnricher
 ) : DiseaseRiskWeatherProvider {
 
@@ -22,10 +21,10 @@ class DefaultDiseaseRiskWeatherProvider(
         }
 
         return weatherHistoryDao
-            .getWeatherForRiskWindow(
-                vineyardId = vineyardId,
-                startTimestamp = startTimestamp,
-                endTimestamp = endTimestamp
+            .riskWindow(
+                id = vineyardId,
+                start = startTimestamp,
+                end = endTimestamp
             )
             .map { entity ->
                 entity.toRiskWeatherPoint()
