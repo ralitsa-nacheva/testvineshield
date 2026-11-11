@@ -28,6 +28,16 @@ interface BlockDao {
         SELECT o.* FROM block_stage_observation o
         JOIN block b ON b.block_id = o.block_id
         JOIN vineyard v ON v.vineyard_id = b.vineyard_id
+        WHERE v.user_id = :ownerId AND b.vineyard_id = :vineyardId AND o.observed_on = :date
+    """)
+    fun observeStageObservations(
+        ownerId: Long, vineyardId: Long, date: LocalDate
+    ): Flow<List<BlockStageObservationEntity>>
+
+    @Query("""
+        SELECT o.* FROM block_stage_observation o
+        JOIN block b ON b.block_id = o.block_id
+        JOIN vineyard v ON v.vineyard_id = b.vineyard_id
         WHERE v.user_id = :ownerId AND b.vineyard_id = :vineyardId AND o.block_id = :blockId
         ORDER BY o.observed_on DESC
         LIMIT 20

@@ -12,6 +12,10 @@ import io.mockk.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.test.*
+import kotlinx.datetime.LocalDate
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
+import com.rncoding.testvineshield.core.domain.datamodels.enums.PhenologicalStage
 import org.junit.Test
 import kotlin.test.*
 
@@ -36,6 +40,8 @@ class ObserveOwnedWeatherUseCaseTest {
         every { forecast.observeCachedForecast(10) } returns flowOf(emptyList())
         every { configs.observeConfigurationsForVineyard(10) } returns flowOf(emptyList())
         every { blocks.observeBlocks(10) } returns flowOf(emptyList())
+        every { parent.timeZone } returns "Europe/Sofia"
+        every { blocks.observeStagesOn(1, 10, any()) } returns flowOf(emptyMap())
     }
     @Test fun invalidIdAndAbsentSessionNeverSubscribeToCaches() = runTest {
         assertIs<Result.Error<*>>(observe(0).first())
@@ -85,6 +91,34 @@ class ObserveOwnedWeatherUseCaseTest {
         val job = launch { observe(10).collect { emissions.add(it) } }
         started.await(); job.cancelAndJoin(); assertTrue(stopped); assertTrue(emissions.isEmpty())
     }
+    @Test fun previousLocalDayRequeriesAtMidnightAndNeverLabelsOldStagesWithTheNewDate() = runTest {
+        setup()
+        val before = Instant.parse("2026-06-16T20:59:00Z").toEpochMilliseconds()
+        every { clock.nowMillis() } returns before
+        val firstDate = LocalDate(2026, 6, 15)
+        val secondDate = LocalDate(2026, 6, 16)
+        every { blocks.observeStagesOn(1, 10, firstDate) } returns flowOf(mapOf(20L to PhenologicalStage.FLOWERING))
+        val newDay = MutableStateFlow(emptyMap<Long, PhenologicalStage>())
+        every { blocks.observeStagesOn(1, 10, secondDate) } returns newDay
+        val evidence = mutableListOf<DatedStageEvidence>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            observe(10).collect { result ->
+                if (result is Result.Success) result.data.stageEvidence?.let { evidence.add(it) }
+            }
+        }
+        runCurrent()
+        assertEquals(firstDate, evidence.last().date)
+        assertEquals(PhenologicalStage.FLOWERING, assertIs<Result.Success<Map<Long, PhenologicalStage>>>(evidence.last().result).data[20L])
+        every { clock.nowMillis() } returns before + 60_000L
+        advanceTimeBy(1.minutes)
+        runCurrent()
+        assertEquals(secondDate, evidence.last().date)
+        assertTrue(assertIs<Result.Success<Map<Long, PhenologicalStage>>>(evidence.last().result).data.isEmpty())
+        newDay.value = mapOf(20L to PhenologicalStage.HARVEST)
+        runCurrent()
+        assertEquals(PhenologicalStage.HARVEST, assertIs<Result.Success<Map<Long, PhenologicalStage>>>(evidence.last().result).data[20L])
+    }
+
     @Test fun monitoringReadFailureDoesNotHideWeatherOrPretendThereAreNoSettings() = runTest {
         setup(); every { configs.observeConfigurationsForVineyard(10) } returns flow { throw IllegalStateException("settings storage") }
         val result = assertIs<Result.Success<VineyardWeatherSnapshot>>(observe(10).first()).data

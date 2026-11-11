@@ -6,6 +6,8 @@ import com.rncoding.testvineshield.core.data.local.mappers.BlockMapper
 import com.rncoding.testvineshield.core.domain.datamodels.BlockDomainModel
 import com.rncoding.testvineshield.core.domain.repository.BlockRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.datetime.LocalDate
+import com.rncoding.testvineshield.core.domain.datamodels.enums.PhenologicalStage
 import com.rncoding.testvineshield.core.domain.datamodels.BlockStageObservation
 import kotlinx.coroutines.flow.map
 
@@ -13,6 +15,12 @@ class BlockRepositoryImpl(
     private val blockDao: BlockDao,
     private val blockMapper: BlockMapper
 ) : BlockRepository {
+    override fun observeStagesOn(
+        ownerId: Long, vineyardId: Long, date: LocalDate
+    ): Flow<Map<Long, PhenologicalStage>> =
+        blockDao.observeStageObservations(ownerId, vineyardId, date)
+            .map { rows -> rows.associate { it.blockId to it.stage } }
+
     override suspend fun getRecentStageObservations(
         ownerId: Long,
         vineyardId: Long,

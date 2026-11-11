@@ -11,6 +11,7 @@ import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rncoding.testvineshield.core.domain.datamodels.WeatherHistoryDomainModel
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskModelType
+import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.presentation.components.RecordTopBar
 import com.rncoding.testvineshield.core.presentation.root.userAction
 import org.koin.compose.viewmodel.koinViewModel
@@ -36,6 +37,8 @@ fun WeatherScreen(state: WeatherScreenState, onBack: () -> Unit, onRetry: () -> 
             state.snapshot?.let { snapshot ->
                 val zone = snapshot.vineyard.timeZone
                 val display = presentWeather(snapshot, state.now)
+                val coverage = previousDayCacheCoverage(snapshot, state.now)
+                val stageEvidence = snapshot.stageEvidence?.takeIf { it.date == coverage?.date }?.result
                 val historyRefresh=snapshot.cacheStatus.firstOrNull { it.kind=="history" }
                 item {
                     Text(snapshot.vineyard.name, style = MaterialTheme.typography.headlineSmall)
@@ -84,7 +87,6 @@ fun WeatherScreen(state: WeatherScreenState, onBack: () -> Unit, onRetry: () -> 
                 items(display.forecast.take(24)) { cached -> WeatherHourCard(cached.weather, zone, "Forecast hour") }
                 item {
                     Text("Botrytis weather input · previous local day", style = MaterialTheme.typography.titleMedium)
-                    val coverage = previousDayCacheCoverage(snapshot, state.now)
                     when {
                         coverage == null -> Text("The vineyard time zone is unavailable.")
                         coverage.expectedHours == null -> Text("${coverage.date}: This day does not fit the hourly weather grid.")
@@ -95,7 +97,26 @@ fun WeatherScreen(state: WeatherScreenState, onBack: () -> Unit, onRetry: () -> 
                             }
                         }
                     }
-                    Text("This checks cached timestamps only. Stage history, wetness and model validation are separate requirements.")
+                    Text("Weather coverage counts timestamps. Wetness and model validation require separate checks.")
+                }
+                item {
+                    Text("Block stages for the previous local day", style = MaterialTheme.typography.titleMedium)
+                    when {
+                        coverage == null -> Text("The vineyard time zone is unavailable.")
+                        stageEvidence is Result.Error -> {
+                            Text("Stage observations could not be read.", color = MaterialTheme.colorScheme.error)
+                            TextButton(onClick = userAction(onRetry)) { Text("Retry loading stages") }
+                        }
+                        stageEvidence == null -> Text("Loading stage observations…")
+                        snapshot.blocks.isEmpty() -> Text("No blocks saved.")
+                        else -> Unit
+                    }
+                }
+                if (stageEvidence is Result.Success) {
+                    items(snapshot.blocks, key = { "day-stage-${it.blockId}" }) { block ->
+                        val stage = stageEvidence.data[block.blockId]
+                        Text("${block.name}: ${stage?.dbValue?.replace('_', ' ') ?: "No observation for this date"}")
+                    }
                 }
                 item {
                     Text("Saved monitoring configuration", style = MaterialTheme.typography.titleLarge)
