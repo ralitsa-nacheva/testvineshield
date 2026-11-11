@@ -53,13 +53,15 @@ import com.rncoding.testvineshield.core.data.local.database.entities.WeatherHist
 import com.rncoding.testvineshield.core.data.local.database.entities.WeatherCacheStatusEntity
 import com.rncoding.testvineshield.core.data.local.database.daos.WeatherCacheDao
 
-@Database(entities = [ActivityEntity::class, BlockEntity::class, DiseaseAlertEntity::class,
+import com.rncoding.testvineshield.core.data.local.database.entities.BlockStageObservationEntity
+
+@Database(entities = [BlockStageObservationEntity::class, ActivityEntity::class, BlockEntity::class, DiseaseAlertEntity::class,
     DiseaseEntity::class, DiseaseOccurrenceEntity::class, DiseaseRiskMonitoringConfigurationEntity::class,
     DiseaseRiskEvaluationEntity::class, DiseaseRiskModelStateEntity::class, DiseaseSymptomCrossRef::class,
     HarvestEntity::class, ObservedSymptomEntity::class, OccurrenceActivityCrossRef::class,
     OccurrenceSymptomCrossRef::class, SecuritySettingsEntity::class, SymptomEntity::class, UserEntity::class,
     VineyardEntity::class, WeatherCalculationEntity::class, WeatherHistoryEntity::class, WeatherForecastEntity::class, SprayApplicationEntity::class, SprayProductEntity::class, WeatherSourceEntity::class, WeatherHistorySourceEntity::class, WeatherCacheStatusEntity::class, WeatherHistoryArchiveEntity::class],
-    version = 11)
+    version = 12)
 @TypeConverters(LocalDateRoomConverters::class, DomainEnumRoomConverters::class, MeasurementUnitRoomConverters::class)
 @ConstructedBy(VineshieldConstructor::class)
 

@@ -9,6 +9,8 @@ import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskHostConte
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskOccurrenceEvidence
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskSymptomEvidence
 
+import kotlinx.datetime.LocalDate
+
 class DefaultDiseaseRiskHostContextProvider(
     private val blockDao: BlockDao,
     private val diseaseOccurrenceDao: DiseaseOccurrenceDao
@@ -17,7 +19,8 @@ class DefaultDiseaseRiskHostContextProvider(
     override suspend fun getHostContext(
         vineyardId: Long,
         blockId: Long,
-        diseaseId: Long
+        diseaseId: Long,
+        stageDate: LocalDate?
     ): DiseaseRiskHostContext {
 
         val block =
@@ -46,11 +49,11 @@ class DefaultDiseaseRiskHostContextProvider(
                 emptyList()
             }
 
-        return DiseaseRiskHostContext(
-            phenologicalStage =
-                block.phenologicalStage,
+        val observation = stageDate?.let { blockDao.getStageObservation(vineyardId, blockId, it) }
 
-            stageObservedOn = block.stageObservedOn,
+        return DiseaseRiskHostContext(
+            phenologicalStage = if (stageDate == null) block.phenologicalStage else observation?.stage,
+            stageObservedOn = if (stageDate == null) block.stageObservedOn else observation?.observedOn,
 
             activeOccurrence =
                 occurrence?.toRiskEvidence(),

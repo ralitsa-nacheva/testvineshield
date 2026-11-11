@@ -86,6 +86,15 @@ fun BlockDetailsScreenRoot(vineyardId: Long, blockId: Long, ownerId: Long, onBac
                         Text("Observed on: ${block.stageObservedOn ?: "Date unknown"}")
                     }
                 }
+                item { Text("Recent stage observations", style = MaterialTheme.typography.titleMedium) }
+                val historyError = state.stageHistoryError
+                when {
+                    historyError != null -> item { ErrorNotice(historyError, vm::load) }
+                    state.stageObservations.isEmpty() -> item { Text("No dated stage observations saved.") }
+                    else -> items(state.stageObservations, key = { it.observedOn.toString() }) {
+                        Text("${it.observedOn}: ${stageLabel(it.stage)}")
+                    }
+                }
                 item { Text("Rootstock: ${block.rootStock.ifBlank { "Unknown" }}") }
                 item { Text("Colour: ${block.color.ifBlank { "Unknown" }}") }
                 item { Button(onClick = userAction(onEdit), enabled = !state.deleting, modifier = Modifier.fillMaxWidth()) { Text("Edit block") } }
@@ -172,7 +181,7 @@ fun BlockEditorScreen(state: BlockEditorState, editing: Boolean, onBack: ()->Uni
                         },
                         label = { Text("Stage observation date") },
                         supportingText = {
-                            Text(state.errors[BlockField.StageObservedOn] ?: "Optional. Use YYYY-MM-DD.")
+                            Text(state.errors[BlockField.StageObservedOn] ?: "Use YYYY-MM-DD. Saving on an existing date updates that entry. Clearing the field keeps saved history.")
                         },
                         isError = BlockField.StageObservedOn in state.errors,
                         enabled = state.canEdit,

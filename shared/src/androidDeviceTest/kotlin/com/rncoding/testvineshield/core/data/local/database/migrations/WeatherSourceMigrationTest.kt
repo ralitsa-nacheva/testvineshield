@@ -31,7 +31,7 @@ class WeatherSourceMigrationTest {
     } }
     private fun open(name: String)=buildVineshieldDatabase(Room.databaseBuilder<VineshieldDatabase>(context,name))
     private fun snapshot(c: SQLiteConnection): Map<String,List<List<String>>> {
-        val names=mutableListOf<String>(); val q=c.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name!='room_master_table' AND name NOT LIKE 'weather_source' AND name NOT LIKE 'weather_history_source' AND name NOT LIKE 'weather_cache_status' AND name NOT LIKE 'weather_history_archive' ORDER BY name")
+        val names=mutableListOf<String>(); val q=c.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name!='room_master_table' AND name!='block_stage_observation' AND name NOT LIKE 'weather_source' AND name NOT LIKE 'weather_history_source' AND name NOT LIKE 'weather_cache_status' AND name NOT LIKE 'weather_history_archive' ORDER BY name")
         try { while(q.step()) names.add(q.getText(0)) } finally { q.close() }
         return names.associateWith { table ->
             val fields=mutableListOf<String>(); val info=c.prepare("PRAGMA table_info(`$table`)")
@@ -79,6 +79,65 @@ class WeatherSourceMigrationTest {
         } finally {
             db.close()
             context.deleteDatabase(name)
+        }
+    }
+
+    @Test fun stageHistorySeedsDatedRowsAndSurvivesLaterEdits(): Unit = runBlocking {
+        val name = "r07c-stage-history-${UUID.randomUUID()}.db"
+        val firstDate = kotlinx.datetime.LocalDate(2024, 5, 17)
+        val secondDate = kotlinx.datetime.LocalDate(2024, 6, 1)
+        val flowering = com.rncoding.testvineshield.core.domain.datamodels.enums.PhenologicalStage.FLOWERING
+        val harvest = com.rncoding.testvineshield.core.domain.datamodels.enums.PhenologicalStage.HARVEST
+        seed(name)
+        raw(name) { connection ->
+            MIGRATION_9_10.migrate(connection)
+            MIGRATION_10_11.migrate(connection)
+            connection.execSQL("UPDATE block SET phenological_stage='flowering', stage_observed_on='2024-05-17' WHERE block_id=20")
+            connection.execSQL("PRAGMA user_version=11")
+        }
+        val db = open(name)
+        try {
+            val dao = db.blockDao()
+            val mapper = BlockMapper()
+            val repo = com.rncoding.testvineshield.core.data.repository.BlockRepositoryImpl(dao, mapper)
+            val original = mapper.toDomain(assertNotNull(dao.getBlockById(10, 20)))
+            assertEquals(flowering, dao.getStageObservation(10, 20, firstDate)?.stage)
+            assertTrue(repo.updateBlock(original.copy(phenologicalStage = harvest, stageObservedOn = secondDate)))
+            assertEquals(listOf(secondDate, firstDate), repo.getRecentStageObservations(1, 10, 20).map { it.observedOn })
+            assertTrue(repo.getRecentStageObservations(999, 10, 20).isEmpty())
+
+            val provider = com.rncoding.testvineshield.core.data.disease_risk.DefaultDiseaseRiskHostContextProvider(
+                dao, db.diseaseOccurrenceDao()
+            )
+            assertEquals(flowering, provider.getHostContext(10, 20, 1, firstDate).phenologicalStage)
+            assertNull(provider.getHostContext(10, 20, 1, kotlinx.datetime.LocalDate(2024, 5, 18)).phenologicalStage)
+            assertTrue(repo.updateBlock(original.copy(phenologicalStage = null, stageObservedOn = null)))
+            assertEquals(harvest, dao.getStageObservation(10, 20, secondDate)?.stage)
+            assertTrue(repo.deleteBlock(10, 20))
+            assertTrue(repo.getRecentStageObservations(1, 10, 20).isEmpty())
+        } finally {
+            db.close()
+            context.deleteDatabase(name)
+        }
+        val freshName = "r07c-stage-fresh-${UUID.randomUUID()}.db"
+        val fresh = open(freshName)
+        try {
+            fresh.blockDao().getRecentStageObservations(1, 10, 20)
+            fresh.close()
+            raw(freshName) { connection ->
+                val query = connection.prepare(
+                    "SELECT count(*) FROM sqlite_master WHERE type='trigger' AND name LIKE 'block_stage_history_%'"
+                )
+                try {
+                    assertTrue(query.step())
+                    assertEquals(2L, query.getLong(0))
+                } finally {
+                    query.close()
+                }
+            }
+        } finally {
+            fresh.close()
+            context.deleteDatabase(freshName)
         }
     }
 
@@ -130,7 +189,7 @@ class WeatherSourceMigrationTest {
         val failing=object: androidx.room.migration.Migration(9,10) {
             override fun migrate(connection: SQLiteConnection) { MIGRATION_9_10.migrate(connection); error("Injected migration failure") }
         }
-        val bad=Room.databaseBuilder<VineshieldDatabase>(context,name).setDriver(BundledSQLiteDriver()).addMigrations(failing, MIGRATION_10_11).build()
+        val bad=Room.databaseBuilder<VineshieldDatabase>(context,name).setDriver(BundledSQLiteDriver()).addMigrations(failing, MIGRATION_10_11, MIGRATION_11_12).build()
         try { assertFailsWith<Exception> { bad.weatherCacheDao().generation(10) } } finally { bad.close() }
         raw(name) { c ->
             val q=c.prepare("SELECT count(*) FROM sqlite_master WHERE name='weather_source'")

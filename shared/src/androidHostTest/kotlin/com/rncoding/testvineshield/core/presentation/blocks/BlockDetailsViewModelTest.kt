@@ -17,6 +17,7 @@ import kotlin.test.*
 class BlockDetailsViewModelTest {
     private val get = mockk<GetBlockDetailsUseCase>()
     private val delete = mockk<DeleteBlockUseCase>()
+    private val history = mockk<GetRecentBlockStageObservationsUseCase>()
     private lateinit var dispatcher: TestDispatcher
     private lateinit var store: ViewModelStore
     private val block = BlockDomainModel(20, 10, "North", null, "Merlot", "", "", null, null, null, null)
@@ -24,11 +25,13 @@ class BlockDetailsViewModelTest {
         Dispatchers.setMain(dispatcher)
         store = ViewModelStore()
         coEvery {get(10, 20)} returns Result.Success(block)
-        coEvery {delete(10, 20)} returns Result.Success(Unit)}
+        coEvery {delete(10, 20)} returns Result.Success(Unit)
+        coEvery {history(10, 20)} returns Result.Success(emptyList())
+    }
     @After fun after() {try {store.clear()
             dispatcher.scheduler.runCurrent()
             dispatcher.scheduler.advanceUntilIdle()} finally {Dispatchers.resetMain()} }
-    private fun vm() = BlockDetailsViewModel(BlockKey(10, 20), get, delete).also {store.put("detail", it)}
+    private fun vm() = BlockDetailsViewModel(BlockKey(10, 20), get, delete, history).also {store.put("detail", it)}
     @Test fun deleteRequiresExplicitConfirmationAndCancelDoesNotDelete() = runTest {
         val v = vm()
         advanceUntilIdle()

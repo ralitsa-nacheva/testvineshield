@@ -1011,7 +1011,8 @@ val commonModule =
         }
         factory { ObserveOwnedBlocksUseCase(get(),get(),get()) }
         viewModel { (vineyardId:Long) -> BlockListViewModel(vineyardId,get()) }
-        viewModel { (key:BlockKey) -> BlockDetailsViewModel(key,get(),get()) }
+        factory { com.rncoding.testvineshield.core.domain.usecases.block.GetRecentBlockStageObservationsUseCase(get(), get()) }
+        viewModel { (key:BlockKey) -> BlockDetailsViewModel(key,get(),get(),get()) }
         viewModel { (request:BlockEditorRequest) -> BlockEditorViewModel(request,get(),get(),get(),get()) }
         factory { ObserveActivityNotebookUseCase(get(),get(),get(),get()) }
         viewModel { (scope: ActivityScope) -> ActivityListViewModel(scope,get()) }

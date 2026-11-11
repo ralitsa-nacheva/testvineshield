@@ -3,8 +3,11 @@ package com.rncoding.testvineshield.core.domain.repository
 
 import com.rncoding.testvineshield.core.domain.datamodels.BlockDomainModel
 import kotlinx.coroutines.flow.Flow
+import com.rncoding.testvineshield.core.domain.datamodels.BlockStageObservation
 
 interface BlockRepository {
+    suspend fun getRecentStageObservations(ownerId: Long, vineyardId: Long, blockId: Long): List<BlockStageObservation>
+
 
     fun observeBlocks(
         vineyardId: Long

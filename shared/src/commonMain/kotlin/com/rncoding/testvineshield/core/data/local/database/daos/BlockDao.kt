@@ -3,6 +3,8 @@ package com.rncoding.testvineshield.core.data.local.database.daos
 import com.rncoding.testvineshield.core.domain.datamodels.units.LengthUnit
 import com.rncoding.testvineshield.core.domain.datamodels.units.AreaUnit
 import androidx.room.Dao
+import com.rncoding.testvineshield.core.data.local.database.entities.BlockStageObservationEntity
+import kotlinx.datetime.LocalDate
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
@@ -15,6 +17,23 @@ import com.rncoding.testvineshield.core.data.local.database.relations.BlockWithH
 
 @Dao
 interface BlockDao {
+    @Query("""
+        SELECT o.* FROM block_stage_observation o
+        JOIN block b ON b.block_id = o.block_id
+        WHERE b.vineyard_id = :vineyardId AND o.block_id = :blockId AND o.observed_on = :date
+    """)
+    suspend fun getStageObservation(vineyardId: Long, blockId: Long, date: LocalDate): BlockStageObservationEntity?
+
+    @Query("""
+        SELECT o.* FROM block_stage_observation o
+        JOIN block b ON b.block_id = o.block_id
+        JOIN vineyard v ON v.vineyard_id = b.vineyard_id
+        WHERE v.user_id = :ownerId AND b.vineyard_id = :vineyardId AND o.block_id = :blockId
+        ORDER BY o.observed_on DESC
+        LIMIT 20
+    """)
+    suspend fun getRecentStageObservations(ownerId: Long, vineyardId: Long, blockId: Long): List<BlockStageObservationEntity>
+
     @Upsert
     @Transaction
     suspend fun upsertBlock(block: BlockEntity)

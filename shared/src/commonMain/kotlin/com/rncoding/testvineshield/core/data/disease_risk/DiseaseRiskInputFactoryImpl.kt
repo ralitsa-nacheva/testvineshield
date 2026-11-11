@@ -91,11 +91,15 @@ class DiseaseRiskInputFactoryImpl(
                 )
             }
 
-            // 5. Retrieve host context.
+            // 5. Retrieve the dated observation for the requested local day.
+            val stageDate = if (modelType == DiseaseRiskModelType.BOTRYTIS) {
+                window.singleLocalDate(timeZone) ?: return DiseaseRiskInputResult.InsufficientStageEvidence
+            } else null
             val hostContext = hostContextProvider.getHostContext(
                 vineyardId = vineyardId,
                 blockId = blockId,
-                diseaseId = diseaseId
+                diseaseId = diseaseId,
+                stageDate = stageDate
             )
 
             if (modelType == DiseaseRiskModelType.BOTRYTIS &&
