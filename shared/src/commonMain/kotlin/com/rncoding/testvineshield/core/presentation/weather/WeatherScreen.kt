@@ -83,10 +83,24 @@ fun WeatherScreen(state: WeatherScreenState, onBack: () -> Unit, onRetry: () -> 
                 }
                 items(display.forecast.take(24)) { cached -> WeatherHourCard(cached.weather, zone, "Forecast hour") }
                 item {
+                    Text("Botrytis weather input · previous local day", style = MaterialTheme.typography.titleMedium)
+                    val coverage = previousDayCacheCoverage(snapshot, state.now)
+                    when {
+                        coverage == null -> Text("The vineyard time zone is unavailable.")
+                        coverage.expectedHours == null -> Text("${coverage.date}: This day does not fit the hourly weather grid.")
+                        else -> {
+                            Text("${coverage.date}: ${coverage.matchedHours} of ${coverage.expectedHours} expected weather hours cached.")
+                            if (coverage.unexpectedRows > 0) {
+                                Text("The cache also contains ${coverage.unexpectedRows} duplicate or off-grid rows for this day.")
+                            }
+                        }
+                    }
+                    Text("This checks cached timestamps only. Stage history, wetness and model validation are separate requirements.")
+                }
+                item {
                     Text("Saved monitoring configuration", style = MaterialTheme.typography.titleLarge)
                     Text("Read-only in this checkpoint. Enabled means a saved preference, not that a validated model has run or that the vineyard is safe.")
                     Text("Disease risk is not assessed by this screen. No configurations or alerts must never be interpreted as no disease risk.")
-                    Text("Dated phenology, model-specific inputs, source verification and current evaluation status are required before risk advice is released.")
                     if (snapshot.monitoringError != null) {
                         Text("Monitoring settings could not be read: ${snapshot.monitoringError.userMessage}", color = MaterialTheme.colorScheme.error)
                         TextButton(onClick = userAction(onRetry)) { Text("Retry loading settings") }

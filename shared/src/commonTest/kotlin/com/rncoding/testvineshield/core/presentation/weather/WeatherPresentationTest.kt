@@ -11,6 +11,27 @@ class WeatherPresentationTest {
     private val vineyard = VineyardDomainModel(10, 1, "North", 1.0, "BG", "Plovdiv", 42.1, 24.7, "Europe/Sofia", null, 0, LocalDate(2026,1,1), LocalDate(2026,1,1))
     private fun weather(at: Long) = WeatherHistoryDomainModel(10, at, 18.0, 60.0, 10.0, 20.0, 4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 2000.0, 10000.0, 12.0, 10.0, 0.3, 0.3, true)
     private fun snapshot(past: List<WeatherHistoryDomainModel> = emptyList(), future: List<CachedForecastHour> = emptyList()) = VineyardWeatherSnapshot(vineyard, past, future, emptyList(), emptyList())
+    @Test fun previousDayCoverageCountsSofiaClockChangeHours() {
+        val start = kotlin.time.Instant.parse("2026-03-28T22:00:00Z").toEpochMilliseconds()
+        val nextDay = start + 23 * hour
+        val rows = (0..23).map { weather(start + it * hour) }
+        val coverage = assertNotNull(previousDayCacheCoverage(snapshot(rows), nextDay))
+        assertEquals(LocalDate(2026, 3, 29), coverage.date)
+        assertEquals(23, coverage.expectedHours)
+        assertEquals(23, coverage.matchedHours)
+        assertEquals(0, coverage.unexpectedRows)
+    }
+
+    @Test fun duplicatesAndOffGridRowsCannotHideMissingHours() {
+        val start = kotlin.time.Instant.parse("2026-03-28T22:00:00Z").toEpochMilliseconds()
+        val rows = (0..22).filter { it != 4 }.map { weather(start + it * hour) } +
+            listOf(weather(start), weather(start + hour / 2))
+        val coverage = assertNotNull(previousDayCacheCoverage(snapshot(rows), start + 24 * hour))
+        assertEquals(23, coverage.expectedHours)
+        assertEquals(22, coverage.matchedHours)
+        assertEquals(2, coverage.unexpectedRows)
+    }
+
     @Test fun emptyCachesRemainUnknown() {
         val p = presentWeather(snapshot(), now)
         assertEquals(CacheAge.EMPTY, p.historyAge); assertEquals(CacheAge.EMPTY, p.forecastAge)

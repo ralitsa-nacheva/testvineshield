@@ -6,6 +6,7 @@ import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskWeatherWi
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskWeatherWindowPolicy
 import com.rncoding.testvineshield.core.domain.disease_risk.downy.DownyMildewPrimaryState
 import com.rncoding.testvineshield.core.domain.disease_risk.powdery.PowderyMildewRiskState
+import com.rncoding.testvineshield.core.domain.disease_risk.previousCompleteVineyardDay
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -210,15 +211,13 @@ class DefaultDiseaseRiskWeatherWindowPolicy :
     ): DiseaseRiskWeatherWindow {
         require(previousState == null) { "Botrytis must not have persisted model state." }
 
-        val today = Instant.fromEpochMilliseconds(calculatedAt).toLocalDateTime(timeZone).date
-        val observationDate = today.plus(-1, DateTimeUnit.DAY)
-        val end = today.atStartOfDayIn(timeZone).toEpochMilliseconds()
-        if (monitoringStartDate != null && observationDate < monitoringStartDate) {
+        val day = previousCompleteVineyardDay(calculatedAt, timeZone)
+        if (monitoringStartDate != null && day.date < monitoringStartDate) {
+            val end = day.window.endTimestamp
             return DiseaseRiskWeatherWindow(end, end)
         }
 
-        val start = observationDate.atStartOfDayIn(timeZone).toEpochMilliseconds()
-        return DiseaseRiskWeatherWindow(start, end)
+        return day.window
     }
 
     private fun getStatelessWindow(

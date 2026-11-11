@@ -3,6 +3,8 @@ package com.rncoding.testvineshield.core.presentation.weather
 import com.rncoding.testvineshield.core.domain.datamodels.*
 import com.rncoding.testvineshield.core.domain.usecases.weather.ObserveOwnedWeatherUseCase
 import com.rncoding.testvineshield.core.domain.usecases.weather.VineyardWeatherSnapshot
+import com.rncoding.testvineshield.core.domain.disease_risk.previousCompleteVineyardDay
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.offsetAt
@@ -47,6 +49,37 @@ fun presentWeather(snapshot: VineyardWeatherSnapshot, now: Long): WeatherPresent
     return WeatherPresentation(history, historyAge, coverage(history.map { it.timestamp }), excluded,
         future, forecastAge, fetchedAt, coverage(future.map { it.weather.timestamp }), fetched.size > 1)
 }
+internal data class LocalDayCacheCoverage(
+    val date: LocalDate,
+    val expectedHours: Int?,
+    val matchedHours: Int,
+    val unexpectedRows: Int
+)
+
+/** Count only rows on the same hourly grid as the experimental Botrytis window. */
+internal fun previousDayCacheCoverage(snapshot: VineyardWeatherSnapshot, now: Long): LocalDayCacheCoverage? {
+    val zone = try {
+        TimeZone.of(snapshot.vineyard.timeZone)
+    } catch (_: IllegalArgumentException) {
+        return null
+    }
+    val day = previousCompleteVineyardDay(now, zone)
+    val (start, end) = day.window
+    val duration = end - start
+    if (duration <= 0 || duration % HOUR != 0L) {
+        return LocalDayCacheCoverage(day.date, null, 0, 0)
+    }
+
+    val rows = snapshot.history.asSequence().map { it.timestamp }.filter { it >= start && it < end }.toList()
+    val matchedHours = rows.filter { (it - start) % HOUR == 0L }.distinct().size
+    return LocalDayCacheCoverage(
+        date = day.date,
+        expectedHours = (duration / HOUR).toInt(),
+        matchedHours = matchedHours,
+        unexpectedRows = rows.size - matchedHours
+    )
+}
+
 private const val HOUR = 3_600_000L
 private fun coverage(times: List<Long>) = HourCoverage(times.size, times.firstOrNull(), times.lastOrNull(),
     times.zipWithNext().count { (a, b) -> b - a != HOUR })
