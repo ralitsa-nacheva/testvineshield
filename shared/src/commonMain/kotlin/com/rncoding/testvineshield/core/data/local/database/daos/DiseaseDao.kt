@@ -30,6 +30,9 @@ interface DiseaseDao {
     )
     fun observeDiseases(): Flow<List<DiseaseEntity>>
 
+    @Query("SELECT * FROM disease WHERE is_predefined = 1 ORDER BY name, disease_id")
+    fun observePredefinedDiseases(): Flow<List<DiseaseEntity>>
+
     @Transaction
     @Query("Select * From disease")
     fun getDiseaseWithSymptoms(): List<DiseaseWithSymptoms>

@@ -13,6 +13,12 @@ data class VineyardWeatherRoute(val vineyardId: Long) : AppRoute
 data object VineyardsRoute : AppRoute
 
 @Serializable
+data object DiseaseCatalogueRoute : AppRoute
+
+@Serializable
+data class BuiltInDiseaseDetailsRoute(val diseaseId: Long) : AppRoute
+
+@Serializable
 data class VineyardDetailsRoute(
     val vineyardId: Long
 ) : AppRoute

@@ -39,6 +39,7 @@ fun VineyardListScreen(
     snackbarHostState: SnackbarHostState,
     onVineyardClick: (Long) -> Unit,
     onCreateVineyard: () -> Unit,
+    onOpenDiseaseCatalogue: () -> Unit,
     onDeleteRequest: (Long) -> Unit,
     onDeleteConfirm: () -> Unit,
     onDeleteCancel: () -> Unit,
@@ -49,6 +50,9 @@ fun VineyardListScreen(
             TopAppBar(
                 title = {
                     Text("Vineyards")
+                },
+                actions = {
+                    TextButton(onClick = userAction(onOpenDiseaseCatalogue)) { Text("Diseases") }
                 }
             )
         },

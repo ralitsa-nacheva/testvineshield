@@ -26,6 +26,9 @@ class DiseaseRepositoryImpl(
     private val symptomMapper: SymptomMapper,
     private val diseaseAlertMapper: DiseaseAlertMapper
 ) : DiseaseRepository {
+    override fun observePredefinedDiseases(): Flow<List<DiseaseDomainModel>> =
+        diseaseDao.observePredefinedDiseases().map { rows -> rows.map(diseaseMapper::toDomain) }
+
 
     override fun observeDiseaseCatalog():
             Flow<List<DiseaseDomainModel>> {

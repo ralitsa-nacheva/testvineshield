@@ -20,6 +20,8 @@ internal val vineShieldSerializersModule =
         polymorphic(NavKey::class) {
 
             subclass(VineyardsRoute::class)
+            subclass(DiseaseCatalogueRoute::class)
+            subclass(BuiltInDiseaseDetailsRoute::class)
             subclass(VineyardDetailsRoute::class)
             subclass(CreateVineyardRoute::class)
             subclass(EditVineyardRoute::class)

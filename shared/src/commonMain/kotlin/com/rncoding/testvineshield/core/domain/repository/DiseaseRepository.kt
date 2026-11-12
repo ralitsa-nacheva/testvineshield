@@ -7,6 +7,8 @@ import com.rncoding.testvineshield.core.domain.datamodels.SymptomDomainModel
 import kotlinx.coroutines.flow.Flow
 
 interface DiseaseRepository {
+    fun observePredefinedDiseases(): Flow<List<DiseaseDomainModel>>
+
 
     fun observeDiseaseCatalog():
             Flow<List<DiseaseDomainModel>>

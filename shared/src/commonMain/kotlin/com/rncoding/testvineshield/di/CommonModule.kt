@@ -1036,6 +1036,9 @@ val commonModule =
         factory<SprayExportEncoder> { SprayExportEncoderImpl() }
         factory { PrepareSprayExportUseCase(get(), get(), get(), get(), get(), get()) }
         viewModel { (key: com.rncoding.testvineshield.core.domain.usecases.activity.SprayKey) -> SprayExportViewModel(key, get(), get()) }
+        viewModel {
+            com.rncoding.testvineshield.core.presentation.disease_catalogue.DiseaseCatalogueViewModel(get())
+        }
         factory { ObserveOwnedWeatherUseCase(get(), get(), get(), get(), get(), get(), get(),get()) }
         factory { RefreshOwnedWeatherUseCase(get(), get(), get(), get(), get()) }
         factory { com.rncoding.testvineshield.core.domain.usecases.weather.SaveBotrytisMonitoringDraftUseCase(get(), get()) }

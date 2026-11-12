@@ -428,6 +428,10 @@ class DiseaseDaoIntegrationTest {
         val diseases = repository.observeDiseaseCatalog().first()
 
         assertEquals(2, diseases.size)
+        assertEquals(
+            listOf("Predefined mildew"),
+            repository.observePredefinedDiseases().first().map { it.name }
+        )
 
         assertTrue(
             diseases.any {

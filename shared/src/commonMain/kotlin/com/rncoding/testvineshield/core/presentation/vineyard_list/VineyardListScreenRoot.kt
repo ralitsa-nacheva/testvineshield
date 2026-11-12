@@ -11,7 +11,8 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun VineyardListScreenRoot(
     onVineyardClick: (Long) -> Unit,
-    onCreateVineyard: () -> Unit
+    onCreateVineyard: () -> Unit,
+    onOpenDiseaseCatalogue: () -> Unit
 ) {
 
     val viewModel:
@@ -56,6 +57,7 @@ fun VineyardListScreenRoot(
             onVineyardClick,
         onCreateVineyard =
             onCreateVineyard,
+        onOpenDiseaseCatalogue = onOpenDiseaseCatalogue,
         onDeleteRequest =
             viewModel::requestDelete,
         onDeleteConfirm =

@@ -1,6 +1,7 @@
 package com.rncoding.testvineshield.core.presentation.navigation
 
 import androidx.compose.foundation.layout.padding
+import com.rncoding.testvineshield.core.presentation.disease_catalogue.DiseaseCatalogueScreenRoot
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import com.rncoding.testvineshield.core.presentation.harvest.*
@@ -82,6 +83,7 @@ fun AuthenticatedApp(
                     entry<VineyardsRoute> {
 
                         VineyardListScreenRoot(
+                            onOpenDiseaseCatalogue = { navigationState.navigate(DiseaseCatalogueRoute) },
                             onVineyardClick = { vineyardId ->
 
                                 navigationState.navigate(
@@ -97,6 +99,22 @@ fun AuthenticatedApp(
                                     CreateVineyardRoute
                                 )
                             }
+                        )
+                    }
+
+                    entry<DiseaseCatalogueRoute> {
+                        DiseaseCatalogueScreenRoot(
+                            ownerId = userId,
+                            onBack = { navigationState.goBack() },
+                            onOpenDisease = { navigationState.navigate(BuiltInDiseaseDetailsRoute(it)) }
+                        )
+                    }
+
+                    entry<BuiltInDiseaseDetailsRoute> { route ->
+                        DiseaseCatalogueScreenRoot(
+                            ownerId = userId,
+                            diseaseId = route.diseaseId,
+                            onBack = { navigationState.goBack() }
                         )
                     }
 
