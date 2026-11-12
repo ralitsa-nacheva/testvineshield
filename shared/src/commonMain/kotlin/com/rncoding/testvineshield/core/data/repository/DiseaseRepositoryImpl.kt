@@ -52,6 +52,20 @@ class DiseaseRepositoryImpl(
         ownerId, vineyardId, blockId, occurrenceId, expectedUpdatedAt, status, curedAt, updatedAt
     ) == 1
 
+    override suspend fun updateOwnedBlockOccurrenceDetails(
+        ownerId: Long,
+        vineyardId: Long,
+        blockId: Long,
+        occurrenceId: Long,
+        expectedUpdatedAt: Long,
+        observedOn: LocalDate,
+        severity: Int,
+        notes: String?,
+        updatedAt: Long
+    ): Boolean = diseaseOccurrenceDao.updateOwnedBlockOccurrenceDetails(
+        ownerId, vineyardId, blockId, occurrenceId, expectedUpdatedAt, observedOn, severity, notes, updatedAt
+    ) == 1
+
     override fun observePredefinedDiseases(): Flow<List<DiseaseDomainModel>> =
         diseaseDao.observePredefinedDiseases().map { rows -> rows.map(diseaseMapper::toDomain) }
 

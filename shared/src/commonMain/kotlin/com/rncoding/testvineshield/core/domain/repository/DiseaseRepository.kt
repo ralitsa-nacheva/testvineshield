@@ -27,6 +27,18 @@ interface DiseaseRepository {
         updatedAt: Long
     ): Boolean
 
+    suspend fun updateOwnedBlockOccurrenceDetails(
+        ownerId: Long,
+        vineyardId: Long,
+        blockId: Long,
+        occurrenceId: Long,
+        expectedUpdatedAt: Long,
+        observedOn: LocalDate,
+        severity: Int,
+        notes: String?,
+        updatedAt: Long
+    ): Boolean
+
     fun observePredefinedDiseases(): Flow<List<DiseaseDomainModel>>
 
 

@@ -7,6 +7,8 @@ import com.rncoding.testvineshield.core.domain.datamodels.BlockDiseaseObservatio
 import com.rncoding.testvineshield.core.domain.datamodels.DiseaseDomainModel
 import com.rncoding.testvineshield.core.domain.datamodels.enums.DiseaseOccurrenceStatus
 import com.rncoding.testvineshield.core.domain.usecases.disease.ChangeDiseaseOccurrenceStatusUseCase
+import com.rncoding.testvineshield.core.domain.error.AppError
+import com.rncoding.testvineshield.core.domain.usecases.disease.EditDiseaseOccurrenceDetailsUseCase
 import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.repository.DiseaseRepository
 import com.rncoding.testvineshield.core.domain.usecases.disease.CreateDiseaseOccurrenceUseCase
@@ -21,6 +23,10 @@ import kotlinx.datetime.LocalDate
 
 data class DiseaseObservationsKey(val ownerId: Long, val vineyardId: Long, val blockId: Long)
 
+data class ObservationDialog(val observation: BlockDiseaseObservation, val kind: Kind) {
+    enum class Kind { DETAILS, STATUS }
+}
+
 data class DiseaseObservationsState(
     val loading: Boolean = true,
     val loadError: String? = null,
@@ -29,8 +35,8 @@ data class DiseaseObservationsState(
     val saving: Boolean = false,
     val saveError: String? = null,
     val lastSavedId: Long? = null,
-    val statusObservation: BlockDiseaseObservation? = null,
-    val statusError: String? = null
+    val dialog: ObservationDialog? = null,
+    val dialogError: String? = null
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -39,7 +45,8 @@ class BlockDiseaseObservationsViewModel(
     private val users: AuthenticatedUserProvider,
     private val repository: DiseaseRepository,
     private val create: CreateDiseaseOccurrenceUseCase,
-    private val changeStatus: ChangeDiseaseOccurrenceStatusUseCase
+    private val changeStatus: ChangeDiseaseOccurrenceStatusUseCase,
+    private val editDetails: EditDiseaseOccurrenceDetailsUseCase
 ) : ViewModel() {
     private val _state = MutableStateFlow(DiseaseObservationsState())
     val state = _state.asStateFlow()
@@ -73,30 +80,45 @@ class BlockDiseaseObservationsViewModel(
         }
     }
 
-    fun openStatus(observationId: Long) {
+    fun openDialog(observationId: Long, kind: ObservationDialog.Kind) {
         val current = _state.value
-        if (current.saving || current.loadError != null) return
+        if (current.saving || current.loadError != null || current.dialog != null) return
         val observation = current.observations.firstOrNull { it.id == observationId } ?: return
-        _state.update { it.copy(statusObservation = observation, statusError = null) }
+        _state.update { it.copy(dialog = ObservationDialog(observation, kind), dialogError = null) }
     }
 
-    fun closeStatus() {
+    fun closeDialog() {
         if (_state.value.saving) return
-        _state.update { it.copy(statusObservation = null, statusError = null) }
+        _state.update { it.copy(dialog = null, dialogError = null) }
     }
 
     fun saveStatus(status: DiseaseOccurrenceStatus) {
+        saveDialog(ObservationDialog.Kind.STATUS) { observation ->
+            changeStatus(key.ownerId, key.vineyardId, key.blockId, observation, status)
+        }
+    }
+
+    fun saveDetails(date: LocalDate, severity: Int, notes: String) {
+        saveDialog(ObservationDialog.Kind.DETAILS) { observation ->
+            editDetails(key.ownerId, key.vineyardId, key.blockId, observation, date, severity, notes)
+        }
+    }
+
+    private fun saveDialog(
+        kind: ObservationDialog.Kind,
+        write: suspend (BlockDiseaseObservation) -> Result<Unit, AppError>
+    ) {
         val current = _state.value
-        val observation = current.statusObservation ?: return
-        if (current.saving || current.loadError != null || status == observation.status) return
-        _state.update { it.copy(saving = true, statusError = null) }
+        val dialog = current.dialog ?: return
+        if (current.saving || current.loadError != null || dialog.kind != kind) return
+        _state.update { it.copy(saving = true, dialogError = null) }
         saveJob = viewModelScope.launch {
             try {
-                val result = changeStatus(key.ownerId, key.vineyardId, key.blockId, observation, status)
+                val result = write(dialog.observation)
                 currentCoroutineContext().ensureActive()
                 when (result) {
-                    is Result.Success -> _state.update { it.copy(statusObservation = null) }
-                    is Result.Error -> _state.update { it.copy(statusError = result.error.userMessage) }
+                    is Result.Success -> _state.update { it.copy(dialog = null) }
+                    is Result.Error -> _state.update { it.copy(dialogError = result.error.userMessage) }
                 }
             } finally {
                 _state.update { it.copy(saving = false) }

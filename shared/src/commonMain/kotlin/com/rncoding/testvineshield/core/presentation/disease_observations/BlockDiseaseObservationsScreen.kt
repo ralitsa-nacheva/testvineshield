@@ -3,6 +3,8 @@ package com.rncoding.testvineshield.core.presentation.disease_observations
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -11,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.rncoding.testvineshield.core.domain.datamodels.BlockDiseaseObservation
 import com.rncoding.testvineshield.core.domain.datamodels.enums.DiseaseOccurrenceStatus
 import com.rncoding.testvineshield.core.presentation.components.RecordChoice
 import com.rncoding.testvineshield.core.presentation.components.RecordTopBar
@@ -39,12 +42,13 @@ fun BlockDiseaseObservationsScreen(
         onDispose { busyChanged(false) }
     }
 
-    state.statusObservation?.let { observation ->
+    state.dialog?.takeIf { it.kind == ObservationDialog.Kind.STATUS }?.let { dialog ->
+        val observation = dialog.observation
         var selected by rememberSaveable(observation.id, observation.updatedAt) {
             mutableStateOf(observation.status)
         }
         AlertDialog(
-            onDismissRequest = model::closeStatus,
+            onDismissRequest = model::closeDialog,
             title = { Text(observation.diseaseName) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -64,7 +68,7 @@ fun BlockDiseaseObservationsScreen(
                     if (selected != DiseaseOccurrenceStatus.ACTIVE && selected != observation.status) {
                         Text("Only active observations are included in active disease summaries.")
                     }
-                    state.statusError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                    state.dialogError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                 }
             },
             confirmButton = {
@@ -74,8 +78,14 @@ fun BlockDiseaseObservationsScreen(
                 ) { Text(if (state.saving) "Saving…" else "Save status") }
             },
             dismissButton = {
-                TextButton(onClick = userAction(model::closeStatus), enabled = !state.saving) { Text("Cancel") }
+                TextButton(onClick = userAction(model::closeDialog), enabled = !state.saving) { Text("Cancel") }
             }
+        )
+    }
+
+    state.dialog?.takeIf { it.kind == ObservationDialog.Kind.DETAILS }?.let { dialog ->
+        EditObservationDialog(
+            dialog.observation, state.saving, state.dialogError, model::closeDialog, model::saveDetails
         )
     }
 
@@ -104,9 +114,13 @@ fun BlockDiseaseObservationsScreen(
                                 observation.curedAt?.let { Text("Resolved on $it") }
                                 observation.notes?.let { Text(it) }
                                 TextButton(
-                                    onClick = userAction { model.openStatus(observation.id) },
+                                    onClick = userAction { model.openDialog(observation.id, ObservationDialog.Kind.STATUS) },
                                     enabled = !state.saving
                                 ) { Text("Change status") }
+                                TextButton(
+                                    onClick = userAction { model.openDialog(observation.id, ObservationDialog.Kind.DETAILS) },
+                                    enabled = !state.saving
+                                ) { Text("Edit details") }
                             }
                         }
                     }
@@ -126,7 +140,6 @@ private fun ObservationForm(
     var severityText by rememberSaveable { mutableStateOf("") }
     var notes by rememberSaveable { mutableStateOf("") }
     var clearedAfterSave by rememberSaveable { mutableStateOf<Long?>(null) }
-    val activity = LocalUserActivity.current
     LaunchedEffect(state.lastSavedId) {
         if (state.lastSavedId != null && state.lastSavedId != clearedAfterSave) {
             clearedAfterSave = state.lastSavedId
@@ -138,8 +151,8 @@ private fun ObservationForm(
     }
 
     val disease = state.diseases.firstOrNull { it.diseaseId == diseaseId }
-    val date = try { LocalDate.parse(dateText.trim()) } catch (_: IllegalArgumentException) { null }
-    val severity = severityText.trim().toIntOrNull()?.takeIf { it in 0..100 }
+    val date = parseObservationDate(dateText)
+    val severity = parseObservationSeverity(severityText)
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Record an observation", style = MaterialTheme.typography.titleMedium)
@@ -148,26 +161,9 @@ private fun ObservationForm(
             text = { it.name }, changed = { diseaseId = it?.diseaseId },
             allowUnknown = false, nullLabel = "Choose a disease"
         )
-        OutlinedTextField(
-            value = dateText, onValueChange = { activity(); dateText = it },
-            label = { Text("Observation date (YYYY-MM-DD)") },
-            enabled = !state.saving, singleLine = true,
-            isError = dateText.isNotBlank() && date == null,
-            modifier = Modifier.fillMaxWidth()
-        )
-        OutlinedTextField(
-            value = severityText, onValueChange = { activity(); severityText = it },
-            label = { Text("Affected tissue or area (%)") },
-            enabled = !state.saving, singleLine = true,
-            isError = severityText.isNotBlank() && severity == null,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth()
-        )
-        OutlinedTextField(
-            value = notes, onValueChange = { activity(); notes = it },
-            label = { Text("Notes (optional)") }, enabled = !state.saving,
-            isError = notes.trim().length > 4000,
-            modifier = Modifier.fillMaxWidth()
+        ObservationFields(
+            dateText, severityText, notes, !state.saving,
+            { dateText = it }, { severityText = it }, { notes = it }
         )
         Button(
             onClick = userAction {
@@ -178,6 +174,101 @@ private fun ObservationForm(
         state.saveError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
     }
 }
+
+@Composable
+private fun EditObservationDialog(
+    observation: BlockDiseaseObservation,
+    saving: Boolean,
+    error: String?,
+    onClose: () -> Unit,
+    onSave: (LocalDate, Int, String) -> Unit
+) {
+    var dateText by rememberSaveable(observation.id, observation.updatedAt) {
+        mutableStateOf(observation.observedOn.toString())
+    }
+    var severityText by rememberSaveable(observation.id, observation.updatedAt) {
+        mutableStateOf(observation.severity.toString())
+    }
+    var notes by rememberSaveable(observation.id, observation.updatedAt) {
+        mutableStateOf(observation.notes.orEmpty())
+    }
+    val date = parseObservationDate(dateText)
+    val severity = parseObservationSeverity(severityText)
+    val changed = date != observation.observedOn || severity != observation.severity ||
+        notes.trim().ifBlank { null } != observation.notes
+    AlertDialog(
+        onDismissRequest = onClose,
+        title = { Text("Edit observation") },
+        text = {
+            Column(
+                Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(observation.diseaseName)
+                observation.curedAt?.let { Text("Resolved on $it") }
+                ObservationFields(
+                    dateText, severityText, notes, !saving,
+                    { dateText = it }, { severityText = it }, { notes = it }
+                )
+                error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = userAction {
+                    if (date != null && severity != null) onSave(date, severity, notes)
+                },
+                enabled = !saving && changed && date != null && severity != null && notes.trim().length <= 4000
+            ) { Text(if (saving) "Saving…" else "Save changes") }
+        },
+        dismissButton = {
+            TextButton(onClick = userAction(onClose), enabled = !saving) { Text("Cancel") }
+        }
+    )
+}
+
+@Composable
+private fun ObservationFields(
+    dateText: String,
+    severityText: String,
+    notes: String,
+    enabled: Boolean,
+    onDateChanged: (String) -> Unit,
+    onSeverityChanged: (String) -> Unit,
+    onNotesChanged: (String) -> Unit
+) {
+    val activity = LocalUserActivity.current
+    OutlinedTextField(
+        value = dateText, onValueChange = { activity(); onDateChanged(it) },
+        label = { Text("Observation date (YYYY-MM-DD)") },
+        enabled = enabled, singleLine = true,
+        isError = dateText.isNotBlank() && parseObservationDate(dateText) == null,
+        modifier = Modifier.fillMaxWidth()
+    )
+    OutlinedTextField(
+        value = severityText, onValueChange = { activity(); onSeverityChanged(it) },
+        label = { Text("Affected tissue or area (%)") },
+        enabled = enabled, singleLine = true,
+        isError = severityText.isNotBlank() && parseObservationSeverity(severityText) == null,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        modifier = Modifier.fillMaxWidth()
+    )
+    OutlinedTextField(
+        value = notes, onValueChange = { activity(); onNotesChanged(it) },
+        label = { Text("Notes (optional)") }, enabled = enabled, maxLines = 5,
+        isError = notes.trim().length > 4000,
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
+private fun parseObservationDate(text: String): LocalDate? = try {
+    LocalDate.parse(text.trim())
+} catch (_: IllegalArgumentException) {
+    null
+}
+
+private fun parseObservationSeverity(text: String): Int? =
+    text.trim().toIntOrNull()?.takeIf { it in 0..100 }
 
 private fun DiseaseOccurrenceStatus.label(): String = when (this) {
     DiseaseOccurrenceStatus.ACTIVE -> "Active"

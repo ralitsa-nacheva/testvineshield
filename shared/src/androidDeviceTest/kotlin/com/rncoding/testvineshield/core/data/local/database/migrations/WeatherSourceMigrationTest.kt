@@ -223,6 +223,12 @@ class WeatherSourceMigrationTest {
             assertEquals(resolved, closed.status)
             assertEquals(resolutionDate, closed.curedAt)
             assertTrue(closed.updatedAt > saved.updatedAt)
+            assertEquals(0, dao.updateOwnedBlockOccurrenceDetails(
+                1, 10, 20, savedId, saved.updatedAt, closed.observedOn, 30, null, saved.updatedAt
+            ))
+            assertEquals(0, dao.updateOwnedBlockOccurrenceDetails(
+                1, 10, 20, savedId, closed.updatedAt, LocalDate(2026, 11, 13), 30, null, closed.updatedAt
+            ))
             assertEquals(1, dao.updateOwnedBlockOccurrenceStatus(
                 1, 10, 20, savedId, closed.updatedAt, monitoring, null, closed.updatedAt
             ))
@@ -234,6 +240,19 @@ class WeatherSourceMigrationTest {
             ))
             val reopened = dao.observeOwnedBlockOccurrences(1, 10, 20).first().single()
             assertEquals(saved.copy(updatedAt = reopened.updatedAt), reopened)
+            val correctedDate = LocalDate(2026, 6, 14)
+            assertEquals(0, dao.updateOwnedBlockOccurrenceDetails(
+                2, 10, 20, savedId, reopened.updatedAt, correctedDate, 30, null, reopened.updatedAt
+            ))
+            assertEquals(1, dao.updateOwnedBlockOccurrenceDetails(
+                1, 10, 20, savedId, reopened.updatedAt, correctedDate, 30, null, reopened.updatedAt
+            ))
+            val edited = dao.observeOwnedBlockOccurrences(1, 10, 20).first().single()
+            assertTrue(edited.updatedAt > reopened.updatedAt)
+            assertEquals(reopened.copy(observedOn = correctedDate, severity = 30, notes = null, updatedAt = edited.updatedAt), edited)
+            assertEquals(0, dao.updateOwnedBlockOccurrenceStatus(
+                1, 10, 20, savedId, reopened.updatedAt, resolved, resolutionDate, reopened.updatedAt
+            ))
             assertEquals(occurrence.createdAt, dao.getDiseaseOccurrenceById(savedId)?.createdAt)
             assertTrue(dao.observeOwnedBlockOccurrences(2, 10, 20).first().isEmpty())
             assertTrue(dao.observeOwnedBlockOccurrences(1, 11, 20).first().isEmpty())
