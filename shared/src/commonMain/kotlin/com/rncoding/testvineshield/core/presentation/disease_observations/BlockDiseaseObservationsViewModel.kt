@@ -12,6 +12,7 @@ import com.rncoding.testvineshield.core.domain.usecases.disease.EditDiseaseOccur
 import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.repository.DiseaseRepository
 import com.rncoding.testvineshield.core.domain.usecases.disease.CreateDiseaseOccurrenceUseCase
+import com.rncoding.testvineshield.core.domain.usecases.disease.RecordOilSpotUseCase
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -24,7 +25,7 @@ import kotlinx.datetime.LocalDate
 data class DiseaseObservationsKey(val ownerId: Long, val vineyardId: Long, val blockId: Long)
 
 data class ObservationDialog(val observation: BlockDiseaseObservation, val kind: Kind) {
-    enum class Kind { DETAILS, STATUS }
+    enum class Kind { DETAILS, STATUS, OIL_SPOT }
 }
 
 data class DiseaseObservationsState(
@@ -46,7 +47,8 @@ class BlockDiseaseObservationsViewModel(
     private val repository: DiseaseRepository,
     private val create: CreateDiseaseOccurrenceUseCase,
     private val changeStatus: ChangeDiseaseOccurrenceStatusUseCase,
-    private val editDetails: EditDiseaseOccurrenceDetailsUseCase
+    private val editDetails: EditDiseaseOccurrenceDetailsUseCase,
+    private val recordOilSpot: RecordOilSpotUseCase
 ) : ViewModel() {
     private val _state = MutableStateFlow(DiseaseObservationsState())
     val state = _state.asStateFlow()
@@ -101,6 +103,12 @@ class BlockDiseaseObservationsViewModel(
     fun saveDetails(date: LocalDate, severity: Int, notes: String) {
         saveDialog(ObservationDialog.Kind.DETAILS) { observation ->
             editDetails(key.ownerId, key.vineyardId, key.blockId, observation, date, severity, notes)
+        }
+    }
+
+    fun saveOilSpot(date: LocalDate, notes: String) {
+        saveDialog(ObservationDialog.Kind.OIL_SPOT) { observation ->
+            recordOilSpot(key.ownerId, key.vineyardId, key.blockId, observation, date, notes)
         }
     }
 

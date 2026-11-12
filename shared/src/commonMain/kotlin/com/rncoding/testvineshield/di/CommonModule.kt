@@ -1048,8 +1048,11 @@ val commonModule =
         factory {
             com.rncoding.testvineshield.core.domain.usecases.disease.EditDiseaseOccurrenceDetailsUseCase(get(), get(), get(), get())
         }
+        factory {
+            com.rncoding.testvineshield.core.domain.usecases.disease.RecordOilSpotUseCase(get(), get(), get(), get())
+        }
         viewModel { (key: com.rncoding.testvineshield.core.presentation.disease_observations.DiseaseObservationsKey) ->
-            com.rncoding.testvineshield.core.presentation.disease_observations.BlockDiseaseObservationsViewModel(key, get(), get(), get(), get(), get())
+            com.rncoding.testvineshield.core.presentation.disease_observations.BlockDiseaseObservationsViewModel(key, get(), get(), get(), get(), get(), get())
         }
         factory { ObserveOwnedWeatherUseCase(get(), get(), get(), get(), get(), get(), get(),get()) }
         factory { RefreshOwnedWeatherUseCase(get(), get(), get(), get(), get()) }

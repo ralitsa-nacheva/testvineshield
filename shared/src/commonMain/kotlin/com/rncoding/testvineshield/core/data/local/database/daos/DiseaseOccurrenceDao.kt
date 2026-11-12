@@ -1,5 +1,10 @@
 package com.rncoding.testvineshield.core.data.local.database.daos
 
+import com.rncoding.testvineshield.core.data.local.database.entities.OccurrenceSymptomCrossRef
+import com.rncoding.testvineshield.core.data.local.database.entities.SymptomEntity
+import com.rncoding.testvineshield.core.domain.datamodels.enums.PhenologicalStage
+import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseCatalogueCodes
+import com.rncoding.testvineshield.core.domain.disease_risk.SymptomCatalogueCodes
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.ColumnInfo
@@ -23,18 +28,29 @@ data class OwnedBlockDiseaseObservationRow(
     val status: DiseaseOccurrenceStatus,
     val notes: String?,
     @ColumnInfo(name = "cured_at") val curedAt: LocalDate?,
-    @ColumnInfo(name = "updated_at") val updatedAt: Long
+    @ColumnInfo(name = "updated_at") val updatedAt: Long,
+    @ColumnInfo(name = "disease_code") val diseaseCode: String?,
+    @ColumnInfo(name = "oil_spot_date") val oilSpotDate: LocalDate?,
+    @ColumnInfo(name = "oil_spot_notes") val oilSpotNotes: String?
 )
 
 @Dao
 interface DiseaseOccurrenceDao {
     @Query("""
         SELECT o.occurrence_id, d.name AS disease_name, o.observed_at, o.severity, o.status, o.notes,
-               o.cured_at, o.updated_at
+               o.cured_at, o.updated_at, d.code AS disease_code,
+               os.observed_at AS oil_spot_date, os.notes AS oil_spot_notes
         FROM disease_occurrence o
         JOIN block b ON b.block_id = o.block_id AND b.vineyard_id = o.vineyard_id
         JOIN vineyard v ON v.vineyard_id = b.vineyard_id
         JOIN disease d ON d.disease_id = o.disease_id
+        LEFT JOIN occurrence_symptom_cross_ref os
+          ON os.occurrence_id = o.occurrence_id AND d.code = '${DiseaseCatalogueCodes.GRAPE_DOWNY_MILDEW}'
+          AND os.symptom_id = (
+              SELECT MIN(link.symptom_id)
+              FROM occurrence_symptom_cross_ref link JOIN symptom s ON s.symptom_id = link.symptom_id
+              WHERE link.occurrence_id = o.occurrence_id AND s.code = '${SymptomCatalogueCodes.DOWNY_MILDEW_OIL_SPOT}'
+          )
         WHERE v.user_id = :ownerId AND v.vineyard_id = :vineyardId
           AND b.block_id = :blockId AND d.is_predefined = 1
         ORDER BY o.observed_at DESC, o.occurrence_id DESC
@@ -118,6 +134,56 @@ interface DiseaseOccurrenceDao {
         notes: String?,
         updatedAt: Long
     ): Int
+
+    @Query("""
+        SELECT EXISTS (
+            SELECT 1 FROM disease_occurrence o
+            JOIN block b ON b.block_id = o.block_id AND b.vineyard_id = o.vineyard_id
+            JOIN vineyard v ON v.vineyard_id = b.vineyard_id
+            JOIN disease d ON d.disease_id = o.disease_id
+            WHERE o.occurrence_id = :occurrenceId AND o.updated_at = :expectedUpdatedAt
+              AND v.user_id = :ownerId AND v.vineyard_id = :vineyardId AND b.block_id = :blockId
+              AND d.is_predefined = 1 AND d.code = '${DiseaseCatalogueCodes.GRAPE_DOWNY_MILDEW}'
+              AND (o.cured_at IS NULL OR :observedOn <= o.cured_at)
+              AND NOT EXISTS (
+                  SELECT 1 FROM occurrence_symptom_cross_ref link JOIN symptom s ON s.symptom_id = link.symptom_id
+                  WHERE link.occurrence_id = o.occurrence_id AND s.code = '${SymptomCatalogueCodes.DOWNY_MILDEW_OIL_SPOT}'
+              )
+        )
+    """)
+    suspend fun canRecordOilSpot(
+        ownerId: Long, vineyardId: Long, blockId: Long, occurrenceId: Long,
+        expectedUpdatedAt: Long, observedOn: LocalDate
+    ): Boolean
+
+    @Query("SELECT MIN(symptom_id) FROM symptom WHERE code = '${SymptomCatalogueCodes.DOWNY_MILDEW_OIL_SPOT}'")
+    suspend fun findOilSpotSymptomId(): Long?
+
+    @Insert
+    suspend fun insertOilSpotReference(symptom: SymptomEntity): Long
+
+    @Insert
+    suspend fun insertObservedOilSpot(link: OccurrenceSymptomCrossRef)
+
+    @Transaction
+    suspend fun recordOwnedOilSpot(
+        ownerId: Long, vineyardId: Long, blockId: Long, occurrenceId: Long,
+        expectedUpdatedAt: Long, observedOn: LocalDate, notes: String
+    ): Boolean {
+        if (!canRecordOilSpot(ownerId, vineyardId, blockId, occurrenceId, expectedUpdatedAt, observedOn)) return false
+        val symptomId = findOilSpotSymptomId() ?: insertOilSpotReference(
+            SymptomEntity(
+                symptomId = 0,
+                code = SymptomCatalogueCodes.DOWNY_MILDEW_OIL_SPOT,
+                name = "Leaf oil spot",
+                plantPart = "Leaf",
+                phenologicalStage = PhenologicalStage.LEAF_DEVELOPMENT,
+                notes = ""
+            )
+        )
+        insertObservedOilSpot(OccurrenceSymptomCrossRef(occurrenceId, symptomId, observedOn, "", notes))
+        return true
+    }
 
     @Upsert
     @Transaction

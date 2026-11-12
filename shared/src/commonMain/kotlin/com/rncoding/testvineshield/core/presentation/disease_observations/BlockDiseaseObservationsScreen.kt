@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rncoding.testvineshield.core.domain.datamodels.BlockDiseaseObservation
 import com.rncoding.testvineshield.core.domain.datamodels.enums.DiseaseOccurrenceStatus
+import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseCatalogueCodes
 import com.rncoding.testvineshield.core.presentation.components.RecordChoice
 import com.rncoding.testvineshield.core.presentation.components.RecordTopBar
 import com.rncoding.testvineshield.core.presentation.root.LocalUserActivity
@@ -89,6 +90,10 @@ fun BlockDiseaseObservationsScreen(
         )
     }
 
+    state.dialog?.takeIf { it.kind == ObservationDialog.Kind.OIL_SPOT }?.let { dialog ->
+        OilSpotDialog(dialog.observation, state.saving, state.dialogError, model::closeDialog, model::saveOilSpot)
+    }
+
     Scaffold(topBar = { RecordTopBar("Disease observations", { if (!model.state.value.saving) onBack() }, !state.saving) }) { padding ->
         LazyColumn(
             Modifier.padding(padding).fillMaxSize(),
@@ -113,6 +118,16 @@ fun BlockDiseaseObservationsScreen(
                                 Text("${observation.observedOn} · ${observation.severity}% affected · ${observation.status.label()}")
                                 observation.curedAt?.let { Text("Resolved on $it") }
                                 observation.notes?.let { Text(it) }
+                                val oilSpot = observation.oilSpot
+                                if (oilSpot != null) {
+                                    Text("Leaf oil spot · ${oilSpot.observedOn}")
+                                    if (oilSpot.notes.isNotBlank()) Text(oilSpot.notes)
+                                } else if (observation.diseaseCode == DiseaseCatalogueCodes.GRAPE_DOWNY_MILDEW) {
+                                    TextButton(
+                                        onClick = userAction { model.openDialog(observation.id, ObservationDialog.Kind.OIL_SPOT) },
+                                        enabled = !state.saving
+                                    ) { Text("Record leaf oil spot") }
+                                }
                                 TextButton(
                                     onClick = userAction { model.openDialog(observation.id, ObservationDialog.Kind.STATUS) },
                                     enabled = !state.saving
@@ -220,6 +235,53 @@ private fun EditObservationDialog(
                 },
                 enabled = !saving && changed && date != null && severity != null && notes.trim().length <= 4000
             ) { Text(if (saving) "Saving…" else "Save changes") }
+        },
+        dismissButton = {
+            TextButton(onClick = userAction(onClose), enabled = !saving) { Text("Cancel") }
+        }
+    )
+}
+
+@Composable
+private fun OilSpotDialog(
+    observation: BlockDiseaseObservation,
+    saving: Boolean,
+    error: String?,
+    onClose: () -> Unit,
+    onSave: (LocalDate, String) -> Unit
+) {
+    var dateText by rememberSaveable(observation.id) { mutableStateOf("") }
+    var notes by rememberSaveable(observation.id) { mutableStateOf("") }
+    val date = parseObservationDate(dateText)
+    val activity = LocalUserActivity.current
+    AlertDialog(
+        onDismissRequest = onClose,
+        title = { Text("Record leaf oil spot") },
+        text = {
+            Column(
+                Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text("Enter the date you saw the symptom on the vine.")
+                OutlinedTextField(
+                    value = dateText, onValueChange = { activity(); dateText = it },
+                    label = { Text("Symptom date (YYYY-MM-DD)") }, enabled = !saving,
+                    singleLine = true, isError = dateText.isNotBlank() && date == null,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = notes, onValueChange = { activity(); notes = it },
+                    label = { Text("Notes (optional)") }, enabled = !saving, maxLines = 5,
+                    isError = notes.trim().length > 4000, modifier = Modifier.fillMaxWidth()
+                )
+                error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = userAction { if (date != null) onSave(date, notes) },
+                enabled = !saving && date != null && notes.trim().length <= 4000
+            ) { Text(if (saving) "Saving…" else "Save symptom") }
         },
         dismissButton = {
             TextButton(onClick = userAction(onClose), enabled = !saving) { Text("Cancel") }

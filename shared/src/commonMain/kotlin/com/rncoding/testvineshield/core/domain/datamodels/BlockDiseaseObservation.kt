@@ -11,5 +11,9 @@ data class BlockDiseaseObservation(
     val status: DiseaseOccurrenceStatus,
     val notes: String?,
     val curedAt: LocalDate?,
-    val updatedAt: Long
+    val updatedAt: Long,
+    val diseaseCode: String?,
+    val oilSpot: ObservedOilSpot?
 )
+
+data class ObservedOilSpot(val observedOn: LocalDate, val notes: String)

@@ -262,6 +262,41 @@ class WeatherSourceMigrationTest {
         }
     }
 
+    @Test fun oilSpotRequiresOwnedDownyOccurrenceAndPreservesFirstEntry(): Unit = runBlocking {
+        val name = "r09f-oil-spot-${UUID.randomUUID()}.db"
+        seed(name)
+        val db = open(name)
+        try {
+            DiseaseCatalogueSeeder(db).seed()
+            val downy = assertNotNull(db.diseaseDao().getDiseaseByCode("grape_downy_mildew"))
+            val botrytis = assertNotNull(db.diseaseDao().getDiseaseByCode("grape_botrytis"))
+            val dao = db.diseaseOccurrenceDao()
+            val observedOn = LocalDate(2026, 6, 14)
+            val occurrence = DiseaseOccurrenceEntity(
+                occurrenceId = 0, diseaseId = downy.diseaseId, vineyardId = 10, blockId = 20,
+                observedAt = LocalDate(2026, 6, 15), severity = 12,
+                status = DiseaseOccurrenceStatus.ACTIVE, curedAt = null,
+                createdAt = 1000, updatedAt = 1000, notes = null
+            )
+            val downyId = assertNotNull(dao.insertOwnedBlockOccurrence(1, occurrence))
+            val botrytisId = assertNotNull(dao.insertOwnedBlockOccurrence(1, occurrence.copy(diseaseId = botrytis.diseaseId)))
+            assertFalse(dao.recordOwnedOilSpot(2, 10, 20, downyId, 1000, observedOn, "wrong owner"))
+            assertFalse(dao.recordOwnedOilSpot(1, 10, 20, botrytisId, 1000, observedOn, "wrong disease"))
+            assertFalse(dao.recordOwnedOilSpot(1, 10, 20, downyId, 999, observedOn, "stale"))
+            assertTrue(dao.recordOwnedOilSpot(1, 10, 20, downyId, 1000, observedOn, "near the row end"))
+            assertFalse(dao.recordOwnedOilSpot(1, 10, 20, downyId, 1000, observedOn, "replacement"))
+            val row = dao.observeOwnedBlockOccurrences(1, 10, 20).first().single { it.id == downyId }
+            assertEquals(observedOn, row.oilSpotDate)
+            assertEquals("near the row end", row.oilSpotNotes)
+            val evidence = dao.getRiskSymptomsForOccurrence(downyId).single()
+            assertEquals("downy_mildew_oil_spot", evidence.code)
+            assertEquals(observedOn, evidence.observedAt)
+        } finally {
+            db.close()
+            context.deleteDatabase(name)
+        }
+    }
+
     @Test fun locationABAAndNewerRequestsRejectOldCommitsWithoutDeletingHistory(): Unit=runBlocking {
         val name="r06b2-aba-${UUID.randomUUID()}.db"; seed(name); val db=open(name)
         try {

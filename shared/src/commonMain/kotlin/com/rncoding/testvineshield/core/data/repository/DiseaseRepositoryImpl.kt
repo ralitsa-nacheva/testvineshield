@@ -15,6 +15,7 @@ import com.rncoding.testvineshield.core.domain.datamodels.SymptomDomainModel
 import com.rncoding.testvineshield.core.domain.repository.DiseaseRepository
 import com.rncoding.testvineshield.core.domain.datamodels.enums.DiseaseOccurrenceStatus
 import kotlinx.datetime.LocalDate
+import com.rncoding.testvineshield.core.domain.datamodels.ObservedOilSpot
 import kotlinx.coroutines.flow.Flow
 import com.rncoding.testvineshield.core.domain.datamodels.BlockDiseaseObservation
 import kotlinx.coroutines.flow.map
@@ -33,7 +34,13 @@ class DiseaseRepositoryImpl(
         ownerId: Long, vineyardId: Long, blockId: Long
     ): Flow<List<BlockDiseaseObservation>> =
         diseaseOccurrenceDao.observeOwnedBlockOccurrences(ownerId, vineyardId, blockId).map { rows ->
-            rows.map { BlockDiseaseObservation(it.id, it.diseaseName, it.observedOn, it.severity, it.status, it.notes, it.curedAt, it.updatedAt) }
+            rows.map { row ->
+                BlockDiseaseObservation(
+                    row.id, row.diseaseName, row.observedOn, row.severity, row.status, row.notes, row.curedAt,
+                    row.updatedAt, row.diseaseCode,
+                    row.oilSpotDate?.let { ObservedOilSpot(it, row.oilSpotNotes.orEmpty()) }
+                )
+            }
         }
 
     override suspend fun createOwnedBlockOccurrence(ownerId: Long, occurrence: DiseaseOccurrenceDomainModel): Long? =
@@ -65,6 +72,13 @@ class DiseaseRepositoryImpl(
     ): Boolean = diseaseOccurrenceDao.updateOwnedBlockOccurrenceDetails(
         ownerId, vineyardId, blockId, occurrenceId, expectedUpdatedAt, observedOn, severity, notes, updatedAt
     ) == 1
+
+    override suspend fun recordOwnedOilSpot(
+        ownerId: Long, vineyardId: Long, blockId: Long, occurrenceId: Long,
+        expectedUpdatedAt: Long, observedOn: LocalDate, notes: String
+    ): Boolean = diseaseOccurrenceDao.recordOwnedOilSpot(
+        ownerId, vineyardId, blockId, occurrenceId, expectedUpdatedAt, observedOn, notes
+    )
 
     override fun observePredefinedDiseases(): Flow<List<DiseaseDomainModel>> =
         diseaseDao.observePredefinedDiseases().map { rows -> rows.map(diseaseMapper::toDomain) }
