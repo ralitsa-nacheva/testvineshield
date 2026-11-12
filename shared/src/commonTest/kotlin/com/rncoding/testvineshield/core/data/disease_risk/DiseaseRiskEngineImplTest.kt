@@ -338,6 +338,17 @@ class DiseaseRiskEngineImplTest {
     }
 
     @Test
+    fun unavailableSoilWetnessSkipsWithoutModelOrPersistence() = runBlocking {
+        val fixture = Fixture()
+        fixture.factory.result = DiseaseRiskInputResult.SoilWetnessEvidenceUnavailable
+
+        val skipped = assertIs<DiseaseRiskEngineResult.Skipped>(fixture.evaluate())
+        assertEquals(DiseaseRiskEngineResult.Skipped.SkipReason.SOIL_WETNESS_EVIDENCE_UNAVAILABLE, skipped.reason)
+        assertEquals(0, fixture.model.callCount)
+        assertEquals(0, fixture.persistence.saveCount)
+    }
+
+    @Test
     fun persistenceFailureIsReported() = runBlocking {
         val fixture = Fixture()
 

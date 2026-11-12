@@ -14,7 +14,8 @@ sealed interface DiseaseRiskEngineResult {
         enum class SkipReason {
             MONITORING_DISABLED,
             NO_NEW_WEATHER,
-            INSUFFICIENT_STAGE_EVIDENCE
+            INSUFFICIENT_STAGE_EVIDENCE,
+            SOIL_WETNESS_EVIDENCE_UNAVAILABLE
         }
     }
 

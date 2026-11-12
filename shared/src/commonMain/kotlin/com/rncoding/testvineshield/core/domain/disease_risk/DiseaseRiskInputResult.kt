@@ -36,6 +36,8 @@ sealed interface DiseaseRiskInputResult {
         val modelType: DiseaseRiskModelType
     ) : DiseaseRiskInputResult
 
+    data object SoilWetnessEvidenceUnavailable : DiseaseRiskInputResult
+
     data object InsufficientStageEvidence : DiseaseRiskInputResult
 
     data object NoNewWeather : DiseaseRiskInputResult

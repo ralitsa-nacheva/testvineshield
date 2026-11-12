@@ -114,6 +114,12 @@ class DiseaseRiskEngineImpl(
                             .SkipReason.MONITORING_DISABLED
                     )
 
+                DiseaseRiskInputResult.SoilWetnessEvidenceUnavailable ->
+                    return DiseaseRiskEngineResult.Skipped(
+                        reason = DiseaseRiskEngineResult.Skipped
+                            .SkipReason.SOIL_WETNESS_EVIDENCE_UNAVAILABLE
+                    )
+
                 DiseaseRiskInputResult.InsufficientStageEvidence ->
                     return DiseaseRiskEngineResult.Skipped(
                         reason = DiseaseRiskEngineResult.Skipped

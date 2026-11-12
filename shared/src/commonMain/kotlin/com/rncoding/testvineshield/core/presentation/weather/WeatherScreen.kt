@@ -150,6 +150,9 @@ fun WeatherScreen(
                         Text(modelLabel(config.modelType), style = MaterialTheme.typography.titleMedium)
                         Text("Block: ${snapshot.blocks.firstOrNull { it.blockId == config.blockId }?.name ?: "Unavailable"}")
                         Text("Monitoring start: ${config.monitoringStartDate}")
+                        if (config.modelType == DiseaseRiskModelType.DOWNY_MILDEW_PRIMARY) {
+                            Text("Evaluation unavailable: this app lacks the required soil-wetness input.")
+                        }
                         Text(if (config.enabled) "Saved setting: enabled" else "Saved setting: disabled")
                         val block = snapshot.blocks.firstOrNull { it.blockId == config.blockId }
                         Text("Recorded block stage: ${block?.phenologicalStage?.dbValue?.replace('_', ' ') ?: "Unknown"}")

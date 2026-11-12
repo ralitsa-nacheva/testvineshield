@@ -44,6 +44,12 @@ class DiseaseRiskInputFactoryImpl(
                 )
             }
 
+            // The primary model requires classified soil wetness. The production
+            // provider has no supported conversion from volumetric soil moisture.
+            if (modelType == DiseaseRiskModelType.DOWNY_MILDEW_PRIMARY) {
+                return DiseaseRiskInputResult.SoilWetnessEvidenceUnavailable
+            }
+
             // 2. Retrieve vineyard time zone.
             val timeZoneString = vineyardContextProvider.getTimeZone(
                 vineyardId = vineyardId
