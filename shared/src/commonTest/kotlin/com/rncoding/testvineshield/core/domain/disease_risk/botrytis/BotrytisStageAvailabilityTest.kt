@@ -101,9 +101,32 @@ class BotrytisStageAvailabilityTest {
         }
     }
 
-    private fun wetWeather(run: IntRange) = dryWeather().mapIndexed { index, point ->
-        point.copy(leafWetness = checkNotNull(point.leafWetness).copy(value = index in run))
+    @Test
+    fun flowerAndBerryEstimatesMatchIndependentEquationFixtures() {
+        assertEstimate(PhenologicalStage.FLOWERING, 23.7, 2, 86.63517205754418)
+        assertEstimate(PhenologicalStage.FLOWERING, 13.2, 2, 26.20237652518889)
+        assertEstimate(PhenologicalStage.RIPENING, 20.8, 14, 63.73946573044291)
+        assertEstimate(PhenologicalStage.RIPENING, 11.9, 14, 12.82822233310305)
     }
+
+    private fun assertEstimate(
+        stage: PhenologicalStage,
+        temperature: Double,
+        hours: Int,
+        expected: Double
+    ) {
+        val result = evaluate(stage, wetWeather(5 until 5 + hours, temperature)).result
+        assertEquals(DiseaseRiskEvaluationStatus.CALCULATED, result.evaluationStatus)
+        assertEquals(expected, checkNotNull(result.nativeRiskValue), absoluteTolerance = 1e-9)
+    }
+
+    private fun wetWeather(run: IntRange, temperature: Double = 20.0) =
+        dryWeather().mapIndexed { index, point ->
+            point.copy(
+                temperatureCelsius = temperature,
+                leafWetness = checkNotNull(point.leafWetness).copy(value = index in run)
+            )
+        }
 
     private fun evaluate(stage: PhenologicalStage?, weather: List<DiseaseRiskWeatherPoint>) =
         model.evaluate(

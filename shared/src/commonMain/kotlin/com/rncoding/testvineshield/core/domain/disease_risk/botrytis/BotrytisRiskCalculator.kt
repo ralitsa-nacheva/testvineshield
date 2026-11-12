@@ -244,7 +244,8 @@ class BotrytisRiskCalculator {
     companion object {
 
         /*
-         * Nair & Allen (1993) parameters.
+         * Nair & Allen (1993) parameters as transcribed by UC IPM.
+         * https://ipm.ucanr.edu/disease/database/grapebotrytis.html
          */
 
         const val FLOWER_MAX_INFECTION_PERCENT =
