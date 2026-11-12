@@ -12,6 +12,9 @@ import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskModelEval
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskModelState
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskModelType
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskResult
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Instant
 
 class DownyMildewSecondaryDiseaseRiskModel(
     private val calculator:
@@ -44,39 +47,25 @@ class DownyMildewSecondaryDiseaseRiskModel(
             )
         }
 
-        /*
-         * Secondary infection requires an ACTUAL
-         * observed oil spot.
-         *
-         * Predicted incubation dates must never
-         * satisfy this condition.
-         */
-        val activeOilSpotsObserved =
-            input.hostContext
-                .observedSymptoms
-                .any { symptom ->
-                    symptom.code ==
-                            DOWNY_MILDEW_OIL_SPOT_CODE
-                }
-
-        if (!activeOilSpotsObserved) {
-            return emptyEvaluation(
-                input = input,
-                calculatedAt = calculatedAt,
-                status =
-                    DiseaseRiskEvaluationStatus
-                        .NOT_APPLICABLE
-            )
+        val oilSpots = input.hostContext.observedSymptoms.filter {
+            it.code == DOWNY_MILDEW_OIL_SPOT_CODE
+        }
+        if (oilSpots.isEmpty()) {
+            return emptyEvaluation(input, calculatedAt, DiseaseRiskEvaluationStatus.NOT_APPLICABLE)
         }
 
-        if (input.hourlyWeather.isEmpty()) {
-            return emptyEvaluation(
-                input = input,
-                calculatedAt = calculatedAt,
-                status =
-                    DiseaseRiskEvaluationStatus
-                        .INSUFFICIENT_DATA
-            )
+        val firstHour = input.hourlyWeather.minOfOrNull { it.timestamp }
+            ?: return emptyEvaluation(input, calculatedAt, DiseaseRiskEvaluationStatus.INSUFFICIENT_DATA)
+        val zone = try {
+            TimeZone.of(input.timeZone)
+        } catch (_: IllegalArgumentException) {
+            return emptyEvaluation(input, calculatedAt, DiseaseRiskEvaluationStatus.INSUFFICIENT_DATA)
+        }
+        val firstLocalDate = Instant.fromEpochMilliseconds(firstHour).toLocalDateTime(zone).date
+        // A date-only observation on the first day cannot establish that it preceded the window.
+        val observedBeforeWindow = oilSpots.any { it.observedAt?.let { date -> date < firstLocalDate } == true }
+        if (!observedBeforeWindow) {
+            return emptyEvaluation(input, calculatedAt, DiseaseRiskEvaluationStatus.INSUFFICIENT_DATA)
         }
 
         val calculation =
@@ -327,7 +316,7 @@ class DownyMildewSecondaryDiseaseRiskModel(
     companion object {
 
         const val MODEL_VERSION =
-            "DOWNY_SECONDARY_GROWCARE_V2"
+            "DOWNY_SECONDARY_GROWCARE_V3"
 
         const val DOWNY_MILDEW_OIL_SPOT_CODE =
             "downy_mildew_oil_spot"

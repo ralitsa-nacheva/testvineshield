@@ -2,6 +2,8 @@ package com.rncoding.testvineshield.core.domain.disease_risk.downy
 
 import com.rncoding.testvineshield.core.domain.datamodels.enums.PhenologicalStage
 import com.rncoding.testvineshield.core.domain.disease_risk.*
+import kotlinx.datetime.LocalDate
+import kotlin.time.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -42,17 +44,34 @@ class DownyMildewSecondaryEvidenceTest {
         assertEquals(DiseaseRiskEvent.SECONDARY_SPORULATION_CONDITIONS, result.event)
     }
 
-    private fun evaluate(hours: List<DiseaseRiskWeatherPoint>): DiseaseRiskResult =
+    @Test
+    fun dateOnlyObservationMustPredateTheEarliestVineyardLocalWeatherDate() {
+        val start = Instant.parse("2026-06-15T21:00:00Z").toEpochMilliseconds()
+        val hours = List(4) { hour -> point(hour).copy(timestamp = start + hour * 3_600_000L) }
+        for (date in listOf(null, LocalDate(2026, 6, 16), LocalDate(2026, 6, 17))) {
+            val result = evaluate(hours.reversed(), observedOn = date, zone = "Europe/Sofia")
+            assertEquals(DiseaseRiskEvaluationStatus.INSUFFICIENT_DATA, result.evaluationStatus)
+            assertNull(result.event)
+        }
+        val earlier = evaluate(hours, observedOn = LocalDate(2026, 6, 15), zone = "Europe/Sofia")
+        assertEquals(DiseaseRiskEvent.SECONDARY_SPORULATION_CONDITIONS, earlier.event)
+    }
+
+    private fun evaluate(
+        hours: List<DiseaseRiskWeatherPoint>,
+        observedOn: LocalDate? = LocalDate(1969, 12, 31),
+        zone: String = "UTC"
+    ): DiseaseRiskResult =
         model.evaluate(
             input = DiseaseRiskInput(
-                diseaseId = 1, vineyardId = 2, blockId = 3, timeZone = "UTC",
+                diseaseId = 1, vineyardId = 2, blockId = 3, timeZone = zone,
                 hourlyWeather = hours, dailyWeather = emptyList(),
                 hostContext = DiseaseRiskHostContext(
                     phenologicalStage = null, activeOccurrence = null,
                     observedSymptoms = listOf(
                         DiseaseRiskSymptomEvidence(
                             1, DownyMildewSecondaryDiseaseRiskModel.DOWNY_MILDEW_OIL_SPOT_CODE,
-                            "Oil spot", "Leaf", PhenologicalStage.FLOWERING, null, null, null
+                            "Oil spot", "Leaf", PhenologicalStage.FLOWERING, observedOn, null, null
                         )
                     )
                 )
