@@ -155,15 +155,7 @@ class DownyMildewSecondaryDiseaseRiskModel(
         DownyMildewSecondaryInfectionCalculator.Result
     ): DiseaseRiskEvaluationStatus {
 
-        /*
-         * Sporulation happened, but subsequent
-         * leaf-wetness evidence was insufficient
-         * to determine infection.
-         */
-        if (
-            result.sporulationConditionsMet &&
-            result.infectionConditionsMet == null
-        ) {
+        if (result.infectionConditionsMet == null) {
             return DiseaseRiskEvaluationStatus
                 .INSUFFICIENT_DATA
         }
@@ -216,10 +208,7 @@ class DownyMildewSecondaryDiseaseRiskModel(
         DownyMildewSecondaryInfectionCalculator.Result
     ): DiseaseRiskConfidence {
 
-        if (
-            calculation.sporulationConditionsMet &&
-            calculation.infectionConditionsMet == null
-        ) {
+        if (calculation.infectionConditionsMet == null) {
             return DiseaseRiskConfidence.LOW
         }
 
@@ -338,7 +327,7 @@ class DownyMildewSecondaryDiseaseRiskModel(
     companion object {
 
         const val MODEL_VERSION =
-            "DOWNY_SECONDARY_GROWCARE_V1"
+            "DOWNY_SECONDARY_GROWCARE_V2"
 
         const val DOWNY_MILDEW_OIL_SPOT_CODE =
             "downy_mildew_oil_spot"

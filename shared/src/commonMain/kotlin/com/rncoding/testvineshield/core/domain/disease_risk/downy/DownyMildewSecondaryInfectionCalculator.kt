@@ -2,6 +2,7 @@ package com.rncoding.testvineshield.core.domain.disease_risk.downy
 
 import com.rncoding.testvineshield.core.domain.disease_risk.ContinuousWetPeriodExtractor
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskWeatherPoint
+import com.rncoding.testvineshield.core.domain.disease_risk.HourlyWeatherContinuityValidator
 
 class DownyMildewSecondaryInfectionCalculator {
 
@@ -34,7 +35,8 @@ class DownyMildewSecondaryInfectionCalculator {
             )
         }
 
-        if (input.weather.isEmpty()) {
+        val weather = input.weather.sortedBy { it.timestamp }
+        if (!HourlyWeatherContinuityValidator.isStrictlyContinuous(weather)) {
             return Result(
                 activeOilSpotsObserved = true,
                 longestSporulationPeriodHours = 0,
@@ -46,17 +48,13 @@ class DownyMildewSecondaryInfectionCalculator {
             )
         }
 
-        val weather =
-            input.weather.sortedBy {
-                it.timestamp
-            }
-
         val sporulation =
             evaluateSporulation(
                 weather = weather
             )
 
         if (!sporulation.conditionsMet) {
+            val missingInputsCouldQualify = evaluateSporulation(weather, allowUnknown = true).conditionsMet
             return Result(
                 activeOilSpotsObserved = true,
                 longestSporulationPeriodHours =
@@ -65,7 +63,7 @@ class DownyMildewSecondaryInfectionCalculator {
                 sporulationCompletedAt = null,
                 maximumWetDegreeHours = null,
                 wetnessThresholdMet = null,
-                infectionConditionsMet = false
+                infectionConditionsMet = if (missingInputsCouldQualify) null else false
             )
         }
 
@@ -159,7 +157,8 @@ class DownyMildewSecondaryInfectionCalculator {
     }
 
     private fun evaluateSporulation(
-        weather: List<DiseaseRiskWeatherPoint>
+        weather: List<DiseaseRiskWeatherPoint>,
+        allowUnknown: Boolean = false
     ): SporulationEvaluation {
 
         var currentHours = 0
@@ -175,7 +174,8 @@ class DownyMildewSecondaryInfectionCalculator {
 
             val qualifies =
                 qualifiesForSporulation(
-                    point = point
+                    point = point,
+                    allowUnknown = allowUnknown
                 )
 
             if (!qualifies) {
@@ -229,18 +229,16 @@ class DownyMildewSecondaryInfectionCalculator {
     }
 
     private fun qualifiesForSporulation(
-        point: DiseaseRiskWeatherPoint
+        point: DiseaseRiskWeatherPoint,
+        allowUnknown: Boolean
     ): Boolean {
+        val temperature = point.temperatureCelsius.takeIf { it.isFinite() }
+        val humidity = point.relativeHumidityPercent?.takeIf { it in 0.0..100.0 }
+        if (point.isDay == true || (temperature != null && temperature <= MIN_SPORULATION_TEMP_C)) return false
+        if (humidity != null && humidity <= MIN_SPORULATION_RH_PERCENT) return false
 
-        val relativeHumidity =
-            point.relativeHumidityPercent
-
-        return point.isDay == false &&
-                relativeHumidity != null &&
-                point.temperatureCelsius >=
-                MIN_SPORULATION_TEMP_C &&
-                relativeHumidity >=
-                MIN_SPORULATION_RH_PERCENT
+        // The second scan asks whether missing evidence could change a negative result.
+        return allowUnknown || (point.isDay == false && temperature != null && humidity != null)
     }
 
     private data class SporulationEvaluation(
