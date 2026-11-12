@@ -1,6 +1,9 @@
 package com.rncoding.testvineshield.core.data.disease_risk
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.datetime.LocalDate
+import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseCatalogueCodes
+import com.rncoding.testvineshield.core.domain.disease_risk.MonitoringDraftSaveOutcome
 import com.rncoding.testvineshield.core.data.local.database.daos.DiseaseRiskMonitoringConfigurationDao
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskEvaluationCoordinator
 import kotlinx.coroutines.flow.map
@@ -12,6 +15,15 @@ class DiseaseRiskMonitoringConfigurationRepositoryImpl(
     private val dao: DiseaseRiskMonitoringConfigurationDao,
     private val coordinator: DiseaseRiskEvaluationCoordinator
 ) : DiseaseRiskMonitoringConfigurationRepository {
+    override suspend fun saveBotrytisDraft(
+        ownerId: Long, vineyardId: Long, blockId: Long, startDate: LocalDate
+    ): MonitoringDraftSaveOutcome = coordinator.withExclusiveEvaluation {
+        dao.saveDisabledDraft(
+            ownerId, vineyardId, blockId, DiseaseCatalogueCodes.GRAPE_BOTRYTIS,
+            DiseaseRiskModelType.BOTRYTIS.name, startDate.toString()
+        )
+    }
+
     override fun observeConfigurationsForVineyard(vineyardId: Long): Flow<List<DiseaseRiskMonitoringConfiguration>> =
         dao.observeConfigurationsForVineyard(vineyardId).map { rows -> rows.map(DiseaseRiskMonitoringConfigurationMapper::toDomain) }
 

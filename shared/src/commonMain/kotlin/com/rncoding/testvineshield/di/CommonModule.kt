@@ -1038,6 +1038,7 @@ val commonModule =
         viewModel { (key: com.rncoding.testvineshield.core.domain.usecases.activity.SprayKey) -> SprayExportViewModel(key, get(), get()) }
         factory { ObserveOwnedWeatherUseCase(get(), get(), get(), get(), get(), get(), get(),get()) }
         factory { RefreshOwnedWeatherUseCase(get(), get(), get(), get(), get()) }
-        viewModel { (vineyardId: Long) -> WeatherViewModel(vineyardId, get(), get(), get()) }
+        factory { com.rncoding.testvineshield.core.domain.usecases.weather.SaveBotrytisMonitoringDraftUseCase(get(), get()) }
+        viewModel { (vineyardId: Long) -> WeatherViewModel(vineyardId, get(), get(), get(), get()) }
 
     }

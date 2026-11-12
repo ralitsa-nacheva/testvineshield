@@ -5,6 +5,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import com.rncoding.testvineshield.core.domain.usecases.weather.VineyardWeatherSnapshot
+import com.rncoding.testvineshield.core.presentation.components.RecordChoice
+import com.rncoding.testvineshield.core.presentation.root.LocalUserActivity
+import kotlinx.datetime.LocalDate
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleStartEffect
@@ -22,11 +29,17 @@ fun WeatherScreenRoot(ownerId: Long, vineyardId: Long, onBack: () -> Unit) {
     val vm = koinViewModel<WeatherViewModel>(key = "weather-$ownerId-$vineyardId", parameters = { parametersOf(vineyardId) })
     val state by vm.state.collectAsStateWithLifecycle()
     LifecycleStartEffect(vm) { vm.start(); onStopOrDispose { vm.stop() } }
-    WeatherScreen(state, onBack, vm::retry, vm::refresh)
+    WeatherScreen(state, onBack, vm::retry, vm::refresh, vm::saveMonitoringDraft)
 }
 
 @Composable
-fun WeatherScreen(state: WeatherScreenState, onBack: () -> Unit, onRetry: () -> Unit, onRefresh: () -> Unit) {
+fun WeatherScreen(
+    state: WeatherScreenState,
+    onBack: () -> Unit,
+    onRetry: () -> Unit,
+    onRefresh: () -> Unit,
+    onSaveDraft: (Long, LocalDate) -> Unit
+) {
     Scaffold(topBar = { RecordTopBar("Weather and monitoring", onBack) }) { padding ->
         LazyColumn(Modifier.padding(padding).fillMaxSize().widthIn(max = 840.dp), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (state.loading || state.refreshing) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
@@ -120,12 +133,17 @@ fun WeatherScreen(state: WeatherScreenState, onBack: () -> Unit, onRetry: () -> 
                 }
                 item {
                     Text("Saved monitoring configuration", style = MaterialTheme.typography.titleLarge)
-                    Text("Read-only in this checkpoint. Enabled means a saved preference, not that a validated model has run or that the vineyard is safe.")
+                    Text("An enabled setting does not confirm that a validated model has run.")
                     Text("Disease risk is not assessed by this screen. No configurations or alerts must never be interpreted as no disease risk.")
                     if (snapshot.monitoringError != null) {
                         Text("Monitoring settings could not be read: ${snapshot.monitoringError.userMessage}", color = MaterialTheme.colorScheme.error)
                         TextButton(onClick = userAction(onRetry)) { Text("Retry loading settings") }
                     } else if (snapshot.configurations.isEmpty()) Text("No monitoring configurations saved.")
+                }
+                if (snapshot.blocks.isNotEmpty() && snapshot.monitoringError == null) {
+                    item(key = "botrytis-monitoring-draft") {
+                        BotrytisDraftEditor(snapshot, state.savingMonitoringDraft, state.monitoringDraftMessage, onSaveDraft)
+                    }
                 }
                 items(snapshot.configurations) { config ->
                     Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -144,6 +162,55 @@ fun WeatherScreen(state: WeatherScreenState, onBack: () -> Unit, onRetry: () -> 
         }
     }
 }
+@Composable
+private fun BotrytisDraftEditor(
+    snapshot: VineyardWeatherSnapshot,
+    saving: Boolean,
+    message: String?,
+    onSave: (Long, LocalDate) -> Unit
+) {
+    var selectedId by rememberSaveable(snapshot.vineyard.vineyardId) { mutableStateOf<Long?>(null) }
+    var dateText by rememberSaveable(snapshot.vineyard.vineyardId) { mutableStateOf("") }
+    val selected = snapshot.blocks.firstOrNull { it.blockId == selectedId }
+    val date = try { LocalDate.parse(dateText.trim()) } catch (_: IllegalArgumentException) { null }
+    val userActivity = LocalUserActivity.current
+
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Botrytis monitoring draft", style = MaterialTheme.typography.titleMedium)
+        Text("Save a start date for a block. Monitoring stays off.")
+        RecordChoice(
+            label = "Block",
+            selected = selected,
+            values = snapshot.blocks,
+            enabled = !saving,
+            text = { it.name },
+            changed = { block ->
+                selectedId = block?.blockId
+                dateText = snapshot.configurations.firstOrNull {
+                    it.blockId == block?.blockId && it.modelType == DiseaseRiskModelType.BOTRYTIS && !it.enabled
+                }?.monitoringStartDate?.toString().orEmpty()
+            },
+            allowUnknown = false,
+            nullLabel = "Choose a block"
+        )
+        OutlinedTextField(
+            value = dateText,
+            onValueChange = { userActivity(); dateText = it },
+            label = { Text("Start date (YYYY-MM-DD)") },
+            enabled = !saving && selected != null,
+            singleLine = true,
+            isError = dateText.isNotBlank() && date == null,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii),
+            modifier = Modifier.fillMaxWidth()
+        )
+        Button(
+            onClick = userAction { if (selected != null && date != null) onSave(selected.blockId, date) },
+            enabled = !saving && selected != null && date != null
+        ) { Text(if (saving) "Saving…" else "Save draft") }
+        if (message != null) Text(message)
+    }
+}
+
 @Composable
 private fun CoverageText(coverage: HourCoverage, zone: String) {
     Text("${coverage.count} cached hours · ${coverage.discontinuities} discontinuities between stored timestamps")

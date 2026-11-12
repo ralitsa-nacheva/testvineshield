@@ -34,6 +34,11 @@ class VineyardDiseaseRiskEvaluatorImplTest {
         override fun observeConfigurationsForVineyard(vineyardId: Long): kotlinx.coroutines.flow.Flow<List<DiseaseRiskMonitoringConfiguration>> =
             kotlinx.coroutines.flow.flow { emit(configurations.filter { it.vineyardId == vineyardId }) }
 
+        override suspend fun saveBotrytisDraft(
+            ownerId: Long, vineyardId: Long, blockId: Long, startDate: LocalDate
+        ): com.rncoding.testvineshield.core.domain.disease_risk.MonitoringDraftSaveOutcome =
+            error("Draft saving is outside this evaluator test.")
+
         var configurations =
             emptyList<DiseaseRiskMonitoringConfiguration>()
 

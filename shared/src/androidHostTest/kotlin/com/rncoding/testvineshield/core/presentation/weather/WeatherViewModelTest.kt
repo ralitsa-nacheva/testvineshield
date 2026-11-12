@@ -19,6 +19,7 @@ import kotlin.test.*
 class WeatherViewModelTest {
     private val observe = mockk<ObserveOwnedWeatherUseCase>()
     private val refresh = mockk<RefreshOwnedWeatherUseCase>()
+    private val saveDraft = mockk<SaveBotrytisMonitoringDraftUseCase>()
     private val clock = mockk<AppClock>()
     private val snapshot = mockk<VineyardWeatherSnapshot>()
     private lateinit var dispatcher: TestDispatcher
@@ -33,7 +34,7 @@ class WeatherViewModelTest {
         try { store.clear(); dispatcher.scheduler.runCurrent(); dispatcher.scheduler.advanceUntilIdle() }
         finally { Dispatchers.resetMain() }
     }
-    private fun vm() = WeatherViewModel(10, observe, refresh, clock).also { store.put("weather", it) }
+    private fun vm() = WeatherViewModel(10, observe, refresh, clock, saveDraft).also { store.put("weather", it) }
     @Test fun startDoesNotFetchAndTicksAgeWithoutUserInput() = runTest {
         val v = vm(); v.start(); v.start(); runCurrent()
         assertEquals(snapshot, v.state.value.snapshot); assertEquals(1_000_000L,v.state.value.now)

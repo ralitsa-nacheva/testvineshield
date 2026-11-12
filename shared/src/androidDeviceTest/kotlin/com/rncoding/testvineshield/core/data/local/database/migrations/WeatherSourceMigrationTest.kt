@@ -9,6 +9,8 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.rncoding.testvineshield.core.data.local.database.*
 import com.rncoding.testvineshield.core.data.local.mappers.*
 import com.rncoding.testvineshield.core.data.remote.WeatherResponseFixtures
+import com.rncoding.testvineshield.core.data.local.database.seed.DiseaseCatalogueSeeder
+import com.rncoding.testvineshield.core.domain.disease_risk.MonitoringDraftSaveOutcome
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.flow.first
 import org.junit.Test
@@ -138,6 +140,41 @@ class WeatherSourceMigrationTest {
         } finally {
             fresh.close()
             context.deleteDatabase(freshName)
+        }
+    }
+
+    @Test fun botrytisDraftIsOwnerScopedAndNeverOverwritesAnEnabledConfiguration(): Unit = runBlocking {
+        val name = "r07h-monitoring-draft-${UUID.randomUUID()}.db"
+        seed(name)
+        val db = open(name)
+        try {
+            val dao = db.diseaseRiskMonitoringConfigurationDao()
+            val code = "grape_botrytis"
+            val model = "BOTRYTIS"
+            assertEquals(MonitoringDraftSaveOutcome.DISEASE_UNAVAILABLE,
+                dao.saveDisabledDraft(1, 10, 20, "missing_catalogue_code", model, "2026-06-15"))
+            DiseaseCatalogueSeeder(db).seed()
+            val diseaseId = assertNotNull(dao.catalogueDiseaseId(code))
+            assertEquals(MonitoringDraftSaveOutcome.BLOCK_UNAVAILABLE,
+                dao.saveDisabledDraft(2, 10, 20, code, model, "2026-06-15"))
+            assertEquals(MonitoringDraftSaveOutcome.BLOCK_UNAVAILABLE,
+                dao.saveDisabledDraft(1, 11, 20, code, model, "2026-06-15"))
+            assertTrue(dao.observeConfigurationsForVineyard(10).first().isEmpty())
+            assertEquals(MonitoringDraftSaveOutcome.SAVED,
+                dao.saveDisabledDraft(1, 10, 20, code, model, "2026-06-15"))
+            assertEquals(MonitoringDraftSaveOutcome.SAVED,
+                dao.saveDisabledDraft(1, 10, 20, code, model, "2026-06-16"))
+            val saved = assertNotNull(dao.getConfiguration(10, 20, diseaseId, model))
+            assertFalse(saved.enabled)
+            assertEquals("2026-06-16", saved.monitoringStartDate)
+            assertTrue(dao.getEnabledConfigurationsForVineyard(10).isEmpty())
+            dao.upsertConfiguration(saved.copy(enabled = true))
+            assertEquals(MonitoringDraftSaveOutcome.ALREADY_ENABLED,
+                dao.saveDisabledDraft(1, 10, 20, code, model, "2026-06-17"))
+            assertEquals(saved.copy(enabled = true), dao.getConfiguration(10, 20, diseaseId, model))
+        } finally {
+            db.close()
+            context.deleteDatabase(name)
         }
     }
 

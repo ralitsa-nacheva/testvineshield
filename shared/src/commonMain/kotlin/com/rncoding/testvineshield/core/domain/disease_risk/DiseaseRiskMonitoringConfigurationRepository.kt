@@ -1,7 +1,12 @@
 package com.rncoding.testvineshield.core.domain.disease_risk
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.datetime.LocalDate
 interface DiseaseRiskMonitoringConfigurationRepository {
+    suspend fun saveBotrytisDraft(
+        ownerId: Long, vineyardId: Long, blockId: Long, startDate: LocalDate
+    ): MonitoringDraftSaveOutcome
+
     /** All saved configurations, including disabled records. No model execution. */
     fun observeConfigurationsForVineyard(vineyardId: Long): Flow<List<DiseaseRiskMonitoringConfiguration>>
 
