@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.rncoding.testvineshield.core.domain.datamodels.enums.DiseaseOccurrenceStatus
 import com.rncoding.testvineshield.core.presentation.components.RecordChoice
 import com.rncoding.testvineshield.core.presentation.components.RecordTopBar
 import com.rncoding.testvineshield.core.presentation.root.LocalUserActivity
@@ -38,6 +39,46 @@ fun BlockDiseaseObservationsScreen(
         onDispose { busyChanged(false) }
     }
 
+    state.statusObservation?.let { observation ->
+        var selected by rememberSaveable(observation.id, observation.updatedAt) {
+            mutableStateOf(observation.status)
+        }
+        AlertDialog(
+            onDismissRequest = model::closeStatus,
+            title = { Text(observation.diseaseName) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Observed ${observation.observedOn} · ${observation.severity}% affected")
+                    Text("Current status: ${observation.status.label()}")
+                    observation.curedAt?.let { Text("Resolved on $it") }
+                    observation.notes?.let { Text(it, maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) }
+                    RecordChoice(
+                        label = "New status", selected = selected,
+                        values = DiseaseOccurrenceStatus.entries, enabled = !state.saving,
+                        text = { it.label() }, changed = { if (it != null) selected = it },
+                        allowUnknown = false
+                    )
+                    if (selected == DiseaseOccurrenceStatus.RESOLVED && selected != observation.status) {
+                        Text("Resolution is dated today in the vineyard’s time zone.")
+                    }
+                    if (selected != DiseaseOccurrenceStatus.ACTIVE && selected != observation.status) {
+                        Text("Only active observations are included in active disease summaries.")
+                    }
+                    state.statusError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = userAction { model.saveStatus(selected) },
+                    enabled = !state.saving && selected != observation.status
+                ) { Text(if (state.saving) "Saving…" else "Save status") }
+            },
+            dismissButton = {
+                TextButton(onClick = userAction(model::closeStatus), enabled = !state.saving) { Text("Cancel") }
+            }
+        )
+    }
+
     Scaffold(topBar = { RecordTopBar("Disease observations", { if (!model.state.value.saving) onBack() }, !state.saving) }) { padding ->
         LazyColumn(
             Modifier.padding(padding).fillMaxSize(),
@@ -59,8 +100,13 @@ fun BlockDiseaseObservationsScreen(
                         OutlinedCard(Modifier.fillMaxWidth()) {
                             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Text(observation.diseaseName, style = MaterialTheme.typography.titleMedium)
-                                Text("${observation.observedOn} · ${observation.severity}% affected · ${observation.status.dbValue}")
+                                Text("${observation.observedOn} · ${observation.severity}% affected · ${observation.status.label()}")
+                                observation.curedAt?.let { Text("Resolved on $it") }
                                 observation.notes?.let { Text(it) }
+                                TextButton(
+                                    onClick = userAction { model.openStatus(observation.id) },
+                                    enabled = !state.saving
+                                ) { Text("Change status") }
                             }
                         }
                     }
@@ -131,4 +177,10 @@ private fun ObservationForm(
         ) { Text(if (state.saving) "Saving…" else "Save active observation") }
         state.saveError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
     }
+}
+
+private fun DiseaseOccurrenceStatus.label(): String = when (this) {
+    DiseaseOccurrenceStatus.ACTIVE -> "Active"
+    DiseaseOccurrenceStatus.MONITORING -> "Monitoring"
+    DiseaseOccurrenceStatus.RESOLVED -> "Resolved"
 }

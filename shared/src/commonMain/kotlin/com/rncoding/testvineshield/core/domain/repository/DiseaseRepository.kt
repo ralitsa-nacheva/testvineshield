@@ -4,6 +4,8 @@ import com.rncoding.testvineshield.core.domain.datamodels.DiseaseAlertDomainMode
 import com.rncoding.testvineshield.core.domain.datamodels.DiseaseDomainModel
 import com.rncoding.testvineshield.core.domain.datamodels.DiseaseOccurrenceDomainModel
 import com.rncoding.testvineshield.core.domain.datamodels.SymptomDomainModel
+import com.rncoding.testvineshield.core.domain.datamodels.enums.DiseaseOccurrenceStatus
+import kotlinx.datetime.LocalDate
 import kotlinx.coroutines.flow.Flow
 import com.rncoding.testvineshield.core.domain.datamodels.BlockDiseaseObservation
 
@@ -13,6 +15,17 @@ interface DiseaseRepository {
     ): Flow<List<BlockDiseaseObservation>>
 
     suspend fun createOwnedBlockOccurrence(ownerId: Long, occurrence: DiseaseOccurrenceDomainModel): Long?
+
+    suspend fun updateOwnedBlockOccurrenceStatus(
+        ownerId: Long,
+        vineyardId: Long,
+        blockId: Long,
+        occurrenceId: Long,
+        expectedUpdatedAt: Long,
+        status: DiseaseOccurrenceStatus,
+        curedAt: LocalDate?,
+        updatedAt: Long
+    ): Boolean
 
     fun observePredefinedDiseases(): Flow<List<DiseaseDomainModel>>
 

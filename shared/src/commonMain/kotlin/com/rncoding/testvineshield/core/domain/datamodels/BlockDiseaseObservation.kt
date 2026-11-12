@@ -9,5 +9,7 @@ data class BlockDiseaseObservation(
     val observedOn: LocalDate,
     val severity: Int,
     val status: DiseaseOccurrenceStatus,
-    val notes: String?
+    val notes: String?,
+    val curedAt: LocalDate?,
+    val updatedAt: Long
 )

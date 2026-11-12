@@ -203,6 +203,38 @@ class WeatherSourceMigrationTest {
             assertEquals(savedId, saved.id)
             assertEquals(occurrence.notes, saved.notes)
             assertEquals(occurrence.observedAt, saved.observedOn)
+            val active = DiseaseOccurrenceStatus.ACTIVE
+            val monitoring = DiseaseOccurrenceStatus.MONITORING
+            val resolved = DiseaseOccurrenceStatus.RESOLVED
+            val resolutionDate = LocalDate.parse("2026-11-12")
+            assertEquals(0, dao.updateOwnedBlockOccurrenceStatus(
+                2, 10, 20, savedId, saved.updatedAt, resolved, resolutionDate, saved.updatedAt
+            ))
+            assertEquals(0, dao.updateOwnedBlockOccurrenceStatus(
+                1, 11, 20, savedId, saved.updatedAt, resolved, resolutionDate, saved.updatedAt
+            ))
+            assertEquals(1, dao.updateOwnedBlockOccurrenceStatus(
+                1, 10, 20, savedId, saved.updatedAt, resolved, resolutionDate, saved.updatedAt
+            ))
+            assertEquals(0, dao.updateOwnedBlockOccurrenceStatus(
+                1, 10, 20, savedId, saved.updatedAt, monitoring, null, saved.updatedAt
+            ))
+            val closed = dao.observeOwnedBlockOccurrences(1, 10, 20).first().single()
+            assertEquals(resolved, closed.status)
+            assertEquals(resolutionDate, closed.curedAt)
+            assertTrue(closed.updatedAt > saved.updatedAt)
+            assertEquals(1, dao.updateOwnedBlockOccurrenceStatus(
+                1, 10, 20, savedId, closed.updatedAt, monitoring, null, closed.updatedAt
+            ))
+            val underReview = dao.observeOwnedBlockOccurrences(1, 10, 20).first().single()
+            assertEquals(monitoring, underReview.status)
+            assertNull(underReview.curedAt)
+            assertEquals(1, dao.updateOwnedBlockOccurrenceStatus(
+                1, 10, 20, savedId, underReview.updatedAt, active, null, underReview.updatedAt
+            ))
+            val reopened = dao.observeOwnedBlockOccurrences(1, 10, 20).first().single()
+            assertEquals(saved.copy(updatedAt = reopened.updatedAt), reopened)
+            assertEquals(occurrence.createdAt, dao.getDiseaseOccurrenceById(savedId)?.createdAt)
             assertTrue(dao.observeOwnedBlockOccurrences(2, 10, 20).first().isEmpty())
             assertTrue(dao.observeOwnedBlockOccurrences(1, 11, 20).first().isEmpty())
         } finally {

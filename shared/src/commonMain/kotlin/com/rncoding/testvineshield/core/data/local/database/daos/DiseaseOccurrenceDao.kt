@@ -21,13 +21,16 @@ data class OwnedBlockDiseaseObservationRow(
     @ColumnInfo(name = "observed_at") val observedOn: LocalDate,
     val severity: Int,
     val status: DiseaseOccurrenceStatus,
-    val notes: String?
+    val notes: String?,
+    @ColumnInfo(name = "cured_at") val curedAt: LocalDate?,
+    @ColumnInfo(name = "updated_at") val updatedAt: Long
 )
 
 @Dao
 interface DiseaseOccurrenceDao {
     @Query("""
-        SELECT o.occurrence_id, d.name AS disease_name, o.observed_at, o.severity, o.status, o.notes
+        SELECT o.occurrence_id, d.name AS disease_name, o.observed_at, o.severity, o.status, o.notes,
+               o.cured_at, o.updated_at
         FROM disease_occurrence o
         JOIN block b ON b.block_id = o.block_id AND b.vineyard_id = o.vineyard_id
         JOIN vineyard v ON v.vineyard_id = b.vineyard_id
@@ -61,6 +64,32 @@ interface DiseaseOccurrenceDao {
         if (!isPredefinedObservationDisease(occurrence.diseaseId)) return null
         return insertOccurrence(occurrence)
     }
+
+    @Query("""
+        UPDATE disease_occurrence
+        SET status = :status, cured_at = :curedAt, updated_at = MAX(:updatedAt, updated_at + 1)
+        WHERE occurrence_id = :occurrenceId
+          AND vineyard_id = :vineyardId AND block_id = :blockId
+          AND updated_at = :expectedUpdatedAt AND status != :status
+          AND (:curedAt IS NULL OR :curedAt >= observed_at)
+          AND EXISTS (
+              SELECT 1 FROM block b JOIN vineyard v ON v.vineyard_id = b.vineyard_id
+              WHERE v.user_id = :ownerId AND v.vineyard_id = :vineyardId AND b.block_id = :blockId
+          )
+          AND EXISTS (
+              SELECT 1 FROM disease d WHERE d.disease_id = disease_occurrence.disease_id AND d.is_predefined = 1
+          )
+    """)
+    suspend fun updateOwnedBlockOccurrenceStatus(
+        ownerId: Long,
+        vineyardId: Long,
+        blockId: Long,
+        occurrenceId: Long,
+        expectedUpdatedAt: Long,
+        status: DiseaseOccurrenceStatus,
+        curedAt: LocalDate?,
+        updatedAt: Long
+    ): Int
 
     @Upsert
     @Transaction

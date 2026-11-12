@@ -13,6 +13,8 @@ import com.rncoding.testvineshield.core.domain.datamodels.DiseaseDomainModel
 import com.rncoding.testvineshield.core.domain.datamodels.DiseaseOccurrenceDomainModel
 import com.rncoding.testvineshield.core.domain.datamodels.SymptomDomainModel
 import com.rncoding.testvineshield.core.domain.repository.DiseaseRepository
+import com.rncoding.testvineshield.core.domain.datamodels.enums.DiseaseOccurrenceStatus
+import kotlinx.datetime.LocalDate
 import kotlinx.coroutines.flow.Flow
 import com.rncoding.testvineshield.core.domain.datamodels.BlockDiseaseObservation
 import kotlinx.coroutines.flow.map
@@ -31,11 +33,24 @@ class DiseaseRepositoryImpl(
         ownerId: Long, vineyardId: Long, blockId: Long
     ): Flow<List<BlockDiseaseObservation>> =
         diseaseOccurrenceDao.observeOwnedBlockOccurrences(ownerId, vineyardId, blockId).map { rows ->
-            rows.map { BlockDiseaseObservation(it.id, it.diseaseName, it.observedOn, it.severity, it.status, it.notes) }
+            rows.map { BlockDiseaseObservation(it.id, it.diseaseName, it.observedOn, it.severity, it.status, it.notes, it.curedAt, it.updatedAt) }
         }
 
     override suspend fun createOwnedBlockOccurrence(ownerId: Long, occurrence: DiseaseOccurrenceDomainModel): Long? =
         diseaseOccurrenceDao.insertOwnedBlockOccurrence(ownerId, diseaseOccurrenceMapper.toEntity(occurrence))
+
+    override suspend fun updateOwnedBlockOccurrenceStatus(
+        ownerId: Long,
+        vineyardId: Long,
+        blockId: Long,
+        occurrenceId: Long,
+        expectedUpdatedAt: Long,
+        status: DiseaseOccurrenceStatus,
+        curedAt: LocalDate?,
+        updatedAt: Long
+    ): Boolean = diseaseOccurrenceDao.updateOwnedBlockOccurrenceStatus(
+        ownerId, vineyardId, blockId, occurrenceId, expectedUpdatedAt, status, curedAt, updatedAt
+    ) == 1
 
     override fun observePredefinedDiseases(): Flow<List<DiseaseDomainModel>> =
         diseaseDao.observePredefinedDiseases().map { rows -> rows.map(diseaseMapper::toDomain) }
