@@ -106,24 +106,14 @@ class PowderyMildewUcDavisCalculator {
         highTemperaturePenalty: Boolean
     ): Evaluation {
 
-        var index =
-            previousState.currentIndex
-
-        if (qualifyingDay) {
-            index += DAILY_INCREASE
-        } else {
-            index -= DAILY_DECREASE
+        // Apply the revised heat threshold with the UC IPM limit of one daily loss.
+        val dailyChange = when {
+            !qualifyingDay -> -DAILY_DECREASE
+            highTemperaturePenalty -> DAILY_INCREASE - HIGH_TEMP_DECREASE
+            else -> DAILY_INCREASE
         }
-
-        if (highTemperaturePenalty) {
-            index -= HIGH_TEMP_DECREASE
-        }
-
-        index =
-            index.coerceIn(
-                MIN_RISK_INDEX,
-                MAX_RISK_INDEX
-            )
+        val index = (previousState.currentIndex + dailyChange)
+            .coerceIn(MIN_RISK_INDEX, MAX_RISK_INDEX)
 
         val newState =
             previousState.copy(
@@ -205,7 +195,7 @@ class PowderyMildewUcDavisCalculator {
     companion object {
 
         const val MODEL_VERSION =
-            "UC_DAVIS_GUBLER_THOMAS_HOURLY_REVISED_V1"
+            "UC_DAVIS_GUBLER_THOMAS_HOURLY_REVISED_V2"
 
         const val MIN_CONDUCIVE_TEMP_C = 21.0
         const val MAX_CONDUCIVE_TEMP_C = 30.0
