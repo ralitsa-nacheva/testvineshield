@@ -14,6 +14,7 @@ import com.rncoding.testvineshield.core.domain.datamodels.DiseaseOccurrenceDomai
 import com.rncoding.testvineshield.core.domain.datamodels.SymptomDomainModel
 import com.rncoding.testvineshield.core.domain.repository.DiseaseRepository
 import kotlinx.coroutines.flow.Flow
+import com.rncoding.testvineshield.core.domain.datamodels.BlockDiseaseObservation
 import kotlinx.coroutines.flow.map
 
 class DiseaseRepositoryImpl(
@@ -26,6 +27,16 @@ class DiseaseRepositoryImpl(
     private val symptomMapper: SymptomMapper,
     private val diseaseAlertMapper: DiseaseAlertMapper
 ) : DiseaseRepository {
+    override fun observeOwnedBlockOccurrences(
+        ownerId: Long, vineyardId: Long, blockId: Long
+    ): Flow<List<BlockDiseaseObservation>> =
+        diseaseOccurrenceDao.observeOwnedBlockOccurrences(ownerId, vineyardId, blockId).map { rows ->
+            rows.map { BlockDiseaseObservation(it.id, it.diseaseName, it.observedOn, it.severity, it.status, it.notes) }
+        }
+
+    override suspend fun createOwnedBlockOccurrence(ownerId: Long, occurrence: DiseaseOccurrenceDomainModel): Long? =
+        diseaseOccurrenceDao.insertOwnedBlockOccurrence(ownerId, diseaseOccurrenceMapper.toEntity(occurrence))
+
     override fun observePredefinedDiseases(): Flow<List<DiseaseDomainModel>> =
         diseaseDao.observePredefinedDiseases().map { rows -> rows.map(diseaseMapper::toDomain) }
 

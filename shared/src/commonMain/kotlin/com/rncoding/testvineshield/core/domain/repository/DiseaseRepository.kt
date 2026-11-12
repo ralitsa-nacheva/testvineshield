@@ -5,8 +5,15 @@ import com.rncoding.testvineshield.core.domain.datamodels.DiseaseDomainModel
 import com.rncoding.testvineshield.core.domain.datamodels.DiseaseOccurrenceDomainModel
 import com.rncoding.testvineshield.core.domain.datamodels.SymptomDomainModel
 import kotlinx.coroutines.flow.Flow
+import com.rncoding.testvineshield.core.domain.datamodels.BlockDiseaseObservation
 
 interface DiseaseRepository {
+    fun observeOwnedBlockOccurrences(
+        ownerId: Long, vineyardId: Long, blockId: Long
+    ): Flow<List<BlockDiseaseObservation>>
+
+    suspend fun createOwnedBlockOccurrence(ownerId: Long, occurrence: DiseaseOccurrenceDomainModel): Long?
+
     fun observePredefinedDiseases(): Flow<List<DiseaseDomainModel>>
 
 

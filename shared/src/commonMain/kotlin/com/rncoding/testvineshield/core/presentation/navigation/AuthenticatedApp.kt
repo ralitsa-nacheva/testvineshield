@@ -1,6 +1,7 @@
 package com.rncoding.testvineshield.core.presentation.navigation
 
 import androidx.compose.foundation.layout.padding
+import com.rncoding.testvineshield.core.presentation.disease_observations.BlockDiseaseObservationsScreen
 import com.rncoding.testvineshield.core.presentation.disease_catalogue.DiseaseCatalogueScreenRoot
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
@@ -187,7 +188,18 @@ fun AuthenticatedApp(
                             onDeleted={navigationState.goBack()},
                             onActivities={navigationState.navigate(ActivityListRoute(route.vineyardId,route.blockId))},
                             onHarvests={navigationState.navigate(HarvestListRoute(route.vineyardId,route.blockId))},
+                            onDiseaseObservations={navigationState.navigate(BlockDiseaseObservationsRoute(route.vineyardId, route.blockId))},
                             onBusyChanged={ if(it) busyRecordRoute=route else if(busyRecordRoute==route) busyRecordRoute=null })
+                    }
+                    entry<BlockDiseaseObservationsRoute> { route ->
+                        BlockDiseaseObservationsScreen(
+                            userId, route.vineyardId, route.blockId,
+                            onBack = { navigationState.goBack() },
+                            onBusyChanged = {
+                                if (it) busyRecordRoute = route
+                                else if (busyRecordRoute == route) busyRecordRoute = null
+                            }
+                        )
                     }
                     entry<BlockEditorRoute> { route ->
                         BlockEditorScreenRoot(route.vineyardId,route.blockId,userId,onBack={navigationState.goBack()},

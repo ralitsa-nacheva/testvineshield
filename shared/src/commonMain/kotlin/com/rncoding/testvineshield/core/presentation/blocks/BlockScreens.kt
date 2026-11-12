@@ -58,7 +58,7 @@ fun BlockListScreenRoot(vineyardId: Long, ownerId: Long, onBack: ()->Unit, onCre
 }
 
 @Composable
-fun BlockDetailsScreenRoot(vineyardId: Long, blockId: Long, ownerId: Long, onBack: ()->Unit, onEdit: ()->Unit, onDeleted: ()->Unit, onBusyChanged: (Boolean)->Unit = {}, onActivities: ()->Unit = {}, onHarvests: ()->Unit = {}) {
+fun BlockDetailsScreenRoot(vineyardId: Long, blockId: Long, ownerId: Long, onBack: ()->Unit, onEdit: ()->Unit, onDeleted: ()->Unit, onBusyChanged: (Boolean)->Unit = {}, onActivities: ()->Unit = {}, onHarvests: ()->Unit = {}, onDiseaseObservations: ()->Unit = {}) {
     val vm = koinViewModel<BlockDetailsViewModel>(key = "block-$ownerId-$vineyardId-$blockId", parameters = { parametersOf(BlockKey(vineyardId, blockId)) })
     val state by vm.state.collectAsStateWithLifecycle()
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { vm.load() }
@@ -75,6 +75,7 @@ fun BlockDetailsScreenRoot(vineyardId: Long, blockId: Long, ownerId: Long, onBac
                 item { Text(block.name, style = MaterialTheme.typography.headlineSmall) }
                 item { TextButton(onClick=userAction(onActivities),enabled=!state.deleting) { Text("Block activities") } }
                 item { TextButton(onClick=userAction(onHarvests),enabled=!state.deleting) { Text("Harvest records") } }
+                item { TextButton(onClick = userAction(onDiseaseObservations), enabled = !state.deleting) { Text("Disease observations") } }
                 item { Text("Variety: ${block.vineVariety}") }
                 item { Text("Area: ${formatBlockArea(block.area,block.areaUnit)}") }
                 item { Text("Rows: ${block.rowCount?.toString() ?: "Unknown"}") }

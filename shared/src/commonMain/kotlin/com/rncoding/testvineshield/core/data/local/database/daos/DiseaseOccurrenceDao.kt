@@ -1,6 +1,10 @@
 package com.rncoding.testvineshield.core.data.local.database.daos
 
 import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.ColumnInfo
+import kotlinx.datetime.LocalDate
+import com.rncoding.testvineshield.core.domain.datamodels.enums.DiseaseOccurrenceStatus
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
@@ -11,8 +15,53 @@ import com.rncoding.testvineshield.core.data.local.database.projections.DiseaseR
 import com.rncoding.testvineshield.core.data.local.database.relations.OccurrenceWithActivities
 import com.rncoding.testvineshield.core.data.local.database.relations.OccurrenceWithSymptoms
 
+data class OwnedBlockDiseaseObservationRow(
+    @ColumnInfo(name = "occurrence_id") val id: Long,
+    @ColumnInfo(name = "disease_name") val diseaseName: String,
+    @ColumnInfo(name = "observed_at") val observedOn: LocalDate,
+    val severity: Int,
+    val status: DiseaseOccurrenceStatus,
+    val notes: String?
+)
+
 @Dao
 interface DiseaseOccurrenceDao {
+    @Query("""
+        SELECT o.occurrence_id, d.name AS disease_name, o.observed_at, o.severity, o.status, o.notes
+        FROM disease_occurrence o
+        JOIN block b ON b.block_id = o.block_id AND b.vineyard_id = o.vineyard_id
+        JOIN vineyard v ON v.vineyard_id = b.vineyard_id
+        JOIN disease d ON d.disease_id = o.disease_id
+        WHERE v.user_id = :ownerId AND v.vineyard_id = :vineyardId
+          AND b.block_id = :blockId AND d.is_predefined = 1
+        ORDER BY o.observed_at DESC, o.occurrence_id DESC
+    """)
+    fun observeOwnedBlockOccurrences(
+        ownerId: Long, vineyardId: Long, blockId: Long
+    ): Flow<List<OwnedBlockDiseaseObservationRow>>
+
+    @Query("""
+        SELECT EXISTS(
+            SELECT 1 FROM block b JOIN vineyard v ON v.vineyard_id = b.vineyard_id
+            WHERE v.user_id = :ownerId AND v.vineyard_id = :vineyardId AND b.block_id = :blockId
+        )
+    """)
+    suspend fun ownsObservationBlock(ownerId: Long, vineyardId: Long, blockId: Long): Boolean
+
+    @Query("SELECT EXISTS(SELECT 1 FROM disease WHERE disease_id = :diseaseId AND is_predefined = 1)")
+    suspend fun isPredefinedObservationDisease(diseaseId: Long): Boolean
+
+    @Insert
+    suspend fun insertOccurrence(occurrence: DiseaseOccurrenceEntity): Long
+
+    @Transaction
+    suspend fun insertOwnedBlockOccurrence(ownerId: Long, occurrence: DiseaseOccurrenceEntity): Long? {
+        val blockId = occurrence.blockId ?: return null
+        if (!ownsObservationBlock(ownerId, occurrence.vineyardId, blockId)) return null
+        if (!isPredefinedObservationDisease(occurrence.diseaseId)) return null
+        return insertOccurrence(occurrence)
+    }
+
     @Upsert
     @Transaction
     suspend fun upsertOccurrence(diseaseOccurrence: DiseaseOccurrenceEntity)

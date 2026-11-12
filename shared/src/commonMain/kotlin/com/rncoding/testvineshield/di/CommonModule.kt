@@ -1039,6 +1039,12 @@ val commonModule =
         viewModel {
             com.rncoding.testvineshield.core.presentation.disease_catalogue.DiseaseCatalogueViewModel(get())
         }
+        factory {
+            com.rncoding.testvineshield.core.domain.usecases.disease.CreateDiseaseOccurrenceUseCase(get(), get(), get(), get())
+        }
+        viewModel { (key: com.rncoding.testvineshield.core.presentation.disease_observations.DiseaseObservationsKey) ->
+            com.rncoding.testvineshield.core.presentation.disease_observations.BlockDiseaseObservationsViewModel(key, get(), get(), get())
+        }
         factory { ObserveOwnedWeatherUseCase(get(), get(), get(), get(), get(), get(), get(),get()) }
         factory { RefreshOwnedWeatherUseCase(get(), get(), get(), get(), get()) }
         factory { com.rncoding.testvineshield.core.domain.usecases.weather.SaveBotrytisMonitoringDraftUseCase(get(), get()) }

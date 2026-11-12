@@ -22,6 +22,7 @@ internal val vineShieldSerializersModule =
             subclass(VineyardsRoute::class)
             subclass(DiseaseCatalogueRoute::class)
             subclass(BuiltInDiseaseDetailsRoute::class)
+            subclass(BlockDiseaseObservationsRoute::class)
             subclass(VineyardDetailsRoute::class)
             subclass(CreateVineyardRoute::class)
             subclass(EditVineyardRoute::class)

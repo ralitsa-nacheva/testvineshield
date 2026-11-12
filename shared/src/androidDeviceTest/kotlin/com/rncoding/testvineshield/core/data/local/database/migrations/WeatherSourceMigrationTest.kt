@@ -11,6 +11,9 @@ import com.rncoding.testvineshield.core.data.local.mappers.*
 import com.rncoding.testvineshield.core.data.remote.WeatherResponseFixtures
 import com.rncoding.testvineshield.core.data.local.database.seed.DiseaseCatalogueSeeder
 import com.rncoding.testvineshield.core.domain.disease_risk.MonitoringDraftSaveOutcome
+import com.rncoding.testvineshield.core.data.local.database.entities.DiseaseOccurrenceEntity
+import com.rncoding.testvineshield.core.domain.datamodels.enums.DiseaseOccurrenceStatus
+import kotlinx.datetime.LocalDate
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.flow.first
 import org.junit.Test
@@ -172,6 +175,36 @@ class WeatherSourceMigrationTest {
             assertEquals(MonitoringDraftSaveOutcome.ALREADY_ENABLED,
                 dao.saveDisabledDraft(1, 10, 20, code, model, "2026-06-17"))
             assertEquals(saved.copy(enabled = true), dao.getConfiguration(10, 20, diseaseId, model))
+        } finally {
+            db.close()
+            context.deleteDatabase(name)
+        }
+    }
+
+    @Test fun diseaseObservationWriteAndReadRequireMatchingOwnerAndBlock(): Unit = runBlocking {
+        val name = "r09c-observation-${UUID.randomUUID()}.db"
+        seed(name)
+        val db = open(name)
+        try {
+            DiseaseCatalogueSeeder(db).seed()
+            val disease = assertNotNull(db.diseaseDao().getDiseaseByCode("grape_botrytis"))
+            val dao = db.diseaseOccurrenceDao()
+            val occurrence = DiseaseOccurrenceEntity(
+                occurrenceId = 0, diseaseId = disease.diseaseId, vineyardId = 10, blockId = 20,
+                observedAt = LocalDate(2026, 6, 15), severity = 12,
+                status = DiseaseOccurrenceStatus.ACTIVE, curedAt = null,
+                createdAt = 1000, updatedAt = 1000, notes = "Near the row end"
+            )
+            assertNull(dao.insertOwnedBlockOccurrence(2, occurrence))
+            assertNull(dao.insertOwnedBlockOccurrence(1, occurrence.copy(vineyardId = 11)))
+            assertNull(dao.insertOwnedBlockOccurrence(1, occurrence.copy(diseaseId = 0)))
+            val savedId = assertNotNull(dao.insertOwnedBlockOccurrence(1, occurrence))
+            val saved = dao.observeOwnedBlockOccurrences(1, 10, 20).first().single()
+            assertEquals(savedId, saved.id)
+            assertEquals(occurrence.notes, saved.notes)
+            assertEquals(occurrence.observedAt, saved.observedOn)
+            assertTrue(dao.observeOwnedBlockOccurrences(2, 10, 20).first().isEmpty())
+            assertTrue(dao.observeOwnedBlockOccurrences(1, 11, 20).first().isEmpty())
         } finally {
             db.close()
             context.deleteDatabase(name)

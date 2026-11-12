@@ -19,6 +19,9 @@ data object DiseaseCatalogueRoute : AppRoute
 data class BuiltInDiseaseDetailsRoute(val diseaseId: Long) : AppRoute
 
 @Serializable
+data class BlockDiseaseObservationsRoute(val vineyardId: Long, val blockId: Long) : AppRoute
+
+@Serializable
 data class VineyardDetailsRoute(
     val vineyardId: Long
 ) : AppRoute
