@@ -54,6 +54,19 @@ fun DiseaseCatalogueScreenRoot(
                     else {
                         item { Text(disease.name, style = MaterialTheme.typography.headlineSmall) }
                         item { Text(disease.description) }
+                        val symptoms = builtInSymptomReference(disease.code)
+                        if (symptoms.isNotEmpty()) {
+                            item {
+                                Text("Signs to look for", style = MaterialTheme.typography.titleLarge)
+                                Text("Reference signs can overlap with other problems. Use them to guide inspection.")
+                            }
+                            items(symptoms, key = { "symptom-${it.plantPart}" }) { symptom ->
+                                CatalogueDetail(symptom.plantPart, symptom.description)
+                            }
+                            item {
+                                Text("Source: UC IPM grape guidelines", style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
                         if (disease.vectors.isNotBlank()) item { CatalogueDetail("How it spreads", disease.vectors) }
                         if (disease.factors.isNotBlank()) item { CatalogueDetail("Conditions that favor it", disease.factors) }
                         if (disease.treatmentSuggestion.isNotBlank()) item {
