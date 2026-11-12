@@ -228,10 +228,7 @@ class PowderyMildewUcDavisDiseaseRiskModel(
                     event =
                         event,
 
-                    nativeRiskValue =
-                        currentState
-                            .currentIndex
-                            .toDouble(),
+                    nativeRiskValue = currentState.currentIndex.toDouble().takeIf { currentState.initiated },
 
                     factors =
                         buildFactors(
@@ -279,17 +276,12 @@ class PowderyMildewUcDavisDiseaseRiskModel(
                 unit = "days",
                 satisfied = null
             ),
-            DiseaseRiskFactor(
-                name =
-                    "uc_davis_risk_index",
-                value =
-                    result
-                        .riskIndex
-                        .toDouble(),
-                unit = "index",
-                satisfied =
-                    result.initiated
-            )
+            if (result.initiated) {
+                DiseaseRiskFactor("uc_davis_risk_index", result.riskIndex.toDouble(), "index", true)
+            } else {
+                val points = state.consecutiveQualifyingDays * PowderyMildewUcDavisCalculator.DAILY_INCREASE
+                DiseaseRiskFactor("uc_davis_initiation_progress", points.toDouble(), "points", false)
+            }
         )
     }
 
@@ -334,10 +326,7 @@ class PowderyMildewUcDavisDiseaseRiskModel(
 
                     event = null,
 
-                    nativeRiskValue =
-                        state
-                            .currentIndex
-                            .toDouble(),
+                    nativeRiskValue = state.currentIndex.toDouble().takeIf { state.initiated },
 
                     factors =
                         emptyList()
