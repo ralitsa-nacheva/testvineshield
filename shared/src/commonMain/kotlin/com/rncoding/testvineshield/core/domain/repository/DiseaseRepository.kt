@@ -6,6 +6,8 @@ import com.rncoding.testvineshield.core.domain.datamodels.DiseaseOccurrenceDomai
 import com.rncoding.testvineshield.core.domain.datamodels.SymptomDomainModel
 import com.rncoding.testvineshield.core.domain.datamodels.enums.DiseaseOccurrenceStatus
 import kotlinx.datetime.LocalDate
+import com.rncoding.testvineshield.core.domain.datamodels.CompletedBlockActivity
+import com.rncoding.testvineshield.core.domain.datamodels.LinkedObservationActivity
 import kotlinx.coroutines.flow.Flow
 import com.rncoding.testvineshield.core.domain.datamodels.BlockDiseaseObservation
 
@@ -42,6 +44,23 @@ interface DiseaseRepository {
     suspend fun recordOwnedOilSpot(
         ownerId: Long, vineyardId: Long, blockId: Long, occurrenceId: Long,
         expectedUpdatedAt: Long, observedOn: LocalDate, notes: String
+    ): Boolean
+
+    fun observeCompletedActivitiesForLink(
+        ownerId: Long, vineyardId: Long, blockId: Long
+    ): Flow<List<CompletedBlockActivity>>
+
+    fun observeOwnedOccurrenceActivityLinks(
+        ownerId: Long, vineyardId: Long, blockId: Long
+    ): Flow<List<LinkedObservationActivity>>
+
+    suspend fun linkOwnedCompletedActivity(
+        ownerId: Long, vineyardId: Long, blockId: Long, occurrenceId: Long,
+        expectedUpdatedAt: Long, activityId: Long, completedOn: LocalDate, linkedOn: LocalDate
+    ): Boolean
+
+    suspend fun unlinkOwnedOccurrenceActivity(
+        ownerId: Long, vineyardId: Long, blockId: Long, occurrenceId: Long, activityId: Long
     ): Boolean
 
     fun observePredefinedDiseases(): Flow<List<DiseaseDomainModel>>

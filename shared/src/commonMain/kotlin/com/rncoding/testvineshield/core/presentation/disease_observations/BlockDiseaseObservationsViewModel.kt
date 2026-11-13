@@ -13,6 +13,9 @@ import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.repository.DiseaseRepository
 import com.rncoding.testvineshield.core.domain.usecases.disease.CreateDiseaseOccurrenceUseCase
 import com.rncoding.testvineshield.core.domain.usecases.disease.RecordOilSpotUseCase
+import com.rncoding.testvineshield.core.domain.datamodels.CompletedBlockActivity
+import com.rncoding.testvineshield.core.domain.datamodels.LinkedObservationActivity
+import com.rncoding.testvineshield.core.domain.usecases.disease.ObservationActivityLinkUseCase
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -24,8 +27,12 @@ import kotlinx.datetime.LocalDate
 
 data class DiseaseObservationsKey(val ownerId: Long, val vineyardId: Long, val blockId: Long)
 
-data class ObservationDialog(val observation: BlockDiseaseObservation, val kind: Kind) {
-    enum class Kind { DETAILS, STATUS, OIL_SPOT }
+data class ObservationDialog(
+    val observation: BlockDiseaseObservation,
+    val kind: Kind,
+    val activityToUnlink: LinkedObservationActivity? = null
+) {
+    enum class Kind { DETAILS, STATUS, OIL_SPOT, LINK_ACTIVITY, UNLINK_ACTIVITY }
 }
 
 data class DiseaseObservationsState(
@@ -33,11 +40,20 @@ data class DiseaseObservationsState(
     val loadError: String? = null,
     val observations: List<BlockDiseaseObservation> = emptyList(),
     val diseases: List<DiseaseDomainModel> = emptyList(),
+    val completedActivities: List<CompletedBlockActivity> = emptyList(),
+    val activityLinks: Map<Long, List<LinkedObservationActivity>> = emptyMap(),
     val saving: Boolean = false,
     val saveError: String? = null,
     val lastSavedId: Long? = null,
     val dialog: ObservationDialog? = null,
     val dialogError: String? = null
+)
+
+private data class ObservationNotebookData(
+    val observations: List<BlockDiseaseObservation>,
+    val diseases: List<DiseaseDomainModel>,
+    val completedActivities: List<CompletedBlockActivity>,
+    val activityLinks: Map<Long, List<LinkedObservationActivity>>
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -48,7 +64,8 @@ class BlockDiseaseObservationsViewModel(
     private val create: CreateDiseaseOccurrenceUseCase,
     private val changeStatus: ChangeDiseaseOccurrenceStatusUseCase,
     private val editDetails: EditDiseaseOccurrenceDetailsUseCase,
-    private val recordOilSpot: RecordOilSpotUseCase
+    private val recordOilSpot: RecordOilSpotUseCase,
+    private val activityLink: ObservationActivityLinkUseCase
 ) : ViewModel() {
     private val _state = MutableStateFlow(DiseaseObservationsState())
     val state = _state.asStateFlow()
@@ -62,11 +79,15 @@ class BlockDiseaseObservationsViewModel(
         _state.value = DiseaseObservationsState()
         loadJob = viewModelScope.launch {
             users.observeUser().flatMapLatest { user ->
-                if (user?.userId != key.ownerId) flowOf<Pair<List<BlockDiseaseObservation>, List<DiseaseDomainModel>>?>(null)
+                if (user?.userId != key.ownerId) flowOf<ObservationNotebookData?>(null)
                 else combine(
                     repository.observeOwnedBlockOccurrences(key.ownerId, key.vineyardId, key.blockId),
-                    repository.observePredefinedDiseases()
-                ) { observations, diseases -> observations to diseases }
+                    repository.observePredefinedDiseases(),
+                    repository.observeCompletedActivitiesForLink(key.ownerId, key.vineyardId, key.blockId),
+                    repository.observeOwnedOccurrenceActivityLinks(key.ownerId, key.vineyardId, key.blockId)
+                ) { observations, diseases, activities, links ->
+                    ObservationNotebookData(observations, diseases, activities, links.groupBy { it.occurrenceId })
+                }
             }.buffer(0).catch { error ->
                 if (error is CancellationException) throw error
                 saveJob?.cancel()
@@ -76,7 +97,13 @@ class BlockDiseaseObservationsViewModel(
                     saveJob?.cancel()
                     _state.value = DiseaseObservationsState(loading = false, loadError = "This session is no longer available.")
                 } else {
-                    _state.update { it.copy(loading = false, loadError = null, observations = data.first, diseases = data.second) }
+                    _state.update {
+                        it.copy(
+                            loading = false, loadError = null, observations = data.observations,
+                            diseases = data.diseases, completedActivities = data.completedActivities,
+                            activityLinks = data.activityLinks
+                        )
+                    }
                 }
             }
         }
@@ -109,6 +136,31 @@ class BlockDiseaseObservationsViewModel(
     fun saveOilSpot(date: LocalDate, notes: String) {
         saveDialog(ObservationDialog.Kind.OIL_SPOT) { observation ->
             recordOilSpot(key.ownerId, key.vineyardId, key.blockId, observation, date, notes)
+        }
+    }
+
+    fun saveActivityLink(activity: CompletedBlockActivity) {
+        saveDialog(ObservationDialog.Kind.LINK_ACTIVITY) { observation ->
+            activityLink.link(key.ownerId, key.vineyardId, key.blockId, observation, activity)
+        }
+    }
+
+    fun openUnlinkDialog(link: LinkedObservationActivity) {
+        val current = _state.value
+        if (current.saving || current.loadError != null || current.dialog != null) return
+        val observation = current.observations.firstOrNull { it.id == link.occurrenceId } ?: return
+        _state.update {
+            it.copy(
+                dialog = ObservationDialog(observation, ObservationDialog.Kind.UNLINK_ACTIVITY, link),
+                dialogError = null
+            )
+        }
+    }
+
+    fun removeActivityLink() {
+        val link = _state.value.dialog?.activityToUnlink ?: return
+        saveDialog(ObservationDialog.Kind.UNLINK_ACTIVITY) { observation ->
+            activityLink.unlink(key.ownerId, key.vineyardId, key.blockId, observation.id, link.activityId)
         }
     }
 

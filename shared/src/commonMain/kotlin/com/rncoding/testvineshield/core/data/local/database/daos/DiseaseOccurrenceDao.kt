@@ -5,6 +5,10 @@ import com.rncoding.testvineshield.core.data.local.database.entities.SymptomEnti
 import com.rncoding.testvineshield.core.domain.datamodels.enums.PhenologicalStage
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseCatalogueCodes
 import com.rncoding.testvineshield.core.domain.disease_risk.SymptomCatalogueCodes
+import androidx.room.OnConflictStrategy
+import com.rncoding.testvineshield.core.data.local.database.entities.OccurrenceActivityCrossRef
+import com.rncoding.testvineshield.core.domain.datamodels.CompletedBlockActivity
+import com.rncoding.testvineshield.core.domain.datamodels.LinkedObservationActivity
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.ColumnInfo
@@ -184,6 +188,91 @@ interface DiseaseOccurrenceDao {
         insertObservedOilSpot(OccurrenceSymptomCrossRef(occurrenceId, symptomId, observedOn, "", notes))
         return true
     }
+
+    @Query("""
+        SELECT a.activity_id AS activityId, a.activity_type AS activityType,
+               a.activity_description AS description, a.completed_at AS completedOn
+        FROM activity a
+        JOIN block b ON b.block_id = a.block_id AND b.vineyard_id = a.vineyard_id
+        JOIN vineyard v ON v.vineyard_id = b.vineyard_id
+        WHERE v.user_id = :ownerId AND v.vineyard_id = :vineyardId AND b.block_id = :blockId
+          AND a.status = 'completed' AND a.completed_at IS NOT NULL
+        ORDER BY a.completed_at DESC, a.activity_id DESC
+    """)
+    fun observeCompletedActivitiesForLink(
+        ownerId: Long, vineyardId: Long, blockId: Long
+    ): Flow<List<CompletedBlockActivity>>
+
+    @Query("""
+        SELECT o.occurrence_id AS occurrenceId, a.activity_id AS activityId, a.activity_type AS activityType,
+               a.activity_description AS description, x.applied_at AS appliedOn
+        FROM OccurrenceActivityCrossRef x
+        JOIN disease_occurrence o ON o.occurrence_id = x.occurrence_id
+        JOIN activity a ON a.activity_id = x.activity_id
+                       AND a.vineyard_id = o.vineyard_id
+        JOIN block b ON b.block_id = o.block_id AND b.vineyard_id = o.vineyard_id
+        JOIN vineyard v ON v.vineyard_id = b.vineyard_id
+        JOIN disease d ON d.disease_id = o.disease_id
+        WHERE v.user_id = :ownerId AND v.vineyard_id = :vineyardId AND b.block_id = :blockId
+          AND d.is_predefined = 1
+        ORDER BY x.applied_at DESC, a.activity_id DESC
+    """)
+    fun observeOwnedOccurrenceActivityLinks(
+        ownerId: Long, vineyardId: Long, blockId: Long
+    ): Flow<List<LinkedObservationActivity>>
+
+    @Query("""
+        SELECT EXISTS (
+            SELECT 1 FROM disease_occurrence o
+            JOIN block b ON b.block_id = o.block_id AND b.vineyard_id = o.vineyard_id
+            JOIN vineyard v ON v.vineyard_id = b.vineyard_id
+            JOIN disease d ON d.disease_id = o.disease_id
+            JOIN activity a ON a.activity_id = :activityId
+                           AND a.block_id = b.block_id AND a.vineyard_id = v.vineyard_id
+            WHERE o.occurrence_id = :occurrenceId AND o.updated_at = :expectedUpdatedAt
+              AND v.user_id = :ownerId AND v.vineyard_id = :vineyardId AND b.block_id = :blockId
+              AND d.is_predefined = 1
+              AND a.status = 'completed' AND a.completed_at = :completedOn
+        )
+    """)
+    suspend fun canLinkCompletedActivity(
+        ownerId: Long, vineyardId: Long, blockId: Long, occurrenceId: Long,
+        expectedUpdatedAt: Long, activityId: Long, completedOn: LocalDate
+    ): Boolean
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertOccurrenceActivityLink(link: OccurrenceActivityCrossRef): Long
+
+    @Transaction
+    suspend fun linkOwnedCompletedActivity(
+        ownerId: Long, vineyardId: Long, blockId: Long, occurrenceId: Long,
+        expectedUpdatedAt: Long, activityId: Long, completedOn: LocalDate, linkedOn: LocalDate
+    ): Boolean {
+        if (!canLinkCompletedActivity(
+                ownerId, vineyardId, blockId, occurrenceId, expectedUpdatedAt, activityId, completedOn
+            )
+        ) return false
+        return insertOccurrenceActivityLink(
+            OccurrenceActivityCrossRef(occurrenceId, activityId, completedOn, linkedOn, "")
+        ) != -1L
+    }
+
+    @Query("""
+        DELETE FROM OccurrenceActivityCrossRef
+        WHERE occurrence_id = :occurrenceId AND activity_id = :activityId
+          AND EXISTS (
+              SELECT 1 FROM disease_occurrence o
+              JOIN block b ON b.block_id = o.block_id AND b.vineyard_id = o.vineyard_id
+              JOIN vineyard v ON v.vineyard_id = b.vineyard_id
+              JOIN disease d ON d.disease_id = o.disease_id
+              JOIN activity a ON a.activity_id = :activityId AND a.vineyard_id = v.vineyard_id
+              WHERE o.occurrence_id = :occurrenceId AND v.user_id = :ownerId
+                AND v.vineyard_id = :vineyardId AND b.block_id = :blockId AND d.is_predefined = 1
+          )
+    """)
+    suspend fun unlinkOwnedOccurrenceActivity(
+        ownerId: Long, vineyardId: Long, blockId: Long, occurrenceId: Long, activityId: Long
+    ): Int
 
     @Upsert
     @Transaction

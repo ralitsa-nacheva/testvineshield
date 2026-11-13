@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.rncoding.testvineshield.core.domain.datamodels.CompletedBlockActivity
 import com.rncoding.testvineshield.core.domain.datamodels.BlockDiseaseObservation
 import com.rncoding.testvineshield.core.domain.datamodels.enums.DiseaseOccurrenceStatus
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseCatalogueCodes
@@ -94,6 +95,39 @@ fun BlockDiseaseObservationsScreen(
         OilSpotDialog(dialog.observation, state.saving, state.dialogError, model::closeDialog, model::saveOilSpot)
     }
 
+    state.dialog?.takeIf { it.kind == ObservationDialog.Kind.LINK_ACTIVITY }?.let { dialog ->
+        val linkedIds = state.activityLinks[dialog.observation.id].orEmpty().map { it.activityId }.toSet()
+        LinkActivityDialog(
+            activities = state.completedActivities.filterNot { it.activityId in linkedIds },
+            saving = state.saving,
+            error = state.dialogError,
+            onClose = model::closeDialog,
+            onSave = model::saveActivityLink
+        )
+    }
+
+    state.dialog?.activityToUnlink?.let { link ->
+        AlertDialog(
+            onDismissRequest = model::closeDialog,
+            title = { Text("Remove activity link?") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("${link.appliedOn} · ${link.activityType}")
+                    Text("The activity will remain in the activity notebook.")
+                    state.dialogError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = userAction(model::removeActivityLink), enabled = !state.saving) {
+                    Text(if (state.saving) "Removing…" else "Remove link")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = userAction(model::closeDialog), enabled = !state.saving) { Text("Cancel") }
+            }
+        )
+    }
+
     Scaffold(topBar = { RecordTopBar("Disease observations", { if (!model.state.value.saving) onBack() }, !state.saving) }) { padding ->
         LazyColumn(
             Modifier.padding(padding).fillMaxSize(),
@@ -136,6 +170,21 @@ fun BlockDiseaseObservationsScreen(
                                     onClick = userAction { model.openDialog(observation.id, ObservationDialog.Kind.DETAILS) },
                                     enabled = !state.saving
                                 ) { Text("Edit details") }
+                                state.activityLinks[observation.id].orEmpty().forEach { link ->
+                                    Text(
+                                        "Linked activity · ${link.appliedOn} · ${link.activityType}",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    if (link.description.isNotBlank()) Text(link.description)
+                                    TextButton(
+                                        onClick = userAction { model.openUnlinkDialog(link) },
+                                        enabled = !state.saving
+                                    ) { Text("Remove activity link") }
+                                }
+                                TextButton(
+                                    onClick = userAction { model.openDialog(observation.id, ObservationDialog.Kind.LINK_ACTIVITY) },
+                                    enabled = !state.saving
+                                ) { Text("Link completed activity") }
                             }
                         }
                     }
@@ -282,6 +331,57 @@ private fun OilSpotDialog(
                 onClick = userAction { if (date != null) onSave(date, notes) },
                 enabled = !saving && date != null && notes.trim().length <= 4000
             ) { Text(if (saving) "Saving…" else "Save symptom") }
+        },
+        dismissButton = {
+            TextButton(onClick = userAction(onClose), enabled = !saving) { Text("Cancel") }
+        }
+    )
+}
+
+@Composable
+private fun LinkActivityDialog(
+    activities: List<CompletedBlockActivity>,
+    saving: Boolean,
+    error: String?,
+    onClose: () -> Unit,
+    onSave: (CompletedBlockActivity) -> Unit
+) {
+    var selectedId by rememberSaveable { mutableStateOf<Long?>(null) }
+    val selected = activities.firstOrNull { it.activityId == selectedId }
+    AlertDialog(
+        onDismissRequest = onClose,
+        title = { Text("Link completed activity") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (activities.isEmpty()) {
+                    Text("There are no unlinked completed activities with a completion date in this block.")
+                } else {
+                    RecordChoice(
+                        label = "Activity",
+                        selected = selected,
+                        values = activities,
+                        enabled = !saving,
+                        text = { activity ->
+                            val description = activity.description.take(60)
+                            "${activity.completedOn} · ${activity.activityType}" +
+                                if (description.isBlank()) "" else " · $description"
+                        },
+                        changed = { selectedId = it?.activityId },
+                        allowUnknown = false,
+                        nullLabel = "Choose a completed activity"
+                    )
+                    selected?.description?.takeIf { it.isNotBlank() }?.let {
+                        Text(it, maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                    }
+                }
+                error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = userAction { selected?.let(onSave) },
+                enabled = !saving && selected != null
+            ) { Text(if (saving) "Linking…" else "Link activity") }
         },
         dismissButton = {
             TextButton(onClick = userAction(onClose), enabled = !saving) { Text("Cancel") }

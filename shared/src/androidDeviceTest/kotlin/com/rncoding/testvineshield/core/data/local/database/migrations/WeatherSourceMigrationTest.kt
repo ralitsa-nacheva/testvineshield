@@ -12,6 +12,9 @@ import com.rncoding.testvineshield.core.data.remote.WeatherResponseFixtures
 import com.rncoding.testvineshield.core.data.local.database.seed.DiseaseCatalogueSeeder
 import com.rncoding.testvineshield.core.domain.disease_risk.MonitoringDraftSaveOutcome
 import com.rncoding.testvineshield.core.data.local.database.entities.DiseaseOccurrenceEntity
+import com.rncoding.testvineshield.core.data.local.database.entities.ActivityEntity
+import com.rncoding.testvineshield.core.domain.datamodels.enums.ActivityPriority
+import com.rncoding.testvineshield.core.domain.datamodels.enums.ActivityStatus
 import com.rncoding.testvineshield.core.domain.datamodels.enums.DiseaseOccurrenceStatus
 import kotlinx.datetime.LocalDate
 import kotlinx.coroutines.runBlocking
@@ -291,6 +294,55 @@ class WeatherSourceMigrationTest {
             val evidence = dao.getRiskSymptomsForOccurrence(downyId).single()
             assertEquals("downy_mildew_oil_spot", evidence.code)
             assertEquals(observedOn, evidence.observedAt)
+        } finally {
+            db.close()
+            context.deleteDatabase(name)
+        }
+    }
+
+    @Test fun completedActivityLinksAreScopedAndCanBeRemoved(): Unit = runBlocking {
+        val name = "r09g-activity-link-${UUID.randomUUID()}.db"
+        seed(name)
+        val db = open(name)
+        try {
+            DiseaseCatalogueSeeder(db).seed()
+            val disease = assertNotNull(db.diseaseDao().getDiseaseByCode("grape_botrytis"))
+            val observations = db.diseaseOccurrenceDao()
+            val activities = db.activityDao()
+            val date = LocalDate(2026, 6, 15)
+            val occurrenceId = assertNotNull(observations.insertOwnedBlockOccurrence(
+                1, DiseaseOccurrenceEntity(
+                    0, disease.diseaseId, 10, 20, date, 12, DiseaseOccurrenceStatus.ACTIVE,
+                    null, 1000, 1000, null
+                )
+            ))
+            val completed = ActivityEntity(
+                activityId = 0, vineyardId = 10, blockId = 20,
+                activityType = "Scouting", activityDescription = "Checked the rows",
+                season = "2026", phenologicalStage = null, priority = ActivityPriority.MEDIUM,
+                status = ActivityStatus.COMPLETED, plannedAt = date, completedAt = date,
+                tool = null, notes = null, createdAt = 1000, updatedAt = 1000,
+                treatmentProduct = null, treatmentProductQuantity = null, treatmentProductUnits = null,
+                waterQuantity = null, treatmentProductRate = null
+            )
+            val completedId = activities.insertActivity(completed)
+            val plannedId = activities.insertActivity(completed.copy(status = ActivityStatus.PLANNED, completedAt = null))
+            val vineyardActivityId = activities.insertActivity(completed.copy(blockId = null))
+            assertEquals(completedId, observations.observeCompletedActivitiesForLink(1, 10, 20).first().single().activityId)
+            assertFalse(observations.linkOwnedCompletedActivity(2, 10, 20, occurrenceId, 1000, completedId, date, date))
+            assertFalse(observations.linkOwnedCompletedActivity(1, 10, 20, occurrenceId, 1000, plannedId, date, date))
+            assertFalse(observations.linkOwnedCompletedActivity(1, 10, 20, occurrenceId, 1000, vineyardActivityId, date, date))
+            assertFalse(observations.linkOwnedCompletedActivity(1, 10, 20, occurrenceId, 999, completedId, date, date))
+            assertTrue(observations.linkOwnedCompletedActivity(1, 10, 20, occurrenceId, 1000, completedId, date, date))
+            assertFalse(observations.linkOwnedCompletedActivity(1, 10, 20, occurrenceId, 1000, completedId, date, date))
+            assertEquals(2, activities.deleteActivitySafely(10, completedId))
+            val link = observations.observeOwnedOccurrenceActivityLinks(1, 10, 20).first().single()
+            assertEquals(occurrenceId, link.occurrenceId)
+            assertEquals(date, link.appliedOn)
+            assertEquals(0, observations.unlinkOwnedOccurrenceActivity(2, 10, 20, occurrenceId, completedId))
+            assertEquals(1, observations.unlinkOwnedOccurrenceActivity(1, 10, 20, occurrenceId, completedId))
+            assertTrue(observations.observeOwnedOccurrenceActivityLinks(1, 10, 20).first().isEmpty())
+            assertNotNull(activities.getActivityById(10, completedId))
         } finally {
             db.close()
             context.deleteDatabase(name)
