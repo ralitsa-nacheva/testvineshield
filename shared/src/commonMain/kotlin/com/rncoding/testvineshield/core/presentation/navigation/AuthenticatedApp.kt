@@ -4,6 +4,14 @@ import androidx.compose.foundation.layout.padding
 import com.rncoding.testvineshield.core.presentation.disease_observations.BlockDiseaseObservationsScreen
 import com.rncoding.testvineshield.core.presentation.disease_catalogue.DiseaseCatalogueScreenRoot
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import com.rncoding.testvineshield.core.domain.error.Result
+import com.rncoding.testvineshield.core.domain.repository.VineyardRepository
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import org.koin.compose.koinInject
 import androidx.compose.runtime.*
 import com.rncoding.testvineshield.core.presentation.harvest.*
 import com.rncoding.testvineshield.core.domain.usecases.harvest.HarvestScope
@@ -29,7 +37,9 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 fun AuthenticatedApp(
     userId: Long,
     alertBadgeCount: Int = 0,
-    activityBadgeCount: Int = 0
+    activityBadgeCount: Int = 0,
+    pendingVineyardId: Long? = null,
+    onVineyardLinkHandled: (Long) -> Unit = {}
 ) {
 
     var busyRecordRoute by remember { mutableStateOf<AppRoute?>(null) }
@@ -42,7 +52,43 @@ fun AuthenticatedApp(
             navigationState.selectDestination(TopLevelDestination.VINEYARDS)
     }
 
+    val vineyards = koinInject<VineyardRepository>()
+    val linkMessages = remember { SnackbarHostState() }
+    var linkUnavailable by remember { mutableStateOf(false) }
+    LaunchedEffect(linkUnavailable) {
+        if (linkUnavailable) {
+            linkMessages.showSnackbar("This vineyard is unavailable for the current account.")
+            linkUnavailable = false
+        }
+    }
+    val onLinkHandled by rememberUpdatedState(onVineyardLinkHandled)
+    LaunchedEffect(userId, pendingVineyardId, busyRecordRoute) {
+        val id = pendingVineyardId ?: return@LaunchedEffect
+        if (busyRecordRoute != null) return@LaunchedEffect
+
+        val canOpen = try {
+            vineyards.getVineyard(userId, id) is Result.Success
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            false
+        }
+        currentCoroutineContext().ensureActive()
+        if (busyRecordRoute != null) return@LaunchedEffect
+        if (canOpen) {
+            navigationState.selectDestination(TopLevelDestination.VINEYARDS)
+            val route = VineyardDetailsRoute(id)
+            if (navigationState.currentBackStack.lastOrNull() != route) {
+                navigationState.navigate(route)
+            }
+        } else {
+            linkUnavailable = true
+        }
+        onLinkHandled(id)
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(linkMessages) },
         bottomBar = {
 
             VineShieldNavigationBar(

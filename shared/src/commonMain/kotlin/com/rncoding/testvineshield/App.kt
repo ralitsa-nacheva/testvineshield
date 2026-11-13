@@ -9,10 +9,18 @@ import com.rncoding.testvineshield.core.presentation.root.AppRoot
 import com.rncoding.testvineshield.core.presentation.theme.VineShieldTheme
 
 @Composable
-fun App(modifier: Modifier = Modifier) {
+fun App(
+    modifier: Modifier = Modifier,
+    pendingVineyardId: Long? = null,
+    onVineyardLinkHandled: (Long) -> Unit = {}
+) {
     VineShieldTheme {
         Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-            AppRoot(modifier = Modifier.fillMaxSize())
+            AppRoot(
+                modifier = Modifier.fillMaxSize(),
+                pendingVineyardId = pendingVineyardId,
+                onVineyardLinkHandled = onVineyardLinkHandled
+            )
         }
     }
 }

@@ -27,7 +27,9 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun AppRoot(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    pendingVineyardId: Long? = null,
+    onVineyardLinkHandled: (Long) -> Unit = {}
 ) {
     val startupViewModel = koinViewModel<AppStartupViewModel>()
     val startupState by startupViewModel.uiState.collectAsStateWithLifecycle()
@@ -39,13 +41,13 @@ fun AppRoot(
                 error = AppInitializationError,
                 onRetry = startupViewModel::retry
             )
-            AppStartupUiState.Ready -> SessionRoot()
+            AppStartupUiState.Ready -> SessionRoot(pendingVineyardId, onVineyardLinkHandled)
         }
     }
 }
 
 @Composable
-private fun SessionRoot() {
+private fun SessionRoot(pendingVineyardId: Long?, onVineyardLinkHandled: (Long) -> Unit) {
     // AuthViewModel restores the session in init. Create it only after readiness.
     val authViewModel = koinViewModel<AuthViewModel>()
 
@@ -97,7 +99,11 @@ private fun SessionRoot() {
 
         is AuthState.Authenticated ->
             appStateHolder.SaveableStateProvider(state.user.userId) {
-                AuthenticatedApp(userId = state.user.userId)
+                AuthenticatedApp(
+                    userId = state.user.userId,
+                    pendingVineyardId = pendingVineyardId,
+                    onVineyardLinkHandled = onVineyardLinkHandled
+                )
             }
 
         is AuthState.Error -> {
