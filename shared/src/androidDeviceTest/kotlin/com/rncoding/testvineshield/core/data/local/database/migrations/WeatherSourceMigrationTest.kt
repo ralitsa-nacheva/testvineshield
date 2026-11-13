@@ -294,6 +294,25 @@ class WeatherSourceMigrationTest {
             val evidence = dao.getRiskSymptomsForOccurrence(downyId).single()
             assertEquals("downy_mildew_oil_spot", evidence.code)
             assertEquals(observedOn, evidence.observedAt)
+            val symptomId = assertNotNull(row.oilSpotId)
+            val correctedDate = LocalDate(2026, 6, 13)
+            assertEquals(0, dao.updateOwnedOilSpot(
+                2, 10, 20, downyId, 1000, symptomId, observedOn, "near the row end", correctedDate, ""
+            ))
+            assertEquals(1, dao.updateOwnedOilSpot(
+                1, 10, 20, downyId, 1000, symptomId, observedOn, "near the row end", correctedDate, ""
+            ))
+            assertEquals(0, dao.removeOwnedOilSpot(
+                1, 10, 20, downyId, 1000, symptomId, observedOn, "near the row end"
+            ))
+            assertEquals(correctedDate, dao.getRiskSymptomsForOccurrence(downyId).single().observedAt)
+            assertEquals(1, dao.removeOwnedOilSpot(
+                1, 10, 20, downyId, 1000, symptomId, correctedDate, ""
+            ))
+            assertTrue(dao.getRiskSymptomsForOccurrence(downyId).isEmpty())
+            assertNull(dao.observeOwnedBlockOccurrences(1, 10, 20).first().single { it.id == downyId }.oilSpotDate)
+            assertEquals(symptomId, dao.findOilSpotSymptomId())
+            assertNotNull(dao.getDiseaseOccurrenceById(downyId))
         } finally {
             db.close()
             context.deleteDatabase(name)

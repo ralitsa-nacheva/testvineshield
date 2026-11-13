@@ -40,7 +40,9 @@ class DiseaseRepositoryImpl(
                 BlockDiseaseObservation(
                     row.id, row.diseaseName, row.observedOn, row.severity, row.status, row.notes, row.curedAt,
                     row.updatedAt, row.diseaseCode,
-                    row.oilSpotDate?.let { ObservedOilSpot(it, row.oilSpotNotes.orEmpty()) }
+                    if (row.oilSpotId != null && row.oilSpotDate != null) {
+                        ObservedOilSpot(row.oilSpotId, row.oilSpotDate, row.oilSpotNotes.orEmpty())
+                    } else null
                 )
             }
         }
@@ -102,6 +104,22 @@ class DiseaseRepositoryImpl(
     override suspend fun unlinkOwnedOccurrenceActivity(
         ownerId: Long, vineyardId: Long, blockId: Long, occurrenceId: Long, activityId: Long
     ): Boolean = diseaseOccurrenceDao.unlinkOwnedOccurrenceActivity(ownerId, vineyardId, blockId, occurrenceId, activityId) == 1
+
+    override suspend fun updateOwnedOilSpot(
+        ownerId: Long, vineyardId: Long, blockId: Long, occurrenceId: Long,
+        expectedUpdatedAt: Long, symptomId: Long, previousDate: LocalDate, previousNotes: String,
+        observedOn: LocalDate, notes: String
+    ): Boolean = diseaseOccurrenceDao.updateOwnedOilSpot(
+        ownerId, vineyardId, blockId, occurrenceId, expectedUpdatedAt, symptomId, previousDate, previousNotes,
+        observedOn, notes
+    ) == 1
+
+    override suspend fun removeOwnedOilSpot(
+        ownerId: Long, vineyardId: Long, blockId: Long, occurrenceId: Long,
+        expectedUpdatedAt: Long, symptomId: Long, previousDate: LocalDate, previousNotes: String
+    ): Boolean = diseaseOccurrenceDao.removeOwnedOilSpot(
+        ownerId, vineyardId, blockId, occurrenceId, expectedUpdatedAt, symptomId, previousDate, previousNotes
+    ) == 1
 
     override fun observePredefinedDiseases(): Flow<List<DiseaseDomainModel>> =
         diseaseDao.observePredefinedDiseases().map { rows -> rows.map(diseaseMapper::toDomain) }

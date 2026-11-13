@@ -32,7 +32,7 @@ data class ObservationDialog(
     val kind: Kind,
     val activityToUnlink: LinkedObservationActivity? = null
 ) {
-    enum class Kind { DETAILS, STATUS, OIL_SPOT, LINK_ACTIVITY, UNLINK_ACTIVITY }
+    enum class Kind { DETAILS, STATUS, OIL_SPOT, REMOVE_OIL_SPOT, LINK_ACTIVITY, UNLINK_ACTIVITY }
 }
 
 data class DiseaseObservationsState(
@@ -136,6 +136,12 @@ class BlockDiseaseObservationsViewModel(
     fun saveOilSpot(date: LocalDate, notes: String) {
         saveDialog(ObservationDialog.Kind.OIL_SPOT) { observation ->
             recordOilSpot(key.ownerId, key.vineyardId, key.blockId, observation, date, notes)
+        }
+    }
+
+    fun removeOilSpot() {
+        saveDialog(ObservationDialog.Kind.REMOVE_OIL_SPOT) { observation ->
+            recordOilSpot.remove(key.ownerId, key.vineyardId, key.blockId, observation)
         }
     }
 

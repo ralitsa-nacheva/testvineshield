@@ -95,6 +95,27 @@ fun BlockDiseaseObservationsScreen(
         OilSpotDialog(dialog.observation, state.saving, state.dialogError, model::closeDialog, model::saveOilSpot)
     }
 
+    state.dialog?.takeIf { it.kind == ObservationDialog.Kind.REMOVE_OIL_SPOT }?.observation?.oilSpot?.let { oilSpot ->
+        AlertDialog(
+            onDismissRequest = model::closeDialog,
+            title = { Text("Remove leaf oil spot?") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Remove the symptom recorded on ${oilSpot.observedOn}.")
+                    state.dialogError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = userAction(model::removeOilSpot), enabled = !state.saving) {
+                    Text(if (state.saving) "Removing…" else "Remove symptom")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = userAction(model::closeDialog), enabled = !state.saving) { Text("Cancel") }
+            }
+        )
+    }
+
     state.dialog?.takeIf { it.kind == ObservationDialog.Kind.LINK_ACTIVITY }?.let { dialog ->
         val linkedIds = state.activityLinks[dialog.observation.id].orEmpty().map { it.activityId }.toSet()
         LinkActivityDialog(
@@ -156,6 +177,14 @@ fun BlockDiseaseObservationsScreen(
                                 if (oilSpot != null) {
                                     Text("Leaf oil spot · ${oilSpot.observedOn}")
                                     if (oilSpot.notes.isNotBlank()) Text(oilSpot.notes)
+                                    TextButton(
+                                        onClick = userAction { model.openDialog(observation.id, ObservationDialog.Kind.OIL_SPOT) },
+                                        enabled = !state.saving
+                                    ) { Text("Edit leaf oil spot") }
+                                    TextButton(
+                                        onClick = userAction { model.openDialog(observation.id, ObservationDialog.Kind.REMOVE_OIL_SPOT) },
+                                        enabled = !state.saving
+                                    ) { Text("Remove leaf oil spot") }
                                 } else if (observation.diseaseCode == DiseaseCatalogueCodes.GRAPE_DOWNY_MILDEW) {
                                     TextButton(
                                         onClick = userAction { model.openDialog(observation.id, ObservationDialog.Kind.OIL_SPOT) },
@@ -299,13 +328,18 @@ private fun OilSpotDialog(
     onClose: () -> Unit,
     onSave: (LocalDate, String) -> Unit
 ) {
-    var dateText by rememberSaveable(observation.id) { mutableStateOf("") }
-    var notes by rememberSaveable(observation.id) { mutableStateOf("") }
+    val existing = observation.oilSpot
+    var dateText by rememberSaveable(observation.id, existing?.symptomId) {
+        mutableStateOf(existing?.observedOn?.toString().orEmpty())
+    }
+    var notes by rememberSaveable(observation.id, existing?.symptomId) {
+        mutableStateOf(existing?.notes.orEmpty())
+    }
     val date = parseObservationDate(dateText)
     val activity = LocalUserActivity.current
     AlertDialog(
         onDismissRequest = onClose,
-        title = { Text("Record leaf oil spot") },
+        title = { Text(if (existing == null) "Record leaf oil spot" else "Edit leaf oil spot") },
         text = {
             Column(
                 Modifier.verticalScroll(rememberScrollState()),

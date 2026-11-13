@@ -34,6 +34,7 @@ data class OwnedBlockDiseaseObservationRow(
     @ColumnInfo(name = "cured_at") val curedAt: LocalDate?,
     @ColumnInfo(name = "updated_at") val updatedAt: Long,
     @ColumnInfo(name = "disease_code") val diseaseCode: String?,
+    @ColumnInfo(name = "oil_spot_id") val oilSpotId: Long?,
     @ColumnInfo(name = "oil_spot_date") val oilSpotDate: LocalDate?,
     @ColumnInfo(name = "oil_spot_notes") val oilSpotNotes: String?
 )
@@ -43,7 +44,7 @@ interface DiseaseOccurrenceDao {
     @Query("""
         SELECT o.occurrence_id, d.name AS disease_name, o.observed_at, o.severity, o.status, o.notes,
                o.cured_at, o.updated_at, d.code AS disease_code,
-               os.observed_at AS oil_spot_date, os.notes AS oil_spot_notes
+               os.symptom_id AS oil_spot_id, os.observed_at AS oil_spot_date, os.notes AS oil_spot_notes
         FROM disease_occurrence o
         JOIN block b ON b.block_id = o.block_id AND b.vineyard_id = o.vineyard_id
         JOIN vineyard v ON v.vineyard_id = b.vineyard_id
@@ -272,6 +273,51 @@ interface DiseaseOccurrenceDao {
     """)
     suspend fun unlinkOwnedOccurrenceActivity(
         ownerId: Long, vineyardId: Long, blockId: Long, occurrenceId: Long, activityId: Long
+    ): Int
+
+    @Query("""
+        UPDATE occurrence_symptom_cross_ref
+        SET observed_at = :observedOn, notes = :notes
+        WHERE occurrence_id = :occurrenceId AND symptom_id = :symptomId
+          AND observed_at = :previousDate AND notes = :previousNotes
+          AND EXISTS (
+              SELECT 1 FROM disease_occurrence o
+              JOIN block b ON b.block_id = o.block_id AND b.vineyard_id = o.vineyard_id
+              JOIN vineyard v ON v.vineyard_id = b.vineyard_id
+              JOIN disease d ON d.disease_id = o.disease_id
+              JOIN symptom s ON s.symptom_id = :symptomId
+              WHERE o.occurrence_id = :occurrenceId AND o.updated_at = :expectedUpdatedAt
+                AND v.user_id = :ownerId AND v.vineyard_id = :vineyardId AND b.block_id = :blockId
+                AND d.is_predefined = 1 AND d.code = '${DiseaseCatalogueCodes.GRAPE_DOWNY_MILDEW}'
+                AND s.code = '${SymptomCatalogueCodes.DOWNY_MILDEW_OIL_SPOT}'
+                AND (o.cured_at IS NULL OR :observedOn <= o.cured_at)
+          )
+    """)
+    suspend fun updateOwnedOilSpot(
+        ownerId: Long, vineyardId: Long, blockId: Long, occurrenceId: Long,
+        expectedUpdatedAt: Long, symptomId: Long, previousDate: LocalDate, previousNotes: String,
+        observedOn: LocalDate, notes: String
+    ): Int
+
+    @Query("""
+        DELETE FROM occurrence_symptom_cross_ref
+        WHERE occurrence_id = :occurrenceId AND symptom_id = :symptomId
+          AND observed_at = :previousDate AND notes = :previousNotes
+          AND EXISTS (
+              SELECT 1 FROM disease_occurrence o
+              JOIN block b ON b.block_id = o.block_id AND b.vineyard_id = o.vineyard_id
+              JOIN vineyard v ON v.vineyard_id = b.vineyard_id
+              JOIN disease d ON d.disease_id = o.disease_id
+              JOIN symptom s ON s.symptom_id = :symptomId
+              WHERE o.occurrence_id = :occurrenceId AND o.updated_at = :expectedUpdatedAt
+                AND v.user_id = :ownerId AND v.vineyard_id = :vineyardId AND b.block_id = :blockId
+                AND d.is_predefined = 1 AND d.code = '${DiseaseCatalogueCodes.GRAPE_DOWNY_MILDEW}'
+                AND s.code = '${SymptomCatalogueCodes.DOWNY_MILDEW_OIL_SPOT}'
+          )
+    """)
+    suspend fun removeOwnedOilSpot(
+        ownerId: Long, vineyardId: Long, blockId: Long, occurrenceId: Long,
+        expectedUpdatedAt: Long, symptomId: Long, previousDate: LocalDate, previousNotes: String
     ): Int
 
     @Upsert
