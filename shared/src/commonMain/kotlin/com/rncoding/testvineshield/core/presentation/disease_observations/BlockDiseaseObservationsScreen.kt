@@ -150,6 +150,18 @@ fun BlockDiseaseObservationsScreen(
         )
     }
 
+    var diseaseCode by rememberSaveable(ownerId, vineyardId, blockId) { mutableStateOf<String?>(null) }
+    var statusName by rememberSaveable(ownerId, vineyardId, blockId) { mutableStateOf<String?>(null) }
+    val status = DiseaseOccurrenceStatus.entries.firstOrNull { it.name == statusName }
+    val selectedDisease = state.diseases.firstOrNull { it.code != null && it.code == diseaseCode }
+    val visibleObservations = remember(state.observations, selectedDisease?.code, status) {
+        val selectedCode = selectedDisease?.code
+        state.observations.filter { observation ->
+            (selectedCode == null || observation.diseaseCode == selectedCode) &&
+                (status == null || observation.status == status)
+        }
+    }
+
     Scaffold(topBar = { RecordTopBar("Disease observations", { if (!model.state.value.saving) onBack() }, !state.saving) }) { padding ->
         LazyColumn(
             Modifier.padding(padding).fillMaxSize(),
@@ -166,8 +178,41 @@ fun BlockDiseaseObservationsScreen(
                 else -> {
                     if (state.diseases.isEmpty()) item { Text("No built-in diseases are available.") }
                     else item(key = "observation-form") { ObservationForm(state, model::save) }
-                    if (state.observations.isEmpty()) item { Text("No observations for built-in diseases in this block.") }
-                    items(state.observations, key = { it.id }) { observation ->
+                    if (state.observations.isEmpty()) {
+                        item { Text("No observations for built-in diseases in this block.") }
+                    } else {
+                        item(key = "observation-filters") {
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text("Filter observations", style = MaterialTheme.typography.titleMedium)
+                                RecordChoice(
+                                    label = "Disease", selected = selectedDisease,
+                                    values = state.diseases.filter { !it.code.isNullOrBlank() },
+                                    enabled = !state.saving,
+                                    text = { it.name }, changed = { diseaseCode = it?.code },
+                                    nullLabel = "All diseases"
+                                )
+                                RecordChoice(
+                                    label = "Status", selected = status,
+                                    values = DiseaseOccurrenceStatus.entries, enabled = !state.saving,
+                                    text = { it.label() }, changed = { statusName = it?.name },
+                                    nullLabel = "All statuses"
+                                )
+                                if (selectedDisease != null || status != null) {
+                                    TextButton(
+                                        onClick = userAction {
+                                            diseaseCode = null
+                                            statusName = null
+                                        },
+                                        enabled = !state.saving
+                                    ) { Text("Clear filters") }
+                                }
+                                if (visibleObservations.isEmpty()) {
+                                    Text("No observations match these filters.")
+                                }
+                            }
+                        }
+                    }
+                    items(visibleObservations, key = { it.id }) { observation ->
                         OutlinedCard(Modifier.fillMaxWidth()) {
                             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Text(observation.diseaseName, style = MaterialTheme.typography.titleMedium)
