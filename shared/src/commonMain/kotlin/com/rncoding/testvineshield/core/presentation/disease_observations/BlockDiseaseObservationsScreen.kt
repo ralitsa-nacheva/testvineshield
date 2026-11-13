@@ -16,6 +16,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rncoding.testvineshield.core.domain.datamodels.CompletedBlockActivity
 import com.rncoding.testvineshield.core.domain.datamodels.BlockDiseaseObservation
 import com.rncoding.testvineshield.core.domain.datamodels.enums.DiseaseOccurrenceStatus
+import com.rncoding.testvineshield.core.domain.datamodels.ObservedReferenceSymptom
 import com.rncoding.testvineshield.core.domain.datamodels.ReferenceSymptom
 import com.rncoding.testvineshield.core.presentation.components.RecordChoice
 import com.rncoding.testvineshield.core.presentation.components.RecordTopBar
@@ -92,10 +93,10 @@ fun BlockDiseaseObservationsScreen(
     }
 
     state.dialog?.takeIf { it.kind == ObservationDialog.Kind.REFERENCE_SYMPTOM }?.let { dialog ->
-        ReferenceSymptomDialog(dialog.observation, state.saving, state.dialogError, model::closeDialog, model::saveReferenceSymptom)
+        ReferenceSymptomDialog(dialog.observation, dialog.symptomToChange, state.saving, state.dialogError, model::closeDialog, model::saveReferenceSymptom)
     }
 
-    state.dialog?.takeIf { it.kind == ObservationDialog.Kind.REMOVE_REFERENCE_SYMPTOM }?.observation?.referenceSymptom?.let { referenceSymptom ->
+    state.dialog?.takeIf { it.kind == ObservationDialog.Kind.REMOVE_REFERENCE_SYMPTOM }?.symptomToChange?.let { referenceSymptom ->
         AlertDialog(
             onDismissRequest = model::closeDialog,
             title = { Text("Remove recorded symptom?") },
@@ -173,23 +174,23 @@ fun BlockDiseaseObservationsScreen(
                                 Text("${observation.observedOn} · ${observation.severity}% affected · ${observation.status.label()}")
                                 observation.curedAt?.let { Text("Resolved on $it") }
                                 observation.notes?.let { Text(it) }
-                                val symptom = ReferenceSymptom.forDisease(observation.diseaseCode)
-                                val recorded = observation.referenceSymptom
-                                if (symptom != null) {
-                                    if (recorded != null) {
-                                        Text("${symptom.label} · ${recorded.observedOn}")
-                                        if (recorded.notes.isNotBlank()) Text(recorded.notes)
-                                    }
+                                observation.referenceSymptoms.forEach { recorded ->
+                                    Text("${recorded.kind.label} · ${recorded.observedOn}")
+                                    if (recorded.notes.isNotBlank()) Text(recorded.notes)
+                                    TextButton(
+                                        onClick = userAction { model.openDialog(observation.id, ObservationDialog.Kind.REFERENCE_SYMPTOM, recorded) },
+                                        enabled = !state.saving
+                                    ) { Text("Edit ${recorded.kind.label.lowercase()}") }
+                                    TextButton(
+                                        onClick = userAction { model.openDialog(observation.id, ObservationDialog.Kind.REMOVE_REFERENCE_SYMPTOM, recorded) },
+                                        enabled = !state.saving
+                                    ) { Text("Remove ${recorded.kind.label.lowercase()}") }
+                                }
+                                if (availableSymptoms(observation).isNotEmpty()) {
                                     TextButton(
                                         onClick = userAction { model.openDialog(observation.id, ObservationDialog.Kind.REFERENCE_SYMPTOM) },
                                         enabled = !state.saving
-                                    ) { Text(if (recorded == null) "Record symptom" else "Edit symptom") }
-                                    if (recorded != null) {
-                                        TextButton(
-                                            onClick = userAction { model.openDialog(observation.id, ObservationDialog.Kind.REMOVE_REFERENCE_SYMPTOM) },
-                                            enabled = !state.saving
-                                        ) { Text("Remove symptom") }
-                                    }
+                                    ) { Text("Record symptom") }
                                 }
                                 TextButton(
                                     onClick = userAction { model.openDialog(observation.id, ObservationDialog.Kind.STATUS) },
@@ -320,16 +321,25 @@ private fun EditObservationDialog(
     )
 }
 
+private fun availableSymptoms(observation: BlockDiseaseObservation): List<ReferenceSymptom> =
+    ReferenceSymptom.forDisease(observation.diseaseCode).filter { kind ->
+        observation.referenceSymptoms.none { it.kind == kind }
+    }
+
 @Composable
 private fun ReferenceSymptomDialog(
     observation: BlockDiseaseObservation,
+    existing: ObservedReferenceSymptom?,
     saving: Boolean,
     error: String?,
     onClose: () -> Unit,
-    onSave: (LocalDate, String) -> Unit
+    onSave: (ReferenceSymptom, LocalDate, String) -> Unit
 ) {
-    val symptom = ReferenceSymptom.forDisease(observation.diseaseCode) ?: return
-    val existing = observation.referenceSymptom
+    val choices = if (existing == null) availableSymptoms(observation) else listOf(existing.kind)
+    var selectedCode by rememberSaveable(observation.id, existing?.symptomId) {
+        mutableStateOf(choices.singleOrNull()?.code)
+    }
+    val symptom = choices.firstOrNull { it.code == selectedCode }
     var dateText by rememberSaveable(observation.id, existing?.symptomId) {
         mutableStateOf(existing?.observedOn?.toString().orEmpty())
     }
@@ -340,12 +350,19 @@ private fun ReferenceSymptomDialog(
     val activity = LocalUserActivity.current
     AlertDialog(
         onDismissRequest = onClose,
-        title = { Text(symptom.label) },
+        title = { Text(if (existing == null) "Record symptom" else "Edit ${existing.kind.label.lowercase()}") },
         text = {
             Column(
                 Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                if (existing == null) {
+                    RecordChoice(
+                        label = "Symptom", selected = symptom, values = choices, enabled = !saving,
+                        text = { it.label }, changed = { selectedCode = it?.code },
+                        allowUnknown = false, nullLabel = "Choose a symptom"
+                    )
+                }
                 Text("Enter the date you saw the symptom on the vine.")
                 OutlinedTextField(
                     value = dateText, onValueChange = { activity(); dateText = it },
@@ -363,8 +380,8 @@ private fun ReferenceSymptomDialog(
         },
         confirmButton = {
             TextButton(
-                onClick = userAction { if (date != null) onSave(date, notes) },
-                enabled = !saving && date != null && notes.trim().length <= 4000
+                onClick = userAction { if (symptom != null && date != null) onSave(symptom, date, notes) },
+                enabled = !saving && symptom != null && date != null && notes.trim().length <= 4000
             ) { Text(if (saving) "Saving…" else "Save symptom") }
         },
         dismissButton = {

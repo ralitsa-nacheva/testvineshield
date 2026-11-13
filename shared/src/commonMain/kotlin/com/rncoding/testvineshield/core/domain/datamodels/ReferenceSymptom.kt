@@ -7,6 +7,9 @@ import com.rncoding.testvineshield.core.domain.disease_risk.SymptomCatalogueCode
 object ReferenceSymptomCodes {
     const val LEAF_OIL_SPOT = SymptomCatalogueCodes.DOWNY_MILDEW_OIL_SPOT
     const val POWDERY_LEAF_PATCH = "powdery_mildew_leaf_patch"
+    const val POWDERY_CLUSTER_PATCH = "powdery_mildew_cluster_patch"
+    const val DOWNY_LEAF_UNDERSIDE = "downy_mildew_leaf_underside_growth"
+    const val BOTRYTIS_SHOOT_PATCH = "botrytis_shoot_patch"
     const val GRAY_BERRY_GROWTH = "botrytis_gray_berry_growth"
 }
 
@@ -28,9 +31,21 @@ enum class ReferenceSymptom(
     GRAY_BERRY_GROWTH(
         DiseaseCatalogueCodes.GRAPE_BOTRYTIS, ReferenceSymptomCodes.GRAY_BERRY_GROWTH,
         "Gray growth on berries", "Berry", PhenologicalStage.RIPENING
+    ),
+    POWDERY_CLUSTER_PATCH(
+        DiseaseCatalogueCodes.GRAPE_POWDERY_MILDEW, ReferenceSymptomCodes.POWDERY_CLUSTER_PATCH,
+        "Powdery patch on berries or cluster stems", "Cluster", PhenologicalStage.BERRY_DEVELOPMENT
+    ),
+    DOWNY_LEAF_UNDERSIDE(
+        DiseaseCatalogueCodes.GRAPE_DOWNY_MILDEW, ReferenceSymptomCodes.DOWNY_LEAF_UNDERSIDE,
+        "White growth under a leaf lesion", "Leaf underside", PhenologicalStage.LEAF_DEVELOPMENT
+    ),
+    BOTRYTIS_SHOOT_PATCH(
+        DiseaseCatalogueCodes.GRAPE_BOTRYTIS, ReferenceSymptomCodes.BOTRYTIS_SHOOT_PATCH,
+        "Soft brown patch on shoot", "Shoot", PhenologicalStage.LEAF_DEVELOPMENT
     );
 
     companion object {
-        fun forDisease(code: String?): ReferenceSymptom? = entries.firstOrNull { it.diseaseCode == code }
+        fun forDisease(code: String?): List<ReferenceSymptom> = entries.filter { it.diseaseCode == code }
     }
 }

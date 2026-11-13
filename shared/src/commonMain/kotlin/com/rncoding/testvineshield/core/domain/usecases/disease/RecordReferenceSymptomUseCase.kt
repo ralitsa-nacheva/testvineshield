@@ -2,6 +2,7 @@ package com.rncoding.testvineshield.core.domain.usecases.disease
 
 import com.rncoding.testvineshield.core.domain.auth.AuthenticatedUserProvider
 import com.rncoding.testvineshield.core.domain.datamodels.BlockDiseaseObservation
+import com.rncoding.testvineshield.core.domain.datamodels.ObservedReferenceSymptom
 import com.rncoding.testvineshield.core.domain.datamodels.ReferenceSymptom
 import com.rncoding.testvineshield.core.domain.error.AppError
 import com.rncoding.testvineshield.core.domain.error.AuthError
@@ -24,11 +25,12 @@ class RecordReferenceSymptomUseCase(
 ) {
     suspend operator fun invoke(
         ownerId: Long, vineyardId: Long, blockId: Long, observation: BlockDiseaseObservation,
-        observedOn: LocalDate, notes: String
+        symptom: ReferenceSymptom, existing: ObservedReferenceSymptom?, observedOn: LocalDate, notes: String
     ): Result<Unit, AppError> {
         if (users.currentUserOrNull()?.userId != ownerId) return Result.Error(AuthError.NoActiveSession)
-        val symptom = ReferenceSymptom.forDisease(observation.diseaseCode)
-            ?: return Result.Error(DiseaseError.InvalidInput("No reference symptom is available for this disease."))
+        if (symptom.diseaseCode != observation.diseaseCode ||
+            (existing != null && (existing.kind != symptom || existing !in observation.referenceSymptoms))
+        ) return Result.Error(DiseaseError.InvalidInput("This symptom is unavailable for the observation."))
         val resolutionDate = observation.curedAt
         if (resolutionDate != null && observedOn > resolutionDate) {
             return Result.Error(DiseaseError.InvalidInput("The symptom date cannot be after the resolution date."))
@@ -43,7 +45,6 @@ class RecordReferenceSymptomUseCase(
                 ?.let { return Result.Error(it) }
             currentCoroutineContext().ensureActive()
             if (users.currentUserOrNull()?.userId != ownerId) return Result.Error(AuthError.NoActiveSession)
-            val existing = observation.referenceSymptom
             val recorded = if (existing == null) {
                 diseases.recordOwnedReferenceSymptom(
                     ownerId, vineyardId, blockId, observation.id, observation.updatedAt, observedOn, normalizedNotes, symptom
@@ -65,11 +66,13 @@ class RecordReferenceSymptomUseCase(
     }
 
     suspend fun remove(
-        ownerId: Long, vineyardId: Long, blockId: Long, observation: BlockDiseaseObservation
+        ownerId: Long, vineyardId: Long, blockId: Long, observation: BlockDiseaseObservation,
+        existing: ObservedReferenceSymptom
     ): Result<Unit, AppError> {
         if (users.currentUserOrNull()?.userId != ownerId) return Result.Error(AuthError.NoActiveSession)
-        val existing = observation.referenceSymptom
-            ?: return Result.Error(DiseaseError.InvalidInput("This observation has no recorded symptom."))
+        if (existing !in observation.referenceSymptoms) {
+            return Result.Error(DiseaseError.InvalidInput("This observation has no matching recorded symptom."))
+        }
         return try {
             currentCoroutineContext().ensureActive()
             val removed = diseases.removeOwnedReferenceSymptom(

@@ -1,5 +1,7 @@
 package com.rncoding.testvineshield.core.presentation.disease_observations
 
+import com.rncoding.testvineshield.core.domain.datamodels.ObservedReferenceSymptom
+import com.rncoding.testvineshield.core.domain.datamodels.ReferenceSymptom
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rncoding.testvineshield.core.domain.auth.AuthenticatedUserProvider
@@ -30,7 +32,8 @@ data class DiseaseObservationsKey(val ownerId: Long, val vineyardId: Long, val b
 data class ObservationDialog(
     val observation: BlockDiseaseObservation,
     val kind: Kind,
-    val activityToUnlink: LinkedObservationActivity? = null
+    val activityToUnlink: LinkedObservationActivity? = null,
+    val symptomToChange: ObservedReferenceSymptom? = null
 ) {
     enum class Kind { DETAILS, STATUS, REFERENCE_SYMPTOM, REMOVE_REFERENCE_SYMPTOM, LINK_ACTIVITY, UNLINK_ACTIVITY }
 }
@@ -109,11 +112,11 @@ class BlockDiseaseObservationsViewModel(
         }
     }
 
-    fun openDialog(observationId: Long, kind: ObservationDialog.Kind) {
+    fun openDialog(observationId: Long, kind: ObservationDialog.Kind, symptom: ObservedReferenceSymptom? = null) {
         val current = _state.value
         if (current.saving || current.loadError != null || current.dialog != null) return
         val observation = current.observations.firstOrNull { it.id == observationId } ?: return
-        _state.update { it.copy(dialog = ObservationDialog(observation, kind), dialogError = null) }
+        _state.update { it.copy(dialog = ObservationDialog(observation, kind, symptomToChange = symptom), dialogError = null) }
     }
 
     fun closeDialog() {
@@ -133,15 +136,17 @@ class BlockDiseaseObservationsViewModel(
         }
     }
 
-    fun saveReferenceSymptom(date: LocalDate, notes: String) {
+    fun saveReferenceSymptom(kind: ReferenceSymptom, date: LocalDate, notes: String) {
+        val existing = _state.value.dialog?.symptomToChange
         saveDialog(ObservationDialog.Kind.REFERENCE_SYMPTOM) { observation ->
-            recordReferenceSymptom(key.ownerId, key.vineyardId, key.blockId, observation, date, notes)
+            recordReferenceSymptom(key.ownerId, key.vineyardId, key.blockId, observation, kind, existing, date, notes)
         }
     }
 
     fun removeReferenceSymptom() {
+        val existing = _state.value.dialog?.symptomToChange ?: return
         saveDialog(ObservationDialog.Kind.REMOVE_REFERENCE_SYMPTOM) { observation ->
-            recordReferenceSymptom.remove(key.ownerId, key.vineyardId, key.blockId, observation)
+            recordReferenceSymptom.remove(key.ownerId, key.vineyardId, key.blockId, observation, existing)
         }
     }
 

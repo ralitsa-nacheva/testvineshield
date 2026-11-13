@@ -289,13 +289,13 @@ class WeatherSourceMigrationTest {
             assertFalse(dao.recordOwnedReferenceSymptom(1, 10, 20, downyId, 999, observedOn, "stale", ReferenceSymptom.LEAF_OIL_SPOT))
             assertTrue(dao.recordOwnedReferenceSymptom(1, 10, 20, downyId, 1000, observedOn, "near the row end", ReferenceSymptom.LEAF_OIL_SPOT))
             assertFalse(dao.recordOwnedReferenceSymptom(1, 10, 20, downyId, 1000, observedOn, "replacement", ReferenceSymptom.LEAF_OIL_SPOT))
-            val row = dao.observeOwnedBlockOccurrences(1, 10, 20).first().single { it.id == downyId }
-            assertEquals(observedOn, row.referenceSymptomDate)
-            assertEquals("near the row end", row.referenceSymptomNotes)
+            val row = dao.observeOwnedObservationSymptoms(1, 10, 20).first().single { it.occurrenceId == downyId }
+            assertEquals(observedOn, row.observedOn)
+            assertEquals("near the row end", row.notes)
             val evidence = dao.getRiskSymptomsForOccurrence(downyId).single()
             assertEquals("downy_mildew_oil_spot", evidence.code)
             assertEquals(observedOn, evidence.observedAt)
-            val symptomId = assertNotNull(row.referenceSymptomId)
+            val symptomId = row.symptomId
             val correctedDate = LocalDate(2026, 6, 13)
             assertEquals(0, dao.updateOwnedReferenceSymptom(
                 2, 10, 20, downyId, 1000, symptomId, observedOn, "near the row end", correctedDate, ""
@@ -311,14 +311,14 @@ class WeatherSourceMigrationTest {
                 1, 10, 20, downyId, 1000, symptomId, correctedDate, ""
             ))
             assertTrue(dao.getRiskSymptomsForOccurrence(downyId).isEmpty())
-            assertNull(dao.observeOwnedBlockOccurrences(1, 10, 20).first().single { it.id == downyId }.referenceSymptomDate)
+            assertTrue(dao.observeOwnedObservationSymptoms(1, 10, 20).first().none { it.occurrenceId == downyId })
             assertEquals(symptomId, dao.findReferenceSymptomId(ReferenceSymptom.LEAF_OIL_SPOT.code))
             assertNotNull(dao.getDiseaseOccurrenceById(downyId))
             assertTrue(dao.recordOwnedReferenceSymptom(
                 1, 10, 20, botrytisId, 1000, observedOn, "on a cluster", ReferenceSymptom.GRAY_BERRY_GROWTH
             ))
-            val botrytisRow = dao.observeOwnedBlockOccurrences(1, 10, 20).first().single { it.id == botrytisId }
-            assertEquals("on a cluster", botrytisRow.referenceSymptomNotes)
+            val botrytisRow = dao.observeOwnedObservationSymptoms(1, 10, 20).first().single { it.occurrenceId == botrytisId }
+            assertEquals("on a cluster", botrytisRow.notes)
             assertEquals(ReferenceSymptom.GRAY_BERRY_GROWTH.code, dao.getRiskSymptomsForOccurrence(botrytisId).single().code)
             val powdery = assertNotNull(db.diseaseDao().getDiseaseByCode("grape_powdery_mildew"))
             val powderyId = assertNotNull(dao.insertOwnedBlockOccurrence(1, occurrence.copy(diseaseId = powdery.diseaseId)))
@@ -326,6 +326,24 @@ class WeatherSourceMigrationTest {
                 1, 10, 20, powderyId, 1000, observedOn, "", ReferenceSymptom.POWDERY_LEAF_PATCH
             ))
             assertEquals(ReferenceSymptom.POWDERY_LEAF_PATCH.code, dao.getRiskSymptomsForOccurrence(powderyId).single().code)
+            assertTrue(dao.recordOwnedReferenceSymptom(
+                1, 10, 20, powderyId, 1000, observedOn, "", ReferenceSymptom.POWDERY_CLUSTER_PATCH
+            ))
+            assertFalse(dao.recordOwnedReferenceSymptom(
+                1, 10, 20, powderyId, 1000, observedOn, "", ReferenceSymptom.POWDERY_CLUSTER_PATCH
+            ))
+            val powderySymptoms = dao.observeOwnedObservationSymptoms(1, 10, 20).first()
+                .filter { it.occurrenceId == powderyId }
+            assertEquals(
+                setOf(ReferenceSymptom.POWDERY_LEAF_PATCH.code, ReferenceSymptom.POWDERY_CLUSTER_PATCH.code),
+                powderySymptoms.map { it.code }.toSet()
+            )
+            val clusterPatch = powderySymptoms.single { it.code == ReferenceSymptom.POWDERY_CLUSTER_PATCH.code }
+            assertEquals(1, dao.removeOwnedReferenceSymptom(
+                1, 10, 20, powderyId, 1000, clusterPatch.symptomId, observedOn, ""
+            ))
+            assertEquals(ReferenceSymptom.POWDERY_LEAF_PATCH.code, dao.getRiskSymptomsForOccurrence(powderyId).single().code)
+
 
 
         } finally {

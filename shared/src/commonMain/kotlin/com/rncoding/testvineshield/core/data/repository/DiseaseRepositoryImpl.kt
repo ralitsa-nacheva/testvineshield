@@ -19,6 +19,7 @@ import com.rncoding.testvineshield.core.domain.datamodels.ObservedReferenceSympt
 import com.rncoding.testvineshield.core.domain.datamodels.CompletedBlockActivity
 import com.rncoding.testvineshield.core.domain.datamodels.LinkedObservationActivity
 import com.rncoding.testvineshield.core.domain.datamodels.ReferenceSymptom
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.Flow
 import com.rncoding.testvineshield.core.domain.datamodels.BlockDiseaseObservation
 import kotlinx.coroutines.flow.map
@@ -36,14 +37,21 @@ class DiseaseRepositoryImpl(
     override fun observeOwnedBlockOccurrences(
         ownerId: Long, vineyardId: Long, blockId: Long
     ): Flow<List<BlockDiseaseObservation>> =
-        diseaseOccurrenceDao.observeOwnedBlockOccurrences(ownerId, vineyardId, blockId).map { rows ->
+        combine(
+            diseaseOccurrenceDao.observeOwnedBlockOccurrences(ownerId, vineyardId, blockId),
+            diseaseOccurrenceDao.observeOwnedObservationSymptoms(ownerId, vineyardId, blockId)
+        ) { rows, symptoms ->
+            val byOccurrence = symptoms.groupBy { it.occurrenceId }
             rows.map { row ->
+                val choices = ReferenceSymptom.forDisease(row.diseaseCode).associateBy { it.code }
+                val recorded = byOccurrence[row.id].orEmpty().mapNotNull { symptom ->
+                    choices[symptom.code]?.let { kind ->
+                        ObservedReferenceSymptom(symptom.symptomId, kind, symptom.observedOn, symptom.notes)
+                    }
+                }
                 BlockDiseaseObservation(
                     row.id, row.diseaseName, row.observedOn, row.severity, row.status, row.notes, row.curedAt,
-                    row.updatedAt, row.diseaseCode,
-                    if (row.referenceSymptomId != null && row.referenceSymptomDate != null) {
-                        ObservedReferenceSymptom(row.referenceSymptomId, row.referenceSymptomDate, row.referenceSymptomNotes.orEmpty())
-                    } else null
+                    row.updatedAt, row.diseaseCode, recorded
                 )
             }
         }

@@ -13,7 +13,7 @@ data class BlockDiseaseObservation(
     val curedAt: LocalDate?,
     val updatedAt: Long,
     val diseaseCode: String?,
-    val referenceSymptom: ObservedReferenceSymptom?
+    val referenceSymptoms: List<ObservedReferenceSymptom> = emptyList()
 )
 
-data class ObservedReferenceSymptom(val symptomId: Long, val observedOn: LocalDate, val notes: String)
+data class ObservedReferenceSymptom(val symptomId: Long, val kind: ReferenceSymptom, val observedOn: LocalDate, val notes: String)
