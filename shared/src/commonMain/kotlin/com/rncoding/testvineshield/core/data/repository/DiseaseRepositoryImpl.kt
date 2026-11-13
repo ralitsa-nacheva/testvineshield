@@ -188,6 +188,12 @@ class DiseaseRepositoryImpl(
             ?.let(diseaseOccurrenceMapper::toDomain)
     }
 
+    override suspend fun deleteOwnedBlockOccurrence(
+        ownerId: Long, vineyardId: Long, blockId: Long, occurrenceId: Long, expectedUpdatedAt: Long
+    ): Boolean = diseaseOccurrenceDao.deleteOwnedBlockOccurrence(
+        ownerId, vineyardId, blockId, occurrenceId, expectedUpdatedAt
+    ) == 1
+
     override suspend fun deleteDiseaseOccurrence(
         occurrenceId: Long
     ) {

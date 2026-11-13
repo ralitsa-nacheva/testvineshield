@@ -96,6 +96,10 @@ interface DiseaseRepository {
         occurrenceId: Long
     ): DiseaseOccurrenceDomainModel?
 
+    suspend fun deleteOwnedBlockOccurrence(
+        ownerId: Long, vineyardId: Long, blockId: Long, occurrenceId: Long, expectedUpdatedAt: Long
+    ): Boolean
+
     suspend fun deleteDiseaseOccurrence(
         occurrenceId: Long
     )

@@ -362,6 +362,22 @@ interface DiseaseOccurrenceDao {
         occurrenceId: Long
     ): DiseaseOccurrenceEntity?
 
+    @Query("""
+        DELETE FROM disease_occurrence
+        WHERE occurrence_id = :occurrenceId AND vineyard_id = :vineyardId AND block_id = :blockId
+          AND updated_at = :expectedUpdatedAt
+          AND EXISTS (
+              SELECT 1 FROM block b JOIN vineyard v ON v.vineyard_id = b.vineyard_id
+              WHERE v.user_id = :ownerId AND v.vineyard_id = :vineyardId AND b.block_id = :blockId
+          )
+          AND EXISTS (
+              SELECT 1 FROM disease d WHERE d.disease_id = disease_occurrence.disease_id AND d.is_predefined = 1
+          )
+    """)
+    suspend fun deleteOwnedBlockOccurrence(
+        ownerId: Long, vineyardId: Long, blockId: Long, occurrenceId: Long, expectedUpdatedAt: Long
+    ): Int
+
     @Query("Delete From disease_occurrence Where occurrence_id = :occurrenceId")
     suspend fun deleteDiseaseOccurrenceById(occurrenceId: Long)
 

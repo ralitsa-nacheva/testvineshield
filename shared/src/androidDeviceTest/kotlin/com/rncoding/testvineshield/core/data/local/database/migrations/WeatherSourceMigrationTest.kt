@@ -395,6 +395,17 @@ class WeatherSourceMigrationTest {
             assertEquals(1, observations.unlinkOwnedOccurrenceActivity(1, 10, 20, occurrenceId, completedId))
             assertTrue(observations.observeOwnedOccurrenceActivityLinks(1, 10, 20).first().isEmpty())
             assertNotNull(activities.getActivityById(10, completedId))
+            assertTrue(observations.linkOwnedCompletedActivity(1, 10, 20, occurrenceId, 1000, completedId, date, date))
+            assertTrue(observations.recordOwnedReferenceSymptom(
+                1, 10, 20, occurrenceId, 1000, date, "", ReferenceSymptom.GRAY_BERRY_GROWTH
+            ))
+            assertEquals(0, observations.deleteOwnedBlockOccurrence(2, 10, 20, occurrenceId, 1000))
+            assertEquals(0, observations.deleteOwnedBlockOccurrence(1, 10, 20, occurrenceId, 999))
+            assertEquals(1, observations.deleteOwnedBlockOccurrence(1, 10, 20, occurrenceId, 1000))
+            assertNull(observations.getDiseaseOccurrenceById(occurrenceId))
+            assertTrue(observations.getRiskSymptomsForOccurrence(occurrenceId).isEmpty())
+            assertFalse(activities.hasDiseaseOccurrenceLinks(completedId))
+            assertNotNull(activities.getActivityById(10, completedId))
         } finally {
             db.close()
             context.deleteDatabase(name)

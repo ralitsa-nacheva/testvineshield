@@ -18,6 +18,7 @@ import com.rncoding.testvineshield.core.domain.usecases.disease.RecordReferenceS
 import com.rncoding.testvineshield.core.domain.datamodels.CompletedBlockActivity
 import com.rncoding.testvineshield.core.domain.datamodels.LinkedObservationActivity
 import com.rncoding.testvineshield.core.domain.usecases.disease.ObservationActivityLinkUseCase
+import com.rncoding.testvineshield.core.domain.usecases.disease.DeleteOwnedBlockOccurrenceUseCase
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -35,7 +36,7 @@ data class ObservationDialog(
     val activityToUnlink: LinkedObservationActivity? = null,
     val symptomToChange: ObservedReferenceSymptom? = null
 ) {
-    enum class Kind { DETAILS, STATUS, REFERENCE_SYMPTOM, REMOVE_REFERENCE_SYMPTOM, LINK_ACTIVITY, UNLINK_ACTIVITY }
+    enum class Kind { DETAILS, STATUS, REFERENCE_SYMPTOM, REMOVE_REFERENCE_SYMPTOM, LINK_ACTIVITY, UNLINK_ACTIVITY, DELETE }
 }
 
 data class DiseaseObservationsState(
@@ -68,7 +69,8 @@ class BlockDiseaseObservationsViewModel(
     private val changeStatus: ChangeDiseaseOccurrenceStatusUseCase,
     private val editDetails: EditDiseaseOccurrenceDetailsUseCase,
     private val recordReferenceSymptom: RecordReferenceSymptomUseCase,
-    private val activityLink: ObservationActivityLinkUseCase
+    private val activityLink: ObservationActivityLinkUseCase,
+    private val deleteOccurrence: DeleteOwnedBlockOccurrenceUseCase
 ) : ViewModel() {
     private val _state = MutableStateFlow(DiseaseObservationsState())
     val state = _state.asStateFlow()
@@ -172,6 +174,12 @@ class BlockDiseaseObservationsViewModel(
         val link = _state.value.dialog?.activityToUnlink ?: return
         saveDialog(ObservationDialog.Kind.UNLINK_ACTIVITY) { observation ->
             activityLink.unlink(key.ownerId, key.vineyardId, key.blockId, observation.id, link.activityId)
+        }
+    }
+
+    fun deleteObservation() {
+        saveDialog(ObservationDialog.Kind.DELETE) { observation ->
+            deleteOccurrence(key.ownerId, key.vineyardId, key.blockId, observation)
         }
     }
 

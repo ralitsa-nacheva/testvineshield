@@ -150,6 +150,29 @@ fun BlockDiseaseObservationsScreen(
         )
     }
 
+    state.dialog?.takeIf { it.kind == ObservationDialog.Kind.DELETE }?.let { dialog ->
+        val observation = dialog.observation
+        AlertDialog(
+            onDismissRequest = model::closeDialog,
+            title = { Text("Delete disease observation?") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("${observation.diseaseName} · ${observation.observedOn}")
+                    Text("This permanently removes the observation, its symptoms, and its activity links. The activities stay in the activity notebook.")
+                    state.dialogError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = userAction(model::deleteObservation), enabled = !state.saving) {
+                    Text(if (state.saving) "Deleting…" else "Delete observation", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = userAction(model::closeDialog), enabled = !state.saving) { Text("Cancel") }
+            }
+        )
+    }
+
     var diseaseCode by rememberSaveable(ownerId, vineyardId, blockId) { mutableStateOf<String?>(null) }
     var statusName by rememberSaveable(ownerId, vineyardId, blockId) { mutableStateOf<String?>(null) }
     val status = DiseaseOccurrenceStatus.entries.firstOrNull { it.name == statusName }
@@ -260,6 +283,10 @@ fun BlockDiseaseObservationsScreen(
                                     onClick = userAction { model.openDialog(observation.id, ObservationDialog.Kind.LINK_ACTIVITY) },
                                     enabled = !state.saving
                                 ) { Text("Link completed activity") }
+                                TextButton(
+                                    onClick = userAction { model.openDialog(observation.id, ObservationDialog.Kind.DELETE) },
+                                    enabled = !state.saving
+                                ) { Text("Delete observation", color = MaterialTheme.colorScheme.error) }
                             }
                         }
                     }
