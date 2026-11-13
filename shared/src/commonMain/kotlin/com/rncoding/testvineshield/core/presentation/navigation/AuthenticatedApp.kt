@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.padding
 import com.rncoding.testvineshield.core.presentation.disease_observations.BlockDiseaseObservationsScreen
 import com.rncoding.testvineshield.core.presentation.disease_catalogue.DiseaseCatalogueScreenRoot
 import androidx.compose.material3.Scaffold
+import com.rncoding.testvineshield.core.domain.auth.AuthenticatedUserProvider
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import com.rncoding.testvineshield.core.domain.error.Result
@@ -38,8 +39,7 @@ fun AuthenticatedApp(
     userId: Long,
     alertBadgeCount: Int = 0,
     activityBadgeCount: Int = 0,
-    pendingVineyardId: Long? = null,
-    onVineyardLinkHandled: (Long) -> Unit = {}
+    vineyardLinks: VineyardLinkInbox? = null
 ) {
 
     var busyRecordRoute by remember { mutableStateOf<AppRoute?>(null) }
@@ -61,10 +61,13 @@ fun AuthenticatedApp(
             linkUnavailable = false
         }
     }
-    val onLinkHandled by rememberUpdatedState(onVineyardLinkHandled)
-    LaunchedEffect(userId, pendingVineyardId, busyRecordRoute) {
-        val id = pendingVineyardId ?: return@LaunchedEffect
-        if (busyRecordRoute != null) return@LaunchedEffect
+    val users = koinInject<AuthenticatedUserProvider>()
+    val pendingRequest = vineyardLinks?.pending
+    LaunchedEffect(userId, pendingRequest, busyRecordRoute) {
+        val inbox = vineyardLinks ?: return@LaunchedEffect
+        val request = pendingRequest ?: return@LaunchedEffect
+        if (busyRecordRoute != null || users.currentUserOrNull()?.userId != userId) return@LaunchedEffect
+        val id = request.vineyardId
 
         val canOpen = try {
             vineyards.getVineyard(userId, id) is Result.Success
@@ -74,7 +77,8 @@ fun AuthenticatedApp(
             false
         }
         currentCoroutineContext().ensureActive()
-        if (busyRecordRoute != null) return@LaunchedEffect
+        if (busyRecordRoute != null || users.currentUserOrNull()?.userId != userId) return@LaunchedEffect
+        if (!inbox.consume(request)) return@LaunchedEffect
         if (canOpen) {
             navigationState.selectDestination(TopLevelDestination.VINEYARDS)
             val route = VineyardDetailsRoute(id)
@@ -84,7 +88,6 @@ fun AuthenticatedApp(
         } else {
             linkUnavailable = true
         }
-        onLinkHandled(id)
     }
 
     Scaffold(

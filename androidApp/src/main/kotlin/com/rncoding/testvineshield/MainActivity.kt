@@ -2,9 +2,7 @@ package com.rncoding.testvineshield
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import com.rncoding.testvineshield.core.presentation.navigation.VineyardLinkInbox
 import com.rncoding.testvineshield.core.presentation.navigation.parseVineyardDeepLink
 import androidx.activity.compose.setContent
 import androidx.fragment.app.FragmentActivity
@@ -14,34 +12,28 @@ import org.koin.android.ext.android.inject
 class MainActivity : FragmentActivity() {
     private val activityProvider: AndroidActivityProvider by inject()
 
-    private var pendingVineyardId by mutableStateOf<Long?>(null)
+    private val vineyardLinks = VineyardLinkInbox()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         activityProvider.setActivity(this)
-        pendingVineyardId = if (savedInstanceState == null) {
+        val pendingId = if (savedInstanceState == null) {
             vineyardIdFrom(intent)
         } else {
             savedInstanceState.getLong(PENDING_VINEYARD_ID).takeIf { it > 0 }
         }
-        setContent {
-            App(
-                pendingVineyardId = pendingVineyardId,
-                onVineyardLinkHandled = { id ->
-                    if (pendingVineyardId == id) pendingVineyardId = null
-                }
-            )
-        }
+        pendingId?.let(vineyardLinks::offer)
+        setContent { App(vineyardLinks = vineyardLinks) }
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        vineyardIdFrom(intent)?.let { pendingVineyardId = it }
+        vineyardIdFrom(intent)?.let(vineyardLinks::offer)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        pendingVineyardId?.let { outState.putLong(PENDING_VINEYARD_ID, it) }
+        vineyardLinks.pending?.vineyardId?.let { outState.putLong(PENDING_VINEYARD_ID, it) }
     }
 
     private fun vineyardIdFrom(intent: Intent): Long? =

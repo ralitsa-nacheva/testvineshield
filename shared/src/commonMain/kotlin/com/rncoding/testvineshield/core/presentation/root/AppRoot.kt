@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.presentation.root
 
+import com.rncoding.testvineshield.core.presentation.navigation.VineyardLinkInbox
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -28,8 +29,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun AppRoot(
     modifier: Modifier = Modifier,
-    pendingVineyardId: Long? = null,
-    onVineyardLinkHandled: (Long) -> Unit = {}
+    vineyardLinks: VineyardLinkInbox? = null
 ) {
     val startupViewModel = koinViewModel<AppStartupViewModel>()
     val startupState by startupViewModel.uiState.collectAsStateWithLifecycle()
@@ -41,13 +41,13 @@ fun AppRoot(
                 error = AppInitializationError,
                 onRetry = startupViewModel::retry
             )
-            AppStartupUiState.Ready -> SessionRoot(pendingVineyardId, onVineyardLinkHandled)
+            AppStartupUiState.Ready -> SessionRoot(vineyardLinks)
         }
     }
 }
 
 @Composable
-private fun SessionRoot(pendingVineyardId: Long?, onVineyardLinkHandled: (Long) -> Unit) {
+private fun SessionRoot(vineyardLinks: VineyardLinkInbox?) {
     // AuthViewModel restores the session in init. Create it only after readiness.
     val authViewModel = koinViewModel<AuthViewModel>()
 
@@ -101,8 +101,7 @@ private fun SessionRoot(pendingVineyardId: Long?, onVineyardLinkHandled: (Long) 
             appStateHolder.SaveableStateProvider(state.user.userId) {
                 AuthenticatedApp(
                     userId = state.user.userId,
-                    pendingVineyardId = pendingVineyardId,
-                    onVineyardLinkHandled = onVineyardLinkHandled
+                    vineyardLinks = vineyardLinks
                 )
             }
 

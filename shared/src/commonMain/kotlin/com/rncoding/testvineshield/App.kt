@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield
 
+import com.rncoding.testvineshield.core.presentation.navigation.VineyardLinkInbox
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -11,15 +12,13 @@ import com.rncoding.testvineshield.core.presentation.theme.VineShieldTheme
 @Composable
 fun App(
     modifier: Modifier = Modifier,
-    pendingVineyardId: Long? = null,
-    onVineyardLinkHandled: (Long) -> Unit = {}
+    vineyardLinks: VineyardLinkInbox? = null
 ) {
     VineShieldTheme {
         Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
             AppRoot(
                 modifier = Modifier.fillMaxSize(),
-                pendingVineyardId = pendingVineyardId,
-                onVineyardLinkHandled = onVineyardLinkHandled
+                vineyardLinks = vineyardLinks
             )
         }
     }
