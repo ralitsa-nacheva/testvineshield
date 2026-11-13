@@ -1049,7 +1049,7 @@ val commonModule =
             com.rncoding.testvineshield.core.domain.usecases.disease.EditDiseaseOccurrenceDetailsUseCase(get(), get(), get(), get())
         }
         factory {
-            com.rncoding.testvineshield.core.domain.usecases.disease.RecordOilSpotUseCase(get(), get(), get(), get())
+            com.rncoding.testvineshield.core.domain.usecases.disease.RecordReferenceSymptomUseCase(get(), get(), get(), get())
         }
         factory {
             com.rncoding.testvineshield.core.domain.usecases.disease.ObservationActivityLinkUseCase(get(), get(), get(), get())

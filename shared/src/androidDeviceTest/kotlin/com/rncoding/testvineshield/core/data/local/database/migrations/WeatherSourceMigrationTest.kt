@@ -13,6 +13,7 @@ import com.rncoding.testvineshield.core.data.local.database.seed.DiseaseCatalogu
 import com.rncoding.testvineshield.core.domain.disease_risk.MonitoringDraftSaveOutcome
 import com.rncoding.testvineshield.core.data.local.database.entities.DiseaseOccurrenceEntity
 import com.rncoding.testvineshield.core.data.local.database.entities.ActivityEntity
+import com.rncoding.testvineshield.core.domain.datamodels.ReferenceSymptom
 import com.rncoding.testvineshield.core.domain.datamodels.enums.ActivityPriority
 import com.rncoding.testvineshield.core.domain.datamodels.enums.ActivityStatus
 import com.rncoding.testvineshield.core.domain.datamodels.enums.DiseaseOccurrenceStatus
@@ -265,7 +266,7 @@ class WeatherSourceMigrationTest {
         }
     }
 
-    @Test fun oilSpotRequiresOwnedDownyOccurrenceAndPreservesFirstEntry(): Unit = runBlocking {
+    @Test fun referenceSymptomRequiresOwnedDownyOccurrenceAndPreservesFirstEntry(): Unit = runBlocking {
         val name = "r09f-oil-spot-${UUID.randomUUID()}.db"
         seed(name)
         val db = open(name)
@@ -283,36 +284,50 @@ class WeatherSourceMigrationTest {
             )
             val downyId = assertNotNull(dao.insertOwnedBlockOccurrence(1, occurrence))
             val botrytisId = assertNotNull(dao.insertOwnedBlockOccurrence(1, occurrence.copy(diseaseId = botrytis.diseaseId)))
-            assertFalse(dao.recordOwnedOilSpot(2, 10, 20, downyId, 1000, observedOn, "wrong owner"))
-            assertFalse(dao.recordOwnedOilSpot(1, 10, 20, botrytisId, 1000, observedOn, "wrong disease"))
-            assertFalse(dao.recordOwnedOilSpot(1, 10, 20, downyId, 999, observedOn, "stale"))
-            assertTrue(dao.recordOwnedOilSpot(1, 10, 20, downyId, 1000, observedOn, "near the row end"))
-            assertFalse(dao.recordOwnedOilSpot(1, 10, 20, downyId, 1000, observedOn, "replacement"))
+            assertFalse(dao.recordOwnedReferenceSymptom(2, 10, 20, downyId, 1000, observedOn, "wrong owner", ReferenceSymptom.LEAF_OIL_SPOT))
+            assertFalse(dao.recordOwnedReferenceSymptom(1, 10, 20, botrytisId, 1000, observedOn, "wrong disease", ReferenceSymptom.LEAF_OIL_SPOT))
+            assertFalse(dao.recordOwnedReferenceSymptom(1, 10, 20, downyId, 999, observedOn, "stale", ReferenceSymptom.LEAF_OIL_SPOT))
+            assertTrue(dao.recordOwnedReferenceSymptom(1, 10, 20, downyId, 1000, observedOn, "near the row end", ReferenceSymptom.LEAF_OIL_SPOT))
+            assertFalse(dao.recordOwnedReferenceSymptom(1, 10, 20, downyId, 1000, observedOn, "replacement", ReferenceSymptom.LEAF_OIL_SPOT))
             val row = dao.observeOwnedBlockOccurrences(1, 10, 20).first().single { it.id == downyId }
-            assertEquals(observedOn, row.oilSpotDate)
-            assertEquals("near the row end", row.oilSpotNotes)
+            assertEquals(observedOn, row.referenceSymptomDate)
+            assertEquals("near the row end", row.referenceSymptomNotes)
             val evidence = dao.getRiskSymptomsForOccurrence(downyId).single()
             assertEquals("downy_mildew_oil_spot", evidence.code)
             assertEquals(observedOn, evidence.observedAt)
-            val symptomId = assertNotNull(row.oilSpotId)
+            val symptomId = assertNotNull(row.referenceSymptomId)
             val correctedDate = LocalDate(2026, 6, 13)
-            assertEquals(0, dao.updateOwnedOilSpot(
+            assertEquals(0, dao.updateOwnedReferenceSymptom(
                 2, 10, 20, downyId, 1000, symptomId, observedOn, "near the row end", correctedDate, ""
             ))
-            assertEquals(1, dao.updateOwnedOilSpot(
+            assertEquals(1, dao.updateOwnedReferenceSymptom(
                 1, 10, 20, downyId, 1000, symptomId, observedOn, "near the row end", correctedDate, ""
             ))
-            assertEquals(0, dao.removeOwnedOilSpot(
+            assertEquals(0, dao.removeOwnedReferenceSymptom(
                 1, 10, 20, downyId, 1000, symptomId, observedOn, "near the row end"
             ))
             assertEquals(correctedDate, dao.getRiskSymptomsForOccurrence(downyId).single().observedAt)
-            assertEquals(1, dao.removeOwnedOilSpot(
+            assertEquals(1, dao.removeOwnedReferenceSymptom(
                 1, 10, 20, downyId, 1000, symptomId, correctedDate, ""
             ))
             assertTrue(dao.getRiskSymptomsForOccurrence(downyId).isEmpty())
-            assertNull(dao.observeOwnedBlockOccurrences(1, 10, 20).first().single { it.id == downyId }.oilSpotDate)
-            assertEquals(symptomId, dao.findOilSpotSymptomId())
+            assertNull(dao.observeOwnedBlockOccurrences(1, 10, 20).first().single { it.id == downyId }.referenceSymptomDate)
+            assertEquals(symptomId, dao.findReferenceSymptomId(ReferenceSymptom.LEAF_OIL_SPOT.code))
             assertNotNull(dao.getDiseaseOccurrenceById(downyId))
+            assertTrue(dao.recordOwnedReferenceSymptom(
+                1, 10, 20, botrytisId, 1000, observedOn, "on a cluster", ReferenceSymptom.GRAY_BERRY_GROWTH
+            ))
+            val botrytisRow = dao.observeOwnedBlockOccurrences(1, 10, 20).first().single { it.id == botrytisId }
+            assertEquals("on a cluster", botrytisRow.referenceSymptomNotes)
+            assertEquals(ReferenceSymptom.GRAY_BERRY_GROWTH.code, dao.getRiskSymptomsForOccurrence(botrytisId).single().code)
+            val powdery = assertNotNull(db.diseaseDao().getDiseaseByCode("grape_powdery_mildew"))
+            val powderyId = assertNotNull(dao.insertOwnedBlockOccurrence(1, occurrence.copy(diseaseId = powdery.diseaseId)))
+            assertTrue(dao.recordOwnedReferenceSymptom(
+                1, 10, 20, powderyId, 1000, observedOn, "", ReferenceSymptom.POWDERY_LEAF_PATCH
+            ))
+            assertEquals(ReferenceSymptom.POWDERY_LEAF_PATCH.code, dao.getRiskSymptomsForOccurrence(powderyId).single().code)
+
+
         } finally {
             db.close()
             context.deleteDatabase(name)

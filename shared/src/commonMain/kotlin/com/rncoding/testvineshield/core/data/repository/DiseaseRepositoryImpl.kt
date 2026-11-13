@@ -15,9 +15,10 @@ import com.rncoding.testvineshield.core.domain.datamodels.SymptomDomainModel
 import com.rncoding.testvineshield.core.domain.repository.DiseaseRepository
 import com.rncoding.testvineshield.core.domain.datamodels.enums.DiseaseOccurrenceStatus
 import kotlinx.datetime.LocalDate
-import com.rncoding.testvineshield.core.domain.datamodels.ObservedOilSpot
+import com.rncoding.testvineshield.core.domain.datamodels.ObservedReferenceSymptom
 import com.rncoding.testvineshield.core.domain.datamodels.CompletedBlockActivity
 import com.rncoding.testvineshield.core.domain.datamodels.LinkedObservationActivity
+import com.rncoding.testvineshield.core.domain.datamodels.ReferenceSymptom
 import kotlinx.coroutines.flow.Flow
 import com.rncoding.testvineshield.core.domain.datamodels.BlockDiseaseObservation
 import kotlinx.coroutines.flow.map
@@ -40,8 +41,8 @@ class DiseaseRepositoryImpl(
                 BlockDiseaseObservation(
                     row.id, row.diseaseName, row.observedOn, row.severity, row.status, row.notes, row.curedAt,
                     row.updatedAt, row.diseaseCode,
-                    if (row.oilSpotId != null && row.oilSpotDate != null) {
-                        ObservedOilSpot(row.oilSpotId, row.oilSpotDate, row.oilSpotNotes.orEmpty())
+                    if (row.referenceSymptomId != null && row.referenceSymptomDate != null) {
+                        ObservedReferenceSymptom(row.referenceSymptomId, row.referenceSymptomDate, row.referenceSymptomNotes.orEmpty())
                     } else null
                 )
             }
@@ -77,11 +78,11 @@ class DiseaseRepositoryImpl(
         ownerId, vineyardId, blockId, occurrenceId, expectedUpdatedAt, observedOn, severity, notes, updatedAt
     ) == 1
 
-    override suspend fun recordOwnedOilSpot(
+    override suspend fun recordOwnedReferenceSymptom(
         ownerId: Long, vineyardId: Long, blockId: Long, occurrenceId: Long,
-        expectedUpdatedAt: Long, observedOn: LocalDate, notes: String
-    ): Boolean = diseaseOccurrenceDao.recordOwnedOilSpot(
-        ownerId, vineyardId, blockId, occurrenceId, expectedUpdatedAt, observedOn, notes
+        expectedUpdatedAt: Long, observedOn: LocalDate, notes: String, symptom: ReferenceSymptom
+    ): Boolean = diseaseOccurrenceDao.recordOwnedReferenceSymptom(
+        ownerId, vineyardId, blockId, occurrenceId, expectedUpdatedAt, observedOn, notes, symptom
     )
 
     override fun observeCompletedActivitiesForLink(
@@ -105,19 +106,19 @@ class DiseaseRepositoryImpl(
         ownerId: Long, vineyardId: Long, blockId: Long, occurrenceId: Long, activityId: Long
     ): Boolean = diseaseOccurrenceDao.unlinkOwnedOccurrenceActivity(ownerId, vineyardId, blockId, occurrenceId, activityId) == 1
 
-    override suspend fun updateOwnedOilSpot(
+    override suspend fun updateOwnedReferenceSymptom(
         ownerId: Long, vineyardId: Long, blockId: Long, occurrenceId: Long,
         expectedUpdatedAt: Long, symptomId: Long, previousDate: LocalDate, previousNotes: String,
         observedOn: LocalDate, notes: String
-    ): Boolean = diseaseOccurrenceDao.updateOwnedOilSpot(
+    ): Boolean = diseaseOccurrenceDao.updateOwnedReferenceSymptom(
         ownerId, vineyardId, blockId, occurrenceId, expectedUpdatedAt, symptomId, previousDate, previousNotes,
         observedOn, notes
     ) == 1
 
-    override suspend fun removeOwnedOilSpot(
+    override suspend fun removeOwnedReferenceSymptom(
         ownerId: Long, vineyardId: Long, blockId: Long, occurrenceId: Long,
         expectedUpdatedAt: Long, symptomId: Long, previousDate: LocalDate, previousNotes: String
-    ): Boolean = diseaseOccurrenceDao.removeOwnedOilSpot(
+    ): Boolean = diseaseOccurrenceDao.removeOwnedReferenceSymptom(
         ownerId, vineyardId, blockId, occurrenceId, expectedUpdatedAt, symptomId, previousDate, previousNotes
     ) == 1
 

@@ -8,6 +8,7 @@ import com.rncoding.testvineshield.core.domain.datamodels.enums.DiseaseOccurrenc
 import kotlinx.datetime.LocalDate
 import com.rncoding.testvineshield.core.domain.datamodels.CompletedBlockActivity
 import com.rncoding.testvineshield.core.domain.datamodels.LinkedObservationActivity
+import com.rncoding.testvineshield.core.domain.datamodels.ReferenceSymptom
 import kotlinx.coroutines.flow.Flow
 import com.rncoding.testvineshield.core.domain.datamodels.BlockDiseaseObservation
 
@@ -41,9 +42,9 @@ interface DiseaseRepository {
         updatedAt: Long
     ): Boolean
 
-    suspend fun recordOwnedOilSpot(
+    suspend fun recordOwnedReferenceSymptom(
         ownerId: Long, vineyardId: Long, blockId: Long, occurrenceId: Long,
-        expectedUpdatedAt: Long, observedOn: LocalDate, notes: String
+        expectedUpdatedAt: Long, observedOn: LocalDate, notes: String, symptom: ReferenceSymptom
     ): Boolean
 
     fun observeCompletedActivitiesForLink(
@@ -63,13 +64,13 @@ interface DiseaseRepository {
         ownerId: Long, vineyardId: Long, blockId: Long, occurrenceId: Long, activityId: Long
     ): Boolean
 
-    suspend fun updateOwnedOilSpot(
+    suspend fun updateOwnedReferenceSymptom(
         ownerId: Long, vineyardId: Long, blockId: Long, occurrenceId: Long,
         expectedUpdatedAt: Long, symptomId: Long, previousDate: LocalDate, previousNotes: String,
         observedOn: LocalDate, notes: String
     ): Boolean
 
-    suspend fun removeOwnedOilSpot(
+    suspend fun removeOwnedReferenceSymptom(
         ownerId: Long, vineyardId: Long, blockId: Long, occurrenceId: Long,
         expectedUpdatedAt: Long, symptomId: Long, previousDate: LocalDate, previousNotes: String
     ): Boolean

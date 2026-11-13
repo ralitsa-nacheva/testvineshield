@@ -2,7 +2,7 @@ package com.rncoding.testvineshield.core.domain.usecases.disease
 
 import com.rncoding.testvineshield.core.domain.auth.AuthenticatedUserProvider
 import com.rncoding.testvineshield.core.domain.datamodels.BlockDiseaseObservation
-import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseCatalogueCodes
+import com.rncoding.testvineshield.core.domain.datamodels.ReferenceSymptom
 import com.rncoding.testvineshield.core.domain.error.AppError
 import com.rncoding.testvineshield.core.domain.error.AuthError
 import com.rncoding.testvineshield.core.domain.error.DiseaseError
@@ -16,7 +16,7 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.datetime.LocalDate
 
-class RecordOilSpotUseCase(
+class RecordReferenceSymptomUseCase(
     private val users: AuthenticatedUserProvider,
     private val vineyards: VineyardRepository,
     private val diseases: DiseaseRepository,
@@ -27,9 +27,8 @@ class RecordOilSpotUseCase(
         observedOn: LocalDate, notes: String
     ): Result<Unit, AppError> {
         if (users.currentUserOrNull()?.userId != ownerId) return Result.Error(AuthError.NoActiveSession)
-        if (observation.diseaseCode != DiseaseCatalogueCodes.GRAPE_DOWNY_MILDEW) {
-            return Result.Error(DiseaseError.InvalidInput("This observation cannot accept an oil spot record."))
-        }
+        val symptom = ReferenceSymptom.forDisease(observation.diseaseCode)
+            ?: return Result.Error(DiseaseError.InvalidInput("No reference symptom is available for this disease."))
         val resolutionDate = observation.curedAt
         if (resolutionDate != null && observedOn > resolutionDate) {
             return Result.Error(DiseaseError.InvalidInput("The symptom date cannot be after the resolution date."))
@@ -44,13 +43,13 @@ class RecordOilSpotUseCase(
                 ?.let { return Result.Error(it) }
             currentCoroutineContext().ensureActive()
             if (users.currentUserOrNull()?.userId != ownerId) return Result.Error(AuthError.NoActiveSession)
-            val existing = observation.oilSpot
+            val existing = observation.referenceSymptom
             val recorded = if (existing == null) {
-                diseases.recordOwnedOilSpot(
-                    ownerId, vineyardId, blockId, observation.id, observation.updatedAt, observedOn, normalizedNotes
+                diseases.recordOwnedReferenceSymptom(
+                    ownerId, vineyardId, blockId, observation.id, observation.updatedAt, observedOn, normalizedNotes, symptom
                 )
             } else {
-                diseases.updateOwnedOilSpot(
+                diseases.updateOwnedReferenceSymptom(
                     ownerId, vineyardId, blockId, observation.id, observation.updatedAt,
                     existing.symptomId, existing.observedOn, existing.notes, observedOn, normalizedNotes
                 )
@@ -69,11 +68,11 @@ class RecordOilSpotUseCase(
         ownerId: Long, vineyardId: Long, blockId: Long, observation: BlockDiseaseObservation
     ): Result<Unit, AppError> {
         if (users.currentUserOrNull()?.userId != ownerId) return Result.Error(AuthError.NoActiveSession)
-        val existing = observation.oilSpot
-            ?: return Result.Error(DiseaseError.InvalidInput("This observation has no recorded oil spot."))
+        val existing = observation.referenceSymptom
+            ?: return Result.Error(DiseaseError.InvalidInput("This observation has no recorded symptom."))
         return try {
             currentCoroutineContext().ensureActive()
-            val removed = diseases.removeOwnedOilSpot(
+            val removed = diseases.removeOwnedReferenceSymptom(
                 ownerId, vineyardId, blockId, observation.id, observation.updatedAt,
                 existing.symptomId, existing.observedOn, existing.notes
             )

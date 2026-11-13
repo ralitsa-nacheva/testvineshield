@@ -16,7 +16,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rncoding.testvineshield.core.domain.datamodels.CompletedBlockActivity
 import com.rncoding.testvineshield.core.domain.datamodels.BlockDiseaseObservation
 import com.rncoding.testvineshield.core.domain.datamodels.enums.DiseaseOccurrenceStatus
-import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseCatalogueCodes
+import com.rncoding.testvineshield.core.domain.datamodels.ReferenceSymptom
 import com.rncoding.testvineshield.core.presentation.components.RecordChoice
 import com.rncoding.testvineshield.core.presentation.components.RecordTopBar
 import com.rncoding.testvineshield.core.presentation.root.LocalUserActivity
@@ -91,22 +91,22 @@ fun BlockDiseaseObservationsScreen(
         )
     }
 
-    state.dialog?.takeIf { it.kind == ObservationDialog.Kind.OIL_SPOT }?.let { dialog ->
-        OilSpotDialog(dialog.observation, state.saving, state.dialogError, model::closeDialog, model::saveOilSpot)
+    state.dialog?.takeIf { it.kind == ObservationDialog.Kind.REFERENCE_SYMPTOM }?.let { dialog ->
+        ReferenceSymptomDialog(dialog.observation, state.saving, state.dialogError, model::closeDialog, model::saveReferenceSymptom)
     }
 
-    state.dialog?.takeIf { it.kind == ObservationDialog.Kind.REMOVE_OIL_SPOT }?.observation?.oilSpot?.let { oilSpot ->
+    state.dialog?.takeIf { it.kind == ObservationDialog.Kind.REMOVE_REFERENCE_SYMPTOM }?.observation?.referenceSymptom?.let { referenceSymptom ->
         AlertDialog(
             onDismissRequest = model::closeDialog,
-            title = { Text("Remove leaf oil spot?") },
+            title = { Text("Remove recorded symptom?") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Remove the symptom recorded on ${oilSpot.observedOn}.")
+                    Text("Remove the symptom recorded on ${referenceSymptom.observedOn}.")
                     state.dialogError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                 }
             },
             confirmButton = {
-                TextButton(onClick = userAction(model::removeOilSpot), enabled = !state.saving) {
+                TextButton(onClick = userAction(model::removeReferenceSymptom), enabled = !state.saving) {
                     Text(if (state.saving) "Removing…" else "Remove symptom")
                 }
             },
@@ -173,23 +173,23 @@ fun BlockDiseaseObservationsScreen(
                                 Text("${observation.observedOn} · ${observation.severity}% affected · ${observation.status.label()}")
                                 observation.curedAt?.let { Text("Resolved on $it") }
                                 observation.notes?.let { Text(it) }
-                                val oilSpot = observation.oilSpot
-                                if (oilSpot != null) {
-                                    Text("Leaf oil spot · ${oilSpot.observedOn}")
-                                    if (oilSpot.notes.isNotBlank()) Text(oilSpot.notes)
+                                val symptom = ReferenceSymptom.forDisease(observation.diseaseCode)
+                                val recorded = observation.referenceSymptom
+                                if (symptom != null) {
+                                    if (recorded != null) {
+                                        Text("${symptom.label} · ${recorded.observedOn}")
+                                        if (recorded.notes.isNotBlank()) Text(recorded.notes)
+                                    }
                                     TextButton(
-                                        onClick = userAction { model.openDialog(observation.id, ObservationDialog.Kind.OIL_SPOT) },
+                                        onClick = userAction { model.openDialog(observation.id, ObservationDialog.Kind.REFERENCE_SYMPTOM) },
                                         enabled = !state.saving
-                                    ) { Text("Edit leaf oil spot") }
-                                    TextButton(
-                                        onClick = userAction { model.openDialog(observation.id, ObservationDialog.Kind.REMOVE_OIL_SPOT) },
-                                        enabled = !state.saving
-                                    ) { Text("Remove leaf oil spot") }
-                                } else if (observation.diseaseCode == DiseaseCatalogueCodes.GRAPE_DOWNY_MILDEW) {
-                                    TextButton(
-                                        onClick = userAction { model.openDialog(observation.id, ObservationDialog.Kind.OIL_SPOT) },
-                                        enabled = !state.saving
-                                    ) { Text("Record leaf oil spot") }
+                                    ) { Text(if (recorded == null) "Record symptom" else "Edit symptom") }
+                                    if (recorded != null) {
+                                        TextButton(
+                                            onClick = userAction { model.openDialog(observation.id, ObservationDialog.Kind.REMOVE_REFERENCE_SYMPTOM) },
+                                            enabled = !state.saving
+                                        ) { Text("Remove symptom") }
+                                    }
                                 }
                                 TextButton(
                                     onClick = userAction { model.openDialog(observation.id, ObservationDialog.Kind.STATUS) },
@@ -321,14 +321,15 @@ private fun EditObservationDialog(
 }
 
 @Composable
-private fun OilSpotDialog(
+private fun ReferenceSymptomDialog(
     observation: BlockDiseaseObservation,
     saving: Boolean,
     error: String?,
     onClose: () -> Unit,
     onSave: (LocalDate, String) -> Unit
 ) {
-    val existing = observation.oilSpot
+    val symptom = ReferenceSymptom.forDisease(observation.diseaseCode) ?: return
+    val existing = observation.referenceSymptom
     var dateText by rememberSaveable(observation.id, existing?.symptomId) {
         mutableStateOf(existing?.observedOn?.toString().orEmpty())
     }
@@ -339,7 +340,7 @@ private fun OilSpotDialog(
     val activity = LocalUserActivity.current
     AlertDialog(
         onDismissRequest = onClose,
-        title = { Text(if (existing == null) "Record leaf oil spot" else "Edit leaf oil spot") },
+        title = { Text(symptom.label) },
         text = {
             Column(
                 Modifier.verticalScroll(rememberScrollState()),

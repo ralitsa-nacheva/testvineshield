@@ -12,7 +12,7 @@ import com.rncoding.testvineshield.core.domain.usecases.disease.EditDiseaseOccur
 import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.repository.DiseaseRepository
 import com.rncoding.testvineshield.core.domain.usecases.disease.CreateDiseaseOccurrenceUseCase
-import com.rncoding.testvineshield.core.domain.usecases.disease.RecordOilSpotUseCase
+import com.rncoding.testvineshield.core.domain.usecases.disease.RecordReferenceSymptomUseCase
 import com.rncoding.testvineshield.core.domain.datamodels.CompletedBlockActivity
 import com.rncoding.testvineshield.core.domain.datamodels.LinkedObservationActivity
 import com.rncoding.testvineshield.core.domain.usecases.disease.ObservationActivityLinkUseCase
@@ -32,7 +32,7 @@ data class ObservationDialog(
     val kind: Kind,
     val activityToUnlink: LinkedObservationActivity? = null
 ) {
-    enum class Kind { DETAILS, STATUS, OIL_SPOT, REMOVE_OIL_SPOT, LINK_ACTIVITY, UNLINK_ACTIVITY }
+    enum class Kind { DETAILS, STATUS, REFERENCE_SYMPTOM, REMOVE_REFERENCE_SYMPTOM, LINK_ACTIVITY, UNLINK_ACTIVITY }
 }
 
 data class DiseaseObservationsState(
@@ -64,7 +64,7 @@ class BlockDiseaseObservationsViewModel(
     private val create: CreateDiseaseOccurrenceUseCase,
     private val changeStatus: ChangeDiseaseOccurrenceStatusUseCase,
     private val editDetails: EditDiseaseOccurrenceDetailsUseCase,
-    private val recordOilSpot: RecordOilSpotUseCase,
+    private val recordReferenceSymptom: RecordReferenceSymptomUseCase,
     private val activityLink: ObservationActivityLinkUseCase
 ) : ViewModel() {
     private val _state = MutableStateFlow(DiseaseObservationsState())
@@ -133,15 +133,15 @@ class BlockDiseaseObservationsViewModel(
         }
     }
 
-    fun saveOilSpot(date: LocalDate, notes: String) {
-        saveDialog(ObservationDialog.Kind.OIL_SPOT) { observation ->
-            recordOilSpot(key.ownerId, key.vineyardId, key.blockId, observation, date, notes)
+    fun saveReferenceSymptom(date: LocalDate, notes: String) {
+        saveDialog(ObservationDialog.Kind.REFERENCE_SYMPTOM) { observation ->
+            recordReferenceSymptom(key.ownerId, key.vineyardId, key.blockId, observation, date, notes)
         }
     }
 
-    fun removeOilSpot() {
-        saveDialog(ObservationDialog.Kind.REMOVE_OIL_SPOT) { observation ->
-            recordOilSpot.remove(key.ownerId, key.vineyardId, key.blockId, observation)
+    fun removeReferenceSymptom() {
+        saveDialog(ObservationDialog.Kind.REMOVE_REFERENCE_SYMPTOM) { observation ->
+            recordReferenceSymptom.remove(key.ownerId, key.vineyardId, key.blockId, observation)
         }
     }
 
