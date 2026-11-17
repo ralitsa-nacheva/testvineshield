@@ -1,6 +1,10 @@
 package com.rncoding.testvineshield.core.presentation.navigation
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -85,10 +89,12 @@ internal fun AdaptiveVineShieldScaffold(
     onDestinationSelected: (TopLevelDestination) -> Unit,
     destinations: List<TopLevelDestination>,
     snackbarHostState: SnackbarHostState,
+    leadingPane: (@Composable () -> Unit)? = null,
     content: @Composable (Modifier) -> Unit
 ) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val useRail = maxWidth >= 600.dp && maxHeight >= 480.dp
+        val showVineyardPane = useRail && maxWidth >= 900.dp
         Scaffold(
             snackbarHost = { SnackbarHost(snackbarHostState) },
             bottomBar = {
@@ -106,6 +112,10 @@ internal fun AdaptiveVineShieldScaffold(
                         selectedDestination, alertBadgeCount, activityBadgeCount,
                         onDestinationSelected, destinations
                     )
+                }
+                if (showVineyardPane && leadingPane != null) {
+                    Box(Modifier.width(320.dp).fillMaxHeight()) { leadingPane() }
+                    VerticalDivider()
                 }
                 content(Modifier.weight(1f).fillMaxSize())
             }

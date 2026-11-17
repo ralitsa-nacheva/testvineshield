@@ -24,6 +24,7 @@ import androidx.navigation3.ui.NavDisplay
 import com.rncoding.testvineshield.core.presentation.account.AccountScreenRoot
 import com.rncoding.testvineshield.core.presentation.security.SecuritySettingsScreenRoot
 import com.rncoding.testvineshield.core.presentation.vineyard_list.VineyardListScreenRoot
+import com.rncoding.testvineshield.core.presentation.vineyard_list.VineyardSelectionPane
 import com.rncoding.testvineshield.core.presentation.vineyard_editor.VineyardEditorMode
 import com.rncoding.testvineshield.core.presentation.vineyard_editor.VineyardEditorScreenRoot
 import com.rncoding.testvineshield.core.presentation.vineyard_details.VineyardDetailsScreenRoot
@@ -90,13 +91,42 @@ fun AuthenticatedApp(
         if (busyRecordRoute == null) navigationState.selectDestination(destination)
     }
 
+    val currentVineyard = navigationState.currentBackStack.lastOrNull() as? VineyardDetailsRoute
+    val vineyardListPane: (@Composable () -> Unit)? =
+        if (navigationState.selectedDestination == TopLevelDestination.VINEYARDS && currentVineyard != null) {
+            {
+                VineyardSelectionPane(
+                    userId = userId,
+                    selectedVineyardId = currentVineyard.vineyardId,
+                    enabled = busyRecordRoute == null,
+                    onSelect = { vineyardId ->
+                        val stack = navigationState.vineyardBackStack
+                        if (busyRecordRoute == null && stack.lastOrNull() == currentVineyard &&
+                            vineyardId != currentVineyard.vineyardId
+                        ) {
+                            val route = VineyardDetailsRoute(vineyardId)
+                            val existingIndex = stack.lastIndexOf(route)
+                            if (existingIndex >= 0) {
+                                stack.subList(existingIndex + 1, stack.size).clear()
+                            } else {
+                                stack[stack.lastIndex] = route
+                            }
+                        }
+                    }
+                )
+            }
+        } else {
+            null
+        }
+
     AdaptiveVineShieldScaffold(
         navigationState.selectedDestination,
         alertBadgeCount,
         activityBadgeCount,
         selectDestination,
         availableDestinations,
-        linkMessages
+        linkMessages,
+        leadingPane = vineyardListPane
     ) { contentModifier ->
         NavDisplay(
             backStack =
