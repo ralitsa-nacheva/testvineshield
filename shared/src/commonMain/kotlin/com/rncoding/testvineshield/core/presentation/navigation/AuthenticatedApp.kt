@@ -1,11 +1,8 @@
 package com.rncoding.testvineshield.core.presentation.navigation
 
-import androidx.compose.foundation.layout.padding
 import com.rncoding.testvineshield.core.presentation.disease_observations.BlockDiseaseObservationsScreen
 import com.rncoding.testvineshield.core.presentation.disease_catalogue.DiseaseCatalogueScreenRoot
-import androidx.compose.material3.Scaffold
 import com.rncoding.testvineshield.core.domain.auth.AuthenticatedUserProvider
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.repository.VineyardRepository
@@ -22,7 +19,6 @@ import com.rncoding.testvineshield.core.presentation.spray.SprayExportScreenRoot
 import com.rncoding.testvineshield.core.domain.usecases.activity.SprayKey
 import com.rncoding.testvineshield.core.domain.usecases.activity.ActivityScope
 import com.rncoding.testvineshield.core.presentation.blocks.*
-import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import com.rncoding.testvineshield.core.presentation.account.AccountScreenRoot
@@ -90,24 +86,18 @@ fun AuthenticatedApp(
         }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(linkMessages) },
-        bottomBar = {
+    val selectDestination: (TopLevelDestination) -> Unit = { destination ->
+        if (busyRecordRoute == null) navigationState.selectDestination(destination)
+    }
 
-            VineShieldNavigationBar(
-                selectedDestination =
-                    navigationState.selectedDestination,
-                alertBadgeCount =
-                    alertBadgeCount,
-                activityBadgeCount =
-                    activityBadgeCount,
-                onDestinationSelected =
-                    { if(busyRecordRoute == null) navigationState.selectDestination(it) },
-                destinations = availableDestinations
-            )
-        }
-    ) { innerPadding ->
-
+    AdaptiveVineShieldScaffold(
+        navigationState.selectedDestination,
+        alertBadgeCount,
+        activityBadgeCount,
+        selectDestination,
+        availableDestinations,
+        linkMessages
+    ) { contentModifier ->
         NavDisplay(
             backStack =
                 navigationState.currentBackStack,
@@ -116,10 +106,7 @@ fun AuthenticatedApp(
                 if(busyRecordRoute == null) navigationState.goBack()
             },
 
-            modifier =
-                Modifier.padding(
-                    innerPadding
-                ),
+            modifier = contentModifier,
 
             entryDecorators =
                 listOf(
