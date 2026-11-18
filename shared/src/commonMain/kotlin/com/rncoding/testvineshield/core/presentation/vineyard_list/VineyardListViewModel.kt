@@ -136,67 +136,34 @@ class VineyardListViewModel(
         }
     }
 
-    fun reorder(
-        fromIndex: Int,
-        toIndex: Int
-    ) {
+    fun reorder(vineyardId: Long, offset: Int) {
+        val current = _state.value
+        if (current.isReordering || current.vineyardPendingDeletion != null ||
+            (offset != -1 && offset != 1)
+        ) return
 
-        val previousOrder =
-            _state.value.vineyards
+        val previousIds = current.vineyards.map { it.vineyardId }
+        val fromIndex = previousIds.indexOf(vineyardId)
+        val toIndex = fromIndex + offset
+        if (fromIndex < 0 || toIndex !in previousIds.indices) return
 
-        if (fromIndex !in previousOrder.indices ||
-            toIndex !in previousOrder.indices ||
-            fromIndex == toIndex
-        ) {
-            return
+        val newOrder = previousIds.toMutableList().apply {
+            add(toIndex, removeAt(fromIndex))
         }
-
-        val reordered =
-            previousOrder.toMutableList().apply {
-                val moved = removeAt(fromIndex)
-                add(toIndex, moved)
-            }
-        /*
-         * Optimistic UI update.
-         *
-         * The list moves immediately rather than waiting
-         * for Room to finish writing.
-         */
-        _state.update {
-            it.copy(
-                vineyards = reordered,
-                isReordering = true
-            )
-        }
-
+        _state.update { it.copy(isReordering = true) }
         viewModelScope.launch {
-
-            val result =
-                reorderVineyardsUseCase(
-                    vineyardIds =
-                        reordered.map {
-                            it.vineyardId
-                        }
-                )
-
-            when (result) {
-
-                is Result.Error<*> -> {
-                    _state.update {
-                        it.copy(
-                            vineyards = previousOrder,
-                            isReordering = false
-                        )
+            try {
+                when (val result = reorderVineyardsUseCase(vineyardIds = newOrder)) {
+                    is Result.Error -> _events.send(VineyardListEvent.ShowSnackbar(result.error.userMessage))
+                    is Result.Success -> _state.update { latest ->
+                        if (latest.vineyards.map { it.vineyardId } == previousIds) {
+                            val byId = latest.vineyards.associateBy { it.vineyardId }
+                            latest.copy(vineyards = newOrder.map(byId::getValue))
+                        } else latest
                     }
-
-                    _events.send(
-                        VineyardListEvent.ShowSnackbar(
-                            result.error.userMessage
-                        )
-                    )
                 }
-
-                else -> Unit
+            } finally {
+                _state.update { it.copy(isReordering = false) }
             }
         }
     }
