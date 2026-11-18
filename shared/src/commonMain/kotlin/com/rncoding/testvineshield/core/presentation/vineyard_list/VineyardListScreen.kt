@@ -9,6 +9,8 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -58,6 +60,15 @@ fun VineyardListScreen(
     onDeleteCancel: () -> Unit,
     onReorder: (Long, Int) -> Unit
 ) {
+    var searchText by rememberSaveable { mutableStateOf("") }
+    val searchQuery = searchText.trim()
+    val searchActive = searchQuery.isNotEmpty()
+    val visibleVineyards = remember(state.vineyards, searchQuery) {
+        state.vineyards.filter {
+            it.name.contains(searchQuery, ignoreCase = true) || it.location.contains(searchQuery, ignoreCase = true)
+        }
+    }
+    val latestSearchActive by rememberUpdatedState(searchActive)
     val listState = rememberLazyListState()
     val latestState by rememberUpdatedState(state)
     val reorder by rememberUpdatedState(onReorder)
@@ -179,7 +190,7 @@ fun VineyardListScreen(
                             detectDragGesturesAfterLongPress(
                                 onDragStart = { offset ->
                                     val current = latestState
-                                    if (!current.isReordering && current.vineyardPendingDeletion == null) {
+                                    if (!latestSearchActive && !current.isReordering && current.vineyardPendingDeletion == null) {
                                         val rootPoint = offset + listBounds.topLeft
                                         val id = handleBounds.entries.firstOrNull { it.value.contains(rootPoint) }?.key
                                         if (id != null && current.vineyards.any { it.vineyardId == id }) {
@@ -209,7 +220,7 @@ fun VineyardListScreen(
                                     val to = ids.indexOf(targetId)
                                     draggedId = null
                                     targetId = null
-                                    if (id != null && from >= 0 && to >= 0 && from != to) {
+                                    if (!latestSearchActive && id != null && from >= 0 && to >= 0 && from != to) {
                                         reorder(id, to - from)
                                     }
                                 }
@@ -219,13 +230,33 @@ fun VineyardListScreen(
                     verticalArrangement =
                         Arrangement.spacedBy(12.dp)
                 ) {
+                    item(key = "vineyard-search") {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedTextField(
+                                value = searchText,
+                                onValueChange = { activity(); searchText = it },
+                                label = { Text("Search vineyards by name or location") },
+                                enabled = !state.isReordering && draggedId == null,
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            if (searchText.isNotEmpty()) {
+                                TextButton(
+                                    onClick = userAction { searchText = "" },
+                                    enabled = !state.isReordering && draggedId == null
+                                ) { Text("Clear search") }
+                            }
+                            if (searchActive) Text("Clear search to reorder vineyards.")
+                            if (visibleVineyards.isEmpty()) Text("No vineyards match your search.")
+                        }
+                    }
                     if (state.isReordering) {
                         item(key = "saving-vineyard-order") {
                             LinearProgressIndicator(Modifier.fillMaxWidth())
                         }
                     }
                     itemsIndexed(
-                        items = state.vineyards,
+                        items = visibleVineyards,
                         key = { _, vineyard ->
                             vineyard.vineyardId
                         }
@@ -235,6 +266,7 @@ fun VineyardListScreen(
                         }
                         VineyardListItem(
                             vineyard = vineyard,
+                            reorderAvailable = !searchActive,
                             dragModifier = Modifier.onGloballyPositioned { coordinates ->
                                 handleBounds[vineyard.vineyardId] = coordinates.boundsInRoot()
                             },
@@ -247,10 +279,10 @@ fun VineyardListScreen(
                             onDelete = if (state.isReordering) null else {
                                 { onDeleteRequest(vineyard.vineyardId) }
                             },
-                            onMoveUp = if (!state.isReordering && index > 0) {
+                            onMoveUp = if (!searchActive && !state.isReordering && index > 0) {
                                 { onReorder(vineyard.vineyardId, -1) }
                             } else null,
-                            onMoveDown = if (!state.isReordering && index < state.vineyards.lastIndex) {
+                            onMoveDown = if (!searchActive && !state.isReordering && index < state.vineyards.lastIndex) {
                                 { onReorder(vineyard.vineyardId, 1) }
                             } else null
                         )
@@ -294,6 +326,7 @@ fun VineyardListScreen(
 @Composable
 private fun VineyardListItem(
     vineyard: VineyardListItemUiModel,
+    reorderAvailable: Boolean,
     dragModifier: Modifier,
     dropTarget: Boolean,
     onClick: () -> Unit,
@@ -332,21 +365,24 @@ private fun VineyardListItem(
                 }
             }
 
-            Text(
-                if (dropTarget) "Drop here" else "Hold to reorder",
-                modifier = dragModifier
-                    .semantics { contentDescription = "Hold and drag to reorder ${vineyard.name}" }
-                    .padding(12.dp)
-            )
-            Row {
-                TextButton(
-                    onClick = userAction { onMoveUp?.invoke() },
-                    enabled = onMoveUp != null
-                ) { Text("Move up") }
-                TextButton(
-                    onClick = userAction { onMoveDown?.invoke() },
-                    enabled = onMoveDown != null
-                ) { Text("Move down") }
+            if (reorderAvailable) {
+                Text(
+                    if (dropTarget) "Drop here" else "Hold to reorder",
+                    modifier = dragModifier
+                        .semantics { contentDescription = "Hold and drag to reorder ${vineyard.name}" }
+                        .padding(12.dp)
+                )
+                Row {
+                    TextButton(
+                        onClick = userAction { onMoveUp?.invoke() },
+                        enabled = onMoveUp != null
+                    ) { Text("Move up") }
+                    TextButton(
+                        onClick = userAction { onMoveDown?.invoke() },
+                        enabled = onMoveDown != null
+                    ) { Text("Move down") }
+                }
+
             }
 
             if (vineyard.location.isNotBlank()) {
