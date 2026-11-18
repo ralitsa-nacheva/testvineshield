@@ -90,11 +90,13 @@ internal fun AdaptiveVineShieldScaffold(
     destinations: List<TopLevelDestination>,
     snackbarHostState: SnackbarHostState,
     leadingPane: (@Composable () -> Unit)? = null,
+    middlePane: (@Composable () -> Unit)? = null,
     content: @Composable (Modifier) -> Unit
 ) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val useRail = maxWidth >= 600.dp && maxHeight >= 480.dp
-        val showVineyardPane = useRail && maxWidth >= 900.dp
+        val showVineyardPane = useRail && maxWidth >= (if (middlePane == null) 900.dp else 1200.dp)
+        val showBlockPane = useRail && middlePane != null && maxWidth >= 900.dp
         Scaffold(
             snackbarHost = { SnackbarHost(snackbarHostState) },
             bottomBar = {
@@ -115,6 +117,10 @@ internal fun AdaptiveVineShieldScaffold(
                 }
                 if (showVineyardPane && leadingPane != null) {
                     Box(Modifier.width(320.dp).fillMaxHeight()) { leadingPane() }
+                    VerticalDivider()
+                }
+                if (showBlockPane && middlePane != null) {
+                    Box(Modifier.width(280.dp).fillMaxHeight()) { middlePane() }
                     VerticalDivider()
                 }
                 content(Modifier.weight(1f).fillMaxSize())

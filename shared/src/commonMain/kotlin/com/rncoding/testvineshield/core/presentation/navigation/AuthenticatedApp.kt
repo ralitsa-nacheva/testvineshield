@@ -91,23 +91,31 @@ fun AuthenticatedApp(
         if (busyRecordRoute == null) navigationState.selectDestination(destination)
     }
 
-    val currentVineyard = navigationState.currentBackStack.lastOrNull() as? VineyardDetailsRoute
+    val topRoute = navigationState.currentBackStack.lastOrNull()
+    val currentBlock = topRoute as? BlockDetailsRoute
+    val selectedVineyardId = when (topRoute) {
+        is VineyardDetailsRoute -> topRoute.vineyardId
+        is BlockDetailsRoute -> topRoute.vineyardId
+        else -> null
+    }
     val vineyardListPane: (@Composable () -> Unit)? =
-        if (navigationState.selectedDestination == TopLevelDestination.VINEYARDS && currentVineyard != null) {
+        if (navigationState.selectedDestination == TopLevelDestination.VINEYARDS && selectedVineyardId != null) {
             {
                 VineyardSelectionPane(
                     userId = userId,
-                    selectedVineyardId = currentVineyard.vineyardId,
+                    selectedVineyardId = selectedVineyardId,
                     enabled = busyRecordRoute == null,
                     onSelect = { vineyardId ->
                         val stack = navigationState.vineyardBackStack
-                        if (busyRecordRoute == null && stack.lastOrNull() == currentVineyard &&
-                            vineyardId != currentVineyard.vineyardId
+                        if (busyRecordRoute == null && stack.lastOrNull() == topRoute &&
+                            vineyardId != selectedVineyardId
                         ) {
                             val route = VineyardDetailsRoute(vineyardId)
                             val existingIndex = stack.lastIndexOf(route)
                             if (existingIndex >= 0) {
                                 stack.subList(existingIndex + 1, stack.size).clear()
+                            } else if (currentBlock != null) {
+                                stack.add(route)
                             } else {
                                 stack[stack.lastIndex] = route
                             }
@@ -115,9 +123,29 @@ fun AuthenticatedApp(
                     }
                 )
             }
-        } else {
-            null
-        }
+        } else null
+    val blockListPane: (@Composable () -> Unit)? =
+        if (navigationState.selectedDestination == TopLevelDestination.VINEYARDS && currentBlock != null) {
+            {
+                BlockSelectionPane(
+                    ownerId = userId,
+                    vineyardId = currentBlock.vineyardId,
+                    selectedBlockId = currentBlock.blockId,
+                    enabled = busyRecordRoute == null,
+                    onSelect = { blockId ->
+                        val stack = navigationState.vineyardBackStack
+                        if (busyRecordRoute == null && stack.lastOrNull() == currentBlock &&
+                            blockId != currentBlock.blockId
+                        ) {
+                            val route = BlockDetailsRoute(currentBlock.vineyardId, blockId)
+                            val existingIndex = stack.lastIndexOf(route)
+                            if (existingIndex >= 0) stack.subList(existingIndex + 1, stack.size).clear()
+                            else stack[stack.lastIndex] = route
+                        }
+                    }
+                )
+            }
+        } else null
 
     AdaptiveVineShieldScaffold(
         navigationState.selectedDestination,
@@ -126,7 +154,8 @@ fun AuthenticatedApp(
         selectDestination,
         availableDestinations,
         linkMessages,
-        leadingPane = vineyardListPane
+        leadingPane = vineyardListPane,
+        middlePane = blockListPane
     ) { contentModifier ->
         NavDisplay(
             backStack =
