@@ -3,7 +3,7 @@ package com.rncoding.testvineshield
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.window.ComposeUIViewController
 import com.rncoding.testvineshield.core.presentation.export.LocalDocumentExportController
-import com.rncoding.testvineshield.core.presentation.navigation.parseVineyardDeepLink
+import com.rncoding.testvineshield.core.presentation.navigation.parseVineyardLinkTarget
 import com.rncoding.testvineshield.core.presentation.navigation.VineyardLinkInbox
 import platform.UIKit.UIViewController
 
@@ -12,7 +12,7 @@ class IosVineyardLinkReceiver {
     internal val inbox = VineyardLinkInbox()
 
     fun receive(url: String) {
-        parseVineyardDeepLink(url)?.let(inbox::offer)
+        parseVineyardLinkTarget(url)?.let { inbox.offer(it.vineyardId, it.blockId) }
     }
 }
 

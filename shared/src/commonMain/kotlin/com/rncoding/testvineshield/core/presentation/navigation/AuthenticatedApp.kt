@@ -6,6 +6,7 @@ import com.rncoding.testvineshield.core.domain.auth.AuthenticatedUserProvider
 import androidx.compose.material3.SnackbarHostState
 import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.repository.VineyardRepository
+import com.rncoding.testvineshield.core.domain.repository.BlockRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
@@ -50,11 +51,12 @@ fun AuthenticatedApp(
     }
 
     val vineyards = koinInject<VineyardRepository>()
+    val blocks = koinInject<BlockRepository>()
     val linkMessages = remember { SnackbarHostState() }
     var linkUnavailable by remember { mutableStateOf(false) }
     LaunchedEffect(linkUnavailable) {
         if (linkUnavailable) {
-            linkMessages.showSnackbar("This vineyard is unavailable for the current account.")
+            linkMessages.showSnackbar("This record is unavailable for the current account.")
             linkUnavailable = false
         }
     }
@@ -67,7 +69,9 @@ fun AuthenticatedApp(
         val id = request.vineyardId
 
         val canOpen = try {
-            vineyards.getVineyard(userId, id) is Result.Success
+            val ownsVineyard = vineyards.getVineyard(userId, id) is Result.Success
+            val blockId = request.blockId
+            ownsVineyard && (blockId == null || blocks.getBlock(id, blockId) != null)
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (_: Exception) {
@@ -78,7 +82,8 @@ fun AuthenticatedApp(
         if (!inbox.consume(request)) return@LaunchedEffect
         if (canOpen) {
             navigationState.selectDestination(TopLevelDestination.VINEYARDS)
-            val route = VineyardDetailsRoute(id)
+            val route: AppRoute = request.blockId?.let { BlockDetailsRoute(id, it) }
+                ?: VineyardDetailsRoute(id)
             if (navigationState.currentBackStack.lastOrNull() != route) {
                 navigationState.navigate(route)
             }

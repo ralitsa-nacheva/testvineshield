@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.presentation.navigation
 
+import kotlin.test.assertEquals
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -31,5 +32,16 @@ class VineyardLinkInboxTest {
         inbox.offer(0)
         inbox.offer(-1)
         assertSame(request, inbox.pending)
+    }
+
+    @Test fun aNewBlockTargetReplacesThePendingTarget() {
+        val inbox = VineyardLinkInbox()
+        inbox.offer(42, 17)
+        val first = assertNotNull(inbox.pending)
+        inbox.offer(42, 18)
+        val second = assertNotNull(inbox.pending)
+        assertEquals(18L, second.blockId)
+        assertFalse(inbox.consume(first))
+        assertTrue(inbox.consume(second))
     }
 }
