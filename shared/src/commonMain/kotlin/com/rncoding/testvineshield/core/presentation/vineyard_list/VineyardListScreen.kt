@@ -1,6 +1,13 @@
 package com.rncoding.testvineshield.core.presentation.vineyard_list
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.*
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import com.rncoding.testvineshield.core.presentation.root.LocalUserActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,6 +53,14 @@ fun VineyardListScreen(
     onDeleteCancel: () -> Unit,
     onReorder: (Long, Int) -> Unit
 ) {
+    val listState = rememberLazyListState()
+    val latestState by rememberUpdatedState(state)
+    val reorder by rememberUpdatedState(onReorder)
+    val activity = LocalUserActivity.current
+    var draggedId by remember { mutableStateOf<Long?>(null) }
+    var targetId by remember { mutableStateOf<Long?>(null) }
+    var dragY by remember { mutableStateOf(0f) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -101,6 +116,8 @@ fun VineyardListScreen(
 
             else -> {
                 LazyColumn(
+                    state = listState,
+                    userScrollEnabled = draggedId == null,
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(innerPadding),
@@ -121,6 +138,51 @@ fun VineyardListScreen(
                     ) { index, vineyard ->
                         VineyardListItem(
                             vineyard = vineyard,
+                            dragModifier = Modifier.pointerInput(vineyard.vineyardId, state.isReordering) {
+                                detectDragGesturesAfterLongPress(
+                                    onDragStart = {
+                                        val current = latestState
+                                        if (!current.isReordering && current.vineyardPendingDeletion == null) {
+                                            val item = listState.layoutInfo.visibleItemsInfo
+                                                .firstOrNull { it.key == vineyard.vineyardId }
+                                            if (item != null) {
+                                                activity()
+                                                draggedId = vineyard.vineyardId
+                                                targetId = vineyard.vineyardId
+                                                dragY = item.offset + item.size / 2f
+                                            }
+                                        }
+                                    },
+                                    onDrag = { change, delta ->
+                                        if (draggedId == vineyard.vineyardId) {
+                                            change.consume()
+                                            activity()
+                                            dragY += delta.y
+                                            listState.layoutInfo.visibleItemsInfo
+                                                .firstOrNull { dragY >= it.offset && dragY < it.offset + it.size }
+                                                ?.key?.let { key ->
+                                                    latestState.vineyards.firstOrNull { it.vineyardId == key }
+                                                        ?.let { targetId = it.vineyardId }
+                                                }
+                                        }
+                                    },
+                                    onDragCancel = {
+                                        draggedId = null
+                                        targetId = null
+                                    },
+                                    onDragEnd = {
+                                        val ids = latestState.vineyards.map { it.vineyardId }
+                                        val from = ids.indexOf(draggedId)
+                                        val to = ids.indexOf(targetId)
+                                        if (from >= 0 && to >= 0 && from != to) {
+                                            reorder(vineyard.vineyardId, to - from)
+                                        }
+                                        draggedId = null
+                                        targetId = null
+                                    }
+                                )
+                            },
+                            dropTarget = draggedId != null && targetId == vineyard.vineyardId,
                             onClick = userAction {
                                 onVineyardClick(
                                     vineyard.vineyardId
@@ -176,6 +238,8 @@ fun VineyardListScreen(
 @Composable
 private fun VineyardListItem(
     vineyard: VineyardListItemUiModel,
+    dragModifier: Modifier,
+    dropTarget: Boolean,
     onClick: () -> Unit,
     onDelete: (() -> Unit)?,
     onMoveUp: (() -> Unit)?,
@@ -212,6 +276,12 @@ private fun VineyardListItem(
                 }
             }
 
+            Text(
+                if (dropTarget) "Drop here" else "Hold to reorder",
+                modifier = dragModifier
+                    .semantics { contentDescription = "Hold and drag to reorder ${vineyard.name}" }
+                    .padding(12.dp)
+            )
             Row {
                 TextButton(
                     onClick = userAction { onMoveUp?.invoke() },

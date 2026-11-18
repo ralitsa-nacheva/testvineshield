@@ -139,7 +139,7 @@ class VineyardListViewModel(
     fun reorder(vineyardId: Long, offset: Int) {
         val current = _state.value
         if (current.isReordering || current.vineyardPendingDeletion != null ||
-            (offset != -1 && offset != 1)
+            offset == 0
         ) return
 
         val previousIds = current.vineyards.map { it.vineyardId }
