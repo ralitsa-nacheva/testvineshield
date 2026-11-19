@@ -4,6 +4,7 @@ import com.rncoding.testvineshield.core.presentation.navigation.VineyardLinkInbo
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import com.rncoding.testvineshield.core.presentation.language.AppLanguageEnvironment
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.rncoding.testvineshield.core.presentation.root.AppRoot
@@ -14,12 +15,14 @@ fun App(
     modifier: Modifier = Modifier,
     vineyardLinks: VineyardLinkInbox? = null
 ) {
-    VineShieldTheme {
-        Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-            AppRoot(
-                modifier = Modifier.fillMaxSize(),
-                vineyardLinks = vineyardLinks
-            )
+    AppLanguageEnvironment {
+        VineShieldTheme {
+            Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                AppRoot(
+                    modifier = Modifier.fillMaxSize(),
+                    vineyardLinks = vineyardLinks
+                )
+            }
         }
     }
 }

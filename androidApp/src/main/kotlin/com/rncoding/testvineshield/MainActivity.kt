@@ -6,11 +6,11 @@ import com.rncoding.testvineshield.core.presentation.navigation.VineyardLinkInbo
 import com.rncoding.testvineshield.core.presentation.navigation.parseVineyardLinkTarget
 import com.rncoding.testvineshield.core.presentation.navigation.VineyardLinkTarget
 import androidx.activity.compose.setContent
-import androidx.fragment.app.FragmentActivity
+import androidx.appcompat.app.AppCompatActivity
 import com.rncoding.testvineshield.core.platform.AndroidActivityProvider
 import org.koin.android.ext.android.inject
 
-class MainActivity : FragmentActivity() {
+class MainActivity : AppCompatActivity() {
     private val activityProvider: AndroidActivityProvider by inject()
 
     private val vineyardLinks = VineyardLinkInbox()

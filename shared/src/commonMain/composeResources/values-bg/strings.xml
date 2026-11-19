@@ -446,4 +446,7 @@
   <string name="account_delete_title">Изтриване на профила?</string>
   <string name="account_logout_help">Изходът връща към екрана за вход. Локалният профил и запазените записи за лозята остават на устройството. Незапазените промени се отхвърлят.</string>
   <string name="account_delete_warning">Това изтрива окончателно профила и локалните му данни за лозята. Действието е необратимо.</string>
+  <string name="language_title">Език на приложението</string>
+  <string name="language_follow_system">Следвай системния език</string>
+  <string name="language_partial_help">Някои екрани и съобщения за грешки все още се превеждат.</string>
 </resources>

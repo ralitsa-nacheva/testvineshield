@@ -22,6 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.imePadding
 import com.rncoding.testvineshield.resources.*
 import org.jetbrains.compose.resources.stringResource
+import com.rncoding.testvineshield.core.presentation.language.AppLanguageSelector
 import androidx.compose.runtime.Composable
 import com.rncoding.testvineshield.core.presentation.root.LocalUserActivity
 import androidx.compose.runtime.getValue
@@ -102,6 +103,8 @@ fun AccountScreen(
             }
 
             Text(stringResource(Res.string.account_logout_help))
+
+            AppLanguageSelector(enabled = !isBusy)
 
             Text(stringResource(Res.string.account_information))
 

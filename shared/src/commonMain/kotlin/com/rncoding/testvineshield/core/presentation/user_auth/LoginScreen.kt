@@ -12,6 +12,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import com.rncoding.testvineshield.resources.*
 import org.jetbrains.compose.resources.stringResource
+import com.rncoding.testvineshield.core.presentation.language.AppLanguageSelector
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -31,9 +35,13 @@ fun LoginScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .imePadding()
+            .verticalScroll(rememberScrollState())
             .padding(24.dp),
         verticalArrangement = Arrangement.Center
     ) {
+
+        AppLanguageSelector(enabled = !uiState.isSubmitting)
 
         Text(
             text = "VineShield"

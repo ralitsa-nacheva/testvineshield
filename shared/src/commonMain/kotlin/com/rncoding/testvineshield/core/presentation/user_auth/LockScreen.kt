@@ -7,6 +7,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import com.rncoding.testvineshield.resources.*
 import org.jetbrains.compose.resources.stringResource
+import com.rncoding.testvineshield.core.presentation.language.AppLanguageSelector
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
@@ -25,6 +26,7 @@ fun LockScreen(viewModel: AuthViewModel, reason: AuthState.Locked.LockReason) {
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.refreshUnlockOptions() }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
         verticalArrangement = Arrangement.Center) {
+        AppLanguageSelector(enabled = !state.isSubmitting)
         Text("VineShield", style = MaterialTheme.typography.headlineMedium)
         Text(stringResource(Res.string.auth_locked_inactivity))
         Text(stringResource(Res.string.auth_unlock_help))

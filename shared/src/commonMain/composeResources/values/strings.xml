@@ -446,4 +446,7 @@
   <string name="account_delete_title">Delete account?</string>
   <string name="account_logout_help">Logging out returns to login. Your local account and saved vineyard records stay on this device. Unsaved edits are discarded.</string>
   <string name="account_delete_warning">This permanently deletes your account and its local vineyard data. This action cannot be undone.</string>
+  <string name="language_title">App language</string>
+  <string name="language_follow_system">Follow system</string>
+  <string name="language_partial_help">Some screens and error messages are still being translated.</string>
 </resources>

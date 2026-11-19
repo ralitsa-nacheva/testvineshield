@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Native window host only; VineShieldTheme still owns Compose colors/shapes. -->
+    <style name="Theme.VineShield" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowActionModeOverlay">true</item>
+    </style>
+</resources>

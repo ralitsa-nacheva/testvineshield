@@ -134,6 +134,7 @@ kotlin {
         // =====================================================================
 
         androidMain.dependencies {
+            implementation(libs.androidx.appcompat)
             runtimeOnly(libs.maplibre.runtime)
 
             // Android Activity

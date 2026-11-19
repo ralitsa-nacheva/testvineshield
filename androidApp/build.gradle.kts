@@ -14,6 +14,9 @@ android {
         versionName = "1.0"
     }
 
+    // Keep native language resources available offline as well as Compose assets.
+    bundle { language { enableSplit = false } }
+
     buildFeatures {
         compose = true
     }
@@ -38,6 +41,7 @@ android {
 
 dependencies {
     implementation(project(":shared"))
+    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.activity.compose)
     implementation("androidx.fragment:fragment:1.9.1")
     implementation(libs.koin.android)
