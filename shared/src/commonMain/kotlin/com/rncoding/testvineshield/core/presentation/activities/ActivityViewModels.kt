@@ -44,6 +44,8 @@ data class ActivityDetailsState(
     val loading: Boolean = false,
     val record: ActivityDomainModel? = null,
     val scopeLabel: String = "",
+    val scopeIsWholeVineyard: Boolean = true,
+    val scopeUnavailable: Boolean = false,
     val deleting: Boolean = false,
     val confirmDelete: Boolean = false,
     val deleted: Boolean = false,
@@ -68,11 +70,12 @@ class ActivityDetailsViewModel(
                     is Result.Success -> {
                         val record=result.data
                         val blockId=record.blockId
+                        var unavailable=false
                         val label=if(blockId==null) "Whole vineyard" else when(val block=getBlock(key.vineyardId,blockId)) {
-                            is Result.Error -> "Block unavailable"
+                            is Result.Error -> { unavailable=true; "Block unavailable" }
                             is Result.Success -> block.data.name
                         }
-                        _state.update { it.copy(record=record,scopeLabel=label) }
+                        _state.update { it.copy(record=record,scopeLabel=label,scopeIsWholeVineyard=blockId==null,scopeUnavailable=unavailable) }
                     }
                 }
             } catch(e: CancellationException) { throw e }
@@ -109,6 +112,8 @@ data class ActivityEditorRequest(
 data class ActivityEditorState(
     val draft: ActivityDraft = ActivityDraft(),
     val scopeLabel: String = "",
+    val scopeIsWholeVineyard: Boolean = true,
+    val scopeUnavailable: Boolean = false,
     val loading: Boolean = false,
     val saving: Boolean = false,
     val ready: Boolean = false,
@@ -147,15 +152,15 @@ class ActivityEditorViewModel(
                             is Result.Error -> { _state.update { it.copy(error=block.error.userMessage) };return@launch }
                             is Result.Success -> block.data.name
                         }
-                        _state.update { it.copy(ready=true,scopeLabel=scopeLabel,draft=request.restoredDraft ?: if(request.complete) loaded.copy(status=ActivityStatus.COMPLETED) else loaded) }
+                        _state.update { it.copy(ready=true,scopeLabel=scopeLabel,scopeIsWholeVineyard=blockId==null,draft=request.restoredDraft ?: if(request.complete) loaded.copy(status=ActivityStatus.COMPLETED) else loaded) }
                     }
                 } else when(val parent=getVineyard(request.scope.vineyardId)) {
                     is Result.Error -> _state.update { it.copy(error=parent.error.userMessage) }
                     is Result.Success -> {
                         if(request.scope.blockId>0) when(val block=getBlock(request.scope.vineyardId,request.scope.blockId)) {
                             is Result.Error -> _state.update { it.copy(error=block.error.userMessage) }
-                            is Result.Success -> readyNew(block.data.name)
-                        } else readyNew("Whole vineyard")
+                            is Result.Success -> readyNew(block.data.name, false)
+                        } else readyNew("Whole vineyard", true)
                     }
                 }
             } catch(e: CancellationException) { throw e }
@@ -163,7 +168,7 @@ class ActivityEditorViewModel(
             finally { _state.update { it.copy(loading=false) } }
         }
     }
-    private fun readyNew(label: String) { _state.update { it.copy(ready=true,scopeLabel=label,draft=request.restoredDraft ?: ActivityDraft()) } }
+    private fun readyNew(label: String, wholeVineyard: Boolean) { _state.update { it.copy(ready=true,scopeLabel=label,scopeIsWholeVineyard=wholeVineyard,draft=request.restoredDraft ?: ActivityDraft()) } }
     private fun change(field: ActivityField? = null, transform: (ActivityDraft)->ActivityDraft) {
         if(_state.value.canEdit) _state.update { it.copy(draft=transform(it.draft),errors=if(field==null) it.errors else it.errors-field,error=null) }
     }
