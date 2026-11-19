@@ -118,4 +118,17 @@
   <string name="search_time_zone">Търсене по град или зона, напр. Sofia</string>
   <string name="no_time_zones">Няма съвпадащи часови зони.</string>
   <string name="selected_zone">%1$s (избрана)</string>
+    <string name="map_choose_location">Изберете местоположение на лозето</string>
+    <string name="map_privacy">Онлайн карта: OpenFreeMap получава показваната област и обичайната мрежова информация. Записите остават на устройството. Не се използва разрешение за местоположението на устройството.</string>
+    <string name="map_position_help">Преместете и увеличете картата, докато мерникът попадне върху лозето. Ако картата не се зарежда или няма връзка, откажете и въведете координатите ръчно.</string>
+    <string name="map_coordinates">Географска ширина: %1$s · Географска дължина: %2$s</string>
+    <string name="map_address_help">Държавата и населеното място могат да се редактират във формуляра. Тази карта не предоставя надежден адрес или най-близко населено място.</string>
+    <string name="map_zone_suggestion">Предложена часова зона: %1$s. Потвърдете, преди да я използвате.</string>
+    <string name="map_zone_loading">Търсене на часова зона…</string>
+    <string name="map_suggest_zone">Предложи часова зона чрез Open-Meteo</string>
+    <string name="map_zone_privacy">Търсенето на часова зона изпраща избраната точка само при заявка. То не е задължително; координатите могат да се използват и без него.</string>
+    <string name="map_use_zone">Използвай %1$s (заменя часовата зона във формуляра)</string>
+    <string name="map_attribution">© OpenFreeMap · © OpenMapTiles · Данни © сътрудниците на OpenStreetMap</string>
+    <string name="map_licence">Авторство и лиценз на картографските данни</string>
+    <string name="map_use_point">Използвай точката</string>
 </resources>

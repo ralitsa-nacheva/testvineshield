@@ -118,4 +118,17 @@
   <string name="search_time_zone">Search city or zone, e.g. Sofia</string>
   <string name="no_time_zones">No matching time zones.</string>
   <string name="selected_zone">%1$s (selected)</string>
+    <string name="map_choose_location">Choose vineyard location</string>
+    <string name="map_privacy">Online map: OpenFreeMap receives the viewed area and normal network information. Records stay local. No device location permission is used.</string>
+    <string name="map_position_help">Pan and zoom until the crosshair is on your vineyard. For a missing/offline map, cancel and use manual coordinates.</string>
+    <string name="map_coordinates">Latitude: %1$s · Longitude: %2$s</string>
+    <string name="map_address_help">Country and locality remain editable in the form. This basemap does not return a reliable address or nearest village.</string>
+    <string name="map_zone_suggestion">Suggested zone: %1$s. Confirm before using.</string>
+    <string name="map_zone_loading">Looking up time zone…</string>
+    <string name="map_suggest_zone">Suggest time zone using Open-Meteo</string>
+    <string name="map_zone_privacy">Time-zone lookup sends this selected point only when requested. It is optional; coordinates can be used without it.</string>
+    <string name="map_use_zone">Use %1$s (replaces the form's time zone)</string>
+    <string name="map_attribution">© OpenFreeMap · © OpenMapTiles · Data © OpenStreetMap contributors</string>
+    <string name="map_licence">Map data attribution and licence</string>
+    <string name="map_use_point">Use point</string>
 </resources>

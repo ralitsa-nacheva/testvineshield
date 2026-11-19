@@ -1,5 +1,7 @@
 package com.rncoding.testvineshield.core.presentation.vineyard_editor
 
+import com.rncoding.testvineshield.resources.*
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -47,9 +49,9 @@ fun VineyardMapPicker(initial: VineyardMapPoint?,onDismiss: ()->Unit,onUse: (Vin
     Dialog(onDismissRequest=onDismiss,properties=DialogProperties(usePlatformDefaultWidth=false)) {
         Surface(Modifier.fillMaxSize().userActivity(activity)) {
             Column(Modifier.fillMaxSize().padding(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                Text("Choose vineyard location",style=MaterialTheme.typography.titleLarge)
-                Text("Online map: OpenFreeMap receives the viewed area and normal network information. Records stay local. No device location permission is used.")
-                Text("Pan and zoom until the crosshair is on your vineyard. For a missing/offline map, cancel and use manual coordinates.")
+                Text(stringResource(Res.string.map_choose_location),style=MaterialTheme.typography.titleLarge)
+                Text(stringResource(Res.string.map_privacy))
+                Text(stringResource(Res.string.map_position_help))
                 Box(Modifier.weight(1f).fillMaxWidth().heightIn(min=180.dp)) {
                     MaplibreMap(state=state,modifier=Modifier.fillMaxSize().userActivity(activity))
                     val color=MaterialTheme.colorScheme.error
@@ -60,8 +62,8 @@ fun VineyardMapPicker(initial: VineyardMapPoint?,onDismiss: ()->Unit,onUse: (Vin
                     }
                 }
                 Column(Modifier.heightIn(max=230.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(6.dp)) {
-                    point?.let { Text("Latitude: ${formatPlainDecimal(it.latitude)} · Longitude: ${formatPlainDecimal(it.longitude)}") }
-                    Text("Country and locality remain editable in the form. This basemap does not return a reliable address or nearest village.")
+                    point?.let { Text(stringResource(Res.string.map_coordinates, formatPlainDecimal(it.latitude), formatPlainDecimal(it.longitude))) }
+                    Text(stringResource(Res.string.map_address_help))
                     TextButton(onClick=userAction {
                         val selected=point
                         if(selected!=null && !busy) {
@@ -70,28 +72,29 @@ fun VineyardMapPicker(initial: VineyardMapPoint?,onDismiss: ()->Unit,onUse: (Vin
                             job=scope.launch {
                                 try {
                                     when(val result=metadata.suggestTimeZone(selected)) {
-                                        is Result.Success -> if(currentPoint==selected && revision==token) { zone=result.data; zonePoint=selected; message="Suggested zone: ${result.data}. Confirm before using." }
+                                        is Result.Success -> if(currentPoint==selected && revision==token) { zone=result.data; zonePoint=selected }
                                         is Result.Error -> if(currentPoint==selected && revision==token) message=result.error.userMessage
                                     }
                                 } catch(e: CancellationException) { throw e }
                                 finally { if(currentPoint==selected && revision==token) busy=false }
                             }
                         }
-                    },enabled=point!=null && !busy) { Text(if(busy) "Looking up time zone…" else "Suggest time zone using Open-Meteo") }
-                    Text("Time-zone lookup sends this selected point only when requested. It is optional; coordinates can be used without it.")
+                    },enabled=point!=null && !busy) { Text(if(busy) stringResource(Res.string.map_zone_loading) else stringResource(Res.string.map_suggest_zone)) }
+                    Text(stringResource(Res.string.map_zone_privacy))
                     message?.let { Text(it) }
                     zone?.let { suggested ->
+                        Text(stringResource(Res.string.map_zone_suggestion, suggested))
                         Row(verticalAlignment=androidx.compose.ui.Alignment.CenterVertically) {
                             Checkbox(checked=useZone,onCheckedChange={ activity(); useZone=it })
-                            Text("Use $suggested (replaces the form's time zone)")
+                            Text(stringResource(Res.string.map_use_zone, suggested))
                         }
                     }
-                    TextButton(onClick=userAction { uri.openUri("https://openfreemap.org/") }) { Text("© OpenFreeMap · © OpenMapTiles · Data © OpenStreetMap contributors") }
-                    TextButton(onClick=userAction { uri.openUri("https://www.openstreetmap.org/copyright") }) { Text("Map data attribution and licence") }
+                    TextButton(onClick=userAction { uri.openUri("https://openfreemap.org/") }) { Text(stringResource(Res.string.map_attribution)) }
+                    TextButton(onClick=userAction { uri.openUri("https://www.openstreetmap.org/copyright") }) { Text(stringResource(Res.string.map_licence)) }
                 }
                 Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(12.dp)) {
-                    OutlinedButton(onClick=userAction(onDismiss),modifier=Modifier.weight(1f)) { Text("Cancel") }
-                    Button(onClick=userAction { point?.let { onUse(it,if(useZone && zonePoint==point) zone else null) } },enabled=point!=null && !busy,modifier=Modifier.weight(1f)) { Text("Use point") }
+                    OutlinedButton(onClick=userAction(onDismiss),modifier=Modifier.weight(1f)) { Text(stringResource(Res.string.cancel_action)) }
+                    Button(onClick=userAction { point?.let { onUse(it,if(useZone && zonePoint==point) zone else null) } },enabled=point!=null && !busy,modifier=Modifier.weight(1f)) { Text(stringResource(Res.string.map_use_point)) }
                 }
             }
         }
