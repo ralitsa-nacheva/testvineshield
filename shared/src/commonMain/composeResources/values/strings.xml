@@ -313,4 +313,12 @@
   <string name="harvest_save">Save harvest</string>
   <string name="harvest_quantity_value">Quantity: %1$s %2$s</string>
   <string name="harvest_brix_value">Brix: %1$s</string>
+  <string name="harvest_export_season_scope">Season scope</string>
+  <string name="harvest_export_json_exact">JSON — exact record text</string>
+  <string name="harvest_export_contents">Includes vineyard/block names, local record IDs, season, dates, quantities, units and Brix status. Unknown Brix stays unknown; different units are not totalled.</string>
+  <string name="harvest_export_plaintext">Files are not encrypted. Choose a local folder for an offline copy; your system may also offer cloud storage providers. This exports harvest records, not an app backup or regulatory report.</string>
+  <string name="harvest_export_csv_help">CSV uses comma-separated columns, UTF-8 and decimal dots. Formula-like text receives a visible protective prefix; spreadsheet apps differ. Use JSON when exact text matters.</string>
+  <string name="harvest_export_empty">No records to export in this scope.</string>
+  <string name="harvest_export_summary">Records currently in this scope: %1$d. Saving reloads the records; the file is a snapshot at generation time.</string>
+  <string name="harvest_export_success">Saved harvest records: %1$d.</string>
 </resources>

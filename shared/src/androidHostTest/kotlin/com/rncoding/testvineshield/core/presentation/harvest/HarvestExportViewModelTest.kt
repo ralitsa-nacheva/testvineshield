@@ -40,7 +40,7 @@ class HarvestExportViewModelTest {
         v.export(scope, "2026", HarvestExportFormat.JSON, saver)
         runCurrent(); assertTrue(v.state.value.busy)
         gate.complete(Unit); advanceUntilIdle()
-        assertEquals("Saved 2 harvest records.", v.state.value.message)
+        assertEquals(HarvestExportNotice.Saved(2), v.state.value.notice)
         assertFalse(v.state.value.busy)
         coVerify(exactly = 1) { prepare(scope, "2026", HarvestExportFormat.JSON) }
         coVerify(exactly = 1) { saver.save(document) }
@@ -48,7 +48,7 @@ class HarvestExportViewModelTest {
     @Test fun userPickerCancellationIsNotSuccessOrError() = runTest {
         coEvery { saver.save(document) } returns DocumentSaveResult.Cancelled
         val v = vm(); v.export(scope, "2026", HarvestExportFormat.JSON, saver); advanceUntilIdle()
-        assertEquals("Export cancelled.", v.state.value.message)
+        assertEquals(HarvestExportNotice.Cancelled, v.state.value.notice)
         assertNull(v.state.value.error); assertFalse(v.state.value.busy)
     }
     @Test fun preparationFailureNeverOpensNativeSaver() = runTest {
@@ -60,10 +60,10 @@ class HarvestExportViewModelTest {
     @Test fun providerFailureAllowsRetryWithoutReportingSaved() = runTest {
         coEvery { saver.save(document) } returns DocumentSaveResult.Failed("Disk full")
         val v = vm(); v.export(scope, "2026", HarvestExportFormat.JSON, saver); advanceUntilIdle()
-        assertEquals("Disk full", v.state.value.error); assertNull(v.state.value.message)
+        assertEquals("Disk full", v.state.value.error); assertNull(v.state.value.notice)
         coEvery { saver.save(document) } returns DocumentSaveResult.Saved
         v.export(scope, "2026", HarvestExportFormat.JSON, saver); advanceUntilIdle()
-        assertEquals("Saved 2 harvest records.", v.state.value.message)
+        assertEquals(HarvestExportNotice.Saved(2), v.state.value.notice)
     }
     @Test fun explicitCancellationReleasesGuardAndRunsSaverCleanup() = runTest {
         var cleaned = false
@@ -73,6 +73,19 @@ class HarvestExportViewModelTest {
         val v = vm(); v.export(scope, "2026", HarvestExportFormat.JSON, saver); runCurrent()
         v.cancel(); advanceUntilIdle()
         assertTrue(cleaned); assertFalse(v.state.value.busy)
-        assertTrue(assertNotNull(v.state.value.message).startsWith("Export interrupted"))
+        assertEquals(HarvestExportNotice.Interrupted, v.state.value.notice)
     }
+    @Test fun retryClearsPreviousNoticeWhileSaveIsPending() = runTest {
+        val v = vm(); v.export(scope, "2026", HarvestExportFormat.JSON, saver); advanceUntilIdle()
+        assertEquals(HarvestExportNotice.Saved(2), v.state.value.notice)
+        val gate = CompletableDeferred<Unit>()
+        coEvery { saver.save(document) } coAnswers { gate.await(); DocumentSaveResult.Cancelled }
+        v.export(scope, "2026", HarvestExportFormat.JSON, saver); runCurrent()
+        assertTrue(v.state.value.busy)
+        assertNull(v.state.value.notice)
+        gate.complete(Unit); advanceUntilIdle()
+        assertEquals(HarvestExportNotice.Cancelled, v.state.value.notice)
+        assertFalse(v.state.value.busy)
+    }
+
 }

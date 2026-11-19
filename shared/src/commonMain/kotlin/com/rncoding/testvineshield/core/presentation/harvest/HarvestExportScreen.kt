@@ -1,6 +1,8 @@
 package com.rncoding.testvineshield.core.presentation.harvest
 
 import androidx.compose.foundation.layout.*
+import com.rncoding.testvineshield.resources.*
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -24,6 +26,8 @@ fun HarvestExportScreenRoot(ownerId: Long, scope: HarvestScope, initialSeason: S
     val vm = koinViewModel<HarvestExportViewModel>(key = "harvest-export-$ownerId-${scope.vineyardId}-${scope.blockId}")
     val state by vm.state.collectAsStateWithLifecycle()
     val saver = rememberDocumentSaver()
+    val formatLabels = mapOf(HarvestExportFormat.JSON to stringResource(Res.string.harvest_export_json_exact),
+        HarvestExportFormat.CSV to stringResource(Res.string.export_csv_view))
     var season by rememberSaveable(ownerId, scope.vineyardId, scope.blockId, initialSeason) { mutableStateOf(initialSeason) }
     var formatCode by rememberSaveable(ownerId, scope.vineyardId, scope.blockId) { mutableStateOf("JSON") }
     val format = HarvestExportFormat.entries.firstOrNull { it.name == formatCode } ?: HarvestExportFormat.JSON
@@ -33,25 +37,29 @@ fun HarvestExportScreenRoot(ownerId: Long, scope: HarvestScope, initialSeason: S
         onDispose { onBusyChanged(false) }
     }
     LaunchedEffect(list.error) { if (list.error != null) vm.cancel() }
-    Scaffold(topBar = { RecordTopBar("Export harvest records", { if (!vm.state.value.busy) onBack() }, !state.busy) }) { padding ->
+    Scaffold(topBar = { RecordTopBar(stringResource(Res.string.harvest_export_records), { if (!vm.state.value.busy) onBack() }, !state.busy) }) { padding ->
         LazyColumn(Modifier.padding(padding).fillMaxHeight().widthIn(max = 720.dp).fillMaxWidth(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (list.loading || state.busy) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
-            list.error?.let { error -> item { Text(error, color = MaterialTheme.colorScheme.error); TextButton(onClick = userAction(records::reload), enabled = !state.busy) { Text("Retry") } } }
+            list.error?.let { error -> item { Text(error, color = MaterialTheme.colorScheme.error); TextButton(onClick = userAction(records::reload), enabled = !state.busy) { Text(stringResource(Res.string.retry)) } } }
             list.snapshot?.let { snapshot ->
                 val count = snapshot.records.count { season == null || it.season == season }
                 item { Text(snapshot.blockName, style = MaterialTheme.typography.headlineSmall) }
-                item { RecordChoice("Season scope", season, snapshot.records.map { it.season }.distinct().sortedDescending(), !state.busy, { it }, { season = it }, nullLabel = "All seasons") }
-                item { Text("$count records currently in this scope. Saving reloads the records; the file is a snapshot at generation time.") }
-                item { RecordChoice("File format", format, HarvestExportFormat.entries, !state.busy, { if (it == HarvestExportFormat.JSON) "JSON — exact record text" else "CSV — spreadsheet view" }, { it?.let { choice -> formatCode = choice.name } }, allowUnknown = false) }
-                item { Text("Includes vineyard/block names, local record IDs, season, dates, quantities, units and Brix status. Unknown Brix stays unknown; different units are not totalled.") }
-                item { Text("Files are not encrypted. Choose a local folder for an offline copy; your system may also offer cloud storage providers. This exports harvest records, not an app backup or regulatory report.") }
-                if (format == HarvestExportFormat.CSV) item { Text("CSV uses comma-separated columns, UTF-8 and decimal dots. Formula-like text receives a visible protective prefix; spreadsheet apps differ. Use JSON when exact text matters.") }
-                item { Button(onClick = userAction { vm.export(scope, season, format, saver); onBusyChanged(vm.state.value.busy) }, enabled = !list.loading && count > 0 && !state.busy, modifier = Modifier.fillMaxWidth()) { Text("Choose location and save") } }
-                if (count == 0) item { Text("No records to export in this scope.") }
+                item { RecordChoice(stringResource(Res.string.harvest_export_season_scope), season, snapshot.records.map { it.season }.distinct().sortedDescending(), !state.busy, { it }, { season = it }, nullLabel = stringResource(Res.string.all_seasons)) }
+                item { Text(stringResource(Res.string.harvest_export_summary, count)) }
+                item { RecordChoice(stringResource(Res.string.export_file_format), format, HarvestExportFormat.entries, !state.busy, { formatLabels.getValue(it) }, { it?.let { choice -> formatCode = choice.name } }, allowUnknown = false) }
+                item { Text(stringResource(Res.string.harvest_export_contents)) }
+                item { Text(stringResource(Res.string.harvest_export_plaintext)) }
+                if (format == HarvestExportFormat.CSV) item { Text(stringResource(Res.string.harvest_export_csv_help)) }
+                item { Button(onClick = userAction { vm.export(scope, season, format, saver); onBusyChanged(vm.state.value.busy) }, enabled = !list.loading && count > 0 && !state.busy, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.export_choose_save)) } }
+                if (count == 0) item { Text(stringResource(Res.string.harvest_export_empty)) }
             }
-            state.message?.let { item { Text(it) } }
+            state.notice?.let { notice -> item { Text(when (notice) {
+                is HarvestExportNotice.Saved -> stringResource(Res.string.harvest_export_success, notice.recordCount)
+                HarvestExportNotice.Cancelled -> stringResource(Res.string.export_cancelled)
+                HarvestExportNotice.Interrupted -> stringResource(Res.string.export_interrupted)
+            }) } }
             state.error?.let { item { Text(it, color = MaterialTheme.colorScheme.error) } }
-            if (state.busy) item { OutlinedButton(onClick = userAction(vm::cancel), modifier = Modifier.fillMaxWidth()) { Text("Cancel export") } }
+            if (state.busy) item { OutlinedButton(onClick = userAction(vm::cancel), modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.export_cancel)) } }
         }
     }
 }

@@ -313,4 +313,12 @@
   <string name="harvest_save">Запази реколтата</string>
   <string name="harvest_quantity_value">Количество: %1$s %2$s</string>
   <string name="harvest_brix_value">Брикс: %1$s</string>
+  <string name="harvest_export_season_scope">Обхват по сезон</string>
+  <string name="harvest_export_json_exact">JSON — точен текст на записите</string>
+  <string name="harvest_export_contents">Включва имената на лозето и парцела, локалните идентификатори, сезона, датите, количествата, мерните единици и статуса на Брикс. Неизвестните стойности за Брикс остават неизвестни; различни мерни единици не се сумират.</string>
+  <string name="harvest_export_plaintext">Файловете не са шифровани. Изберете локална папка за копие без интернет; системата може да предлага и облачно съхранение. Експортират се записи за реколта, а не резервно копие на приложението или нормативен отчет.</string>
+  <string name="harvest_export_csv_help">CSV използва колони, разделени със запетая, UTF-8 и десетична точка. Текстът, наподобяващ формула, получава видим защитен префикс; програмите за таблици се различават. Използвайте JSON, когато точният текст е важен.</string>
+  <string name="harvest_export_empty">Няма записи за експортиране в този обхват.</string>
+  <string name="harvest_export_summary">Брой записи в този обхват: %1$d. При запазване записите се зареждат отново; файлът отразява данните към момента на генериране.</string>
+  <string name="harvest_export_success">Запазени записи за реколта: %1$d.</string>
 </resources>

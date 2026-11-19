@@ -13,7 +13,13 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-data class HarvestExportState(val busy: Boolean = false, val message: String? = null, val error: String? = null)
+sealed interface HarvestExportNotice {
+    data class Saved(val recordCount: Int) : HarvestExportNotice
+    data object Cancelled : HarvestExportNotice
+    data object Interrupted : HarvestExportNotice
+}
+
+data class HarvestExportState(val busy: Boolean = false, val notice: HarvestExportNotice? = null, val error: String? = null)
 
 class HarvestExportViewModel(private val prepare: PrepareHarvestExportUseCase) : ViewModel() {
     private val _state = MutableStateFlow(HarvestExportState())
@@ -28,13 +34,13 @@ class HarvestExportViewModel(private val prepare: PrepareHarvestExportUseCase) :
                 when (val result = prepare(scope, season, format)) {
                     is Result.Error -> _state.value = HarvestExportState(error = result.error.userMessage)
                     is Result.Success -> when (val saved = saver.save(result.data)) {
-                        DocumentSaveResult.Saved -> _state.value = HarvestExportState(message = "Saved ${result.data.recordCount} harvest records.")
-                        DocumentSaveResult.Cancelled -> _state.value = HarvestExportState(message = "Export cancelled.")
+                        DocumentSaveResult.Saved -> _state.value = HarvestExportState(notice = HarvestExportNotice.Saved(result.data.recordCount))
+                        DocumentSaveResult.Cancelled -> _state.value = HarvestExportState(notice = HarvestExportNotice.Cancelled)
                         is DocumentSaveResult.Failed -> _state.value = HarvestExportState(error = saved.message)
                     }
                 }
             } catch (e: CancellationException) {
-                _state.value = HarvestExportState(message = "Export interrupted. Check the destination before retrying.")
+                _state.value = HarvestExportState(notice = HarvestExportNotice.Interrupted)
                 throw e
             } catch (_: Exception) {
                 _state.value = HarvestExportState(error = UnexpectedError().userMessage)
