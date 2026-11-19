@@ -403,4 +403,16 @@
   <string name="catalogue_powdery_cluster_description">Бели брашнести петна може да се разпространят по зърната или дръжките на грозда. По-старите петна по зърната може да оставят тъмни, мрежести белези.</string>
   <string name="catalogue_powdery_leaf_part">Листа</string>
   <string name="catalogue_powdery_leaf_description">Бледи петна може да се появят по горната повърхност. Проверете долната страна за фин бял налеп, който може да стане брашнест.</string>
+  <string name="catalogue_copy_1_description">Гъбна болест по лозата, засягаща листата, леторастите и зърната.</string>
+  <string name="catalogue_copy_1_vectors">Гъбни спори, пренасяни по въздуха</string>
+  <string name="catalogue_copy_1_factors">Благоприятни температури и чувствителен прираст на лозата</string>
+  <string name="catalogue_copy_1_treatmentsuggestion">Наблюдавайте чувствителния прираст, подобрявайте управлението на листната маса и следвайте местните одобрени препоръки за борба с болестта.</string>
+  <string name="catalogue_copy_2_description">Болест, засягаща листата и плодовете на лозата, особено при влажни условия.</string>
+  <string name="catalogue_copy_2_vectors">Спори, разпространявани от вятър и вода</string>
+  <string name="catalogue_copy_2_factors">Валежи, намокряне на листата и благоприятни температури</string>
+  <string name="catalogue_copy_2_treatmentsuggestion">Наблюдавайте условията за заразяване, управлявайте влажността в листната маса и следвайте местните одобрени препоръки за борба с болестта.</string>
+  <string name="catalogue_copy_3_description">Гъбна болест, която може да причини загниване на гроздовете.</string>
+  <string name="catalogue_copy_3_vectors">Гъбни спори и заразен растителен материал</string>
+  <string name="catalogue_copy_3_factors">Влажност, влага, повредени зърна и сбити гроздове</string>
+  <string name="catalogue_copy_3_treatmentsuggestion">Подобрявайте проветрението, свеждайте повредите по зърната до минимум и следвайте местните одобрени препоръки за борба с болестта.</string>
 </resources>

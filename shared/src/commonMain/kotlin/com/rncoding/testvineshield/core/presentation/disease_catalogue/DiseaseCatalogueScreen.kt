@@ -47,7 +47,7 @@ fun DiseaseCatalogueScreenRoot(
                         ) {
                             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                 Text(builtInDiseaseName(disease.code, disease.name), style = MaterialTheme.typography.titleMedium)
-                                Text(disease.description)
+                                Text(catalogueParagraph(disease, CatalogueParagraph.DESCRIPTION))
                             }
                         }
                     }
@@ -56,7 +56,7 @@ fun DiseaseCatalogueScreenRoot(
                     if (disease == null) item { Text(stringResource(Res.string.catalogue_unavailable)) }
                     else {
                         item { Text(builtInDiseaseName(disease.code, disease.name), style = MaterialTheme.typography.headlineSmall) }
-                        item { Text(disease.description) }
+                        item { Text(catalogueParagraph(disease, CatalogueParagraph.DESCRIPTION)) }
                         val symptoms = builtInSymptomReference(disease.code)
                         if (symptoms.isNotEmpty()) {
                             item {
@@ -70,10 +70,10 @@ fun DiseaseCatalogueScreenRoot(
                                 Text(stringResource(Res.string.catalogue_source), style = MaterialTheme.typography.bodySmall)
                             }
                         }
-                        if (disease.vectors.isNotBlank()) item { CatalogueDetail(stringResource(Res.string.catalogue_spread), disease.vectors) }
-                        if (disease.factors.isNotBlank()) item { CatalogueDetail(stringResource(Res.string.catalogue_conditions), disease.factors) }
+                        if (disease.vectors.isNotBlank()) item { CatalogueDetail(stringResource(Res.string.catalogue_spread), catalogueParagraph(disease, CatalogueParagraph.SPREAD)) }
+                        if (disease.factors.isNotBlank()) item { CatalogueDetail(stringResource(Res.string.catalogue_conditions), catalogueParagraph(disease, CatalogueParagraph.CONDITIONS)) }
                         if (disease.treatmentSuggestion.isNotBlank()) item {
-                            CatalogueDetail(stringResource(Res.string.catalogue_management), disease.treatmentSuggestion)
+                            CatalogueDetail(stringResource(Res.string.catalogue_management), catalogueParagraph(disease, CatalogueParagraph.MANAGEMENT))
                         }
                     }
                 }

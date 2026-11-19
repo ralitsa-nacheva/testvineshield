@@ -403,4 +403,16 @@
   <string name="catalogue_powdery_cluster_description">White powdery patches may spread over berries or cluster stems. Older berry patches can leave dark, web-like scars.</string>
   <string name="catalogue_powdery_leaf_part">Leaves</string>
   <string name="catalogue_powdery_leaf_description">Pale spots can appear on the upper surface. Check the underside for fine white growth that can become powdery.</string>
+  <string name="catalogue_copy_1_description">Fungal disease of grapevines affecting leaves, shoots, and berries.</string>
+  <string name="catalogue_copy_1_vectors">Airborne fungal spores</string>
+  <string name="catalogue_copy_1_factors">Favorable temperatures and susceptible vine growth</string>
+  <string name="catalogue_copy_1_treatmentsuggestion">Monitor susceptible growth, improve canopy management, and follow locally approved disease-control recommendations.</string>
+  <string name="catalogue_copy_2_description">Disease affecting grapevine leaves and fruit, particularly under wet conditions.</string>
+  <string name="catalogue_copy_2_vectors">Spores dispersed by wind and water</string>
+  <string name="catalogue_copy_2_factors">Rainfall, leaf wetness, and favorable temperatures</string>
+  <string name="catalogue_copy_2_treatmentsuggestion">Monitor infection conditions, manage canopy humidity, and follow locally approved disease-control recommendations.</string>
+  <string name="catalogue_copy_3_description">Fungal disease that can cause decay of grape clusters.</string>
+  <string name="catalogue_copy_3_vectors">Fungal spores and infected plant material</string>
+  <string name="catalogue_copy_3_factors">Humidity, moisture, damaged berries, and dense clusters</string>
+  <string name="catalogue_copy_3_treatmentsuggestion">Improve airflow, minimize berry damage, and follow locally approved disease-control recommendations.</string>
 </resources>
