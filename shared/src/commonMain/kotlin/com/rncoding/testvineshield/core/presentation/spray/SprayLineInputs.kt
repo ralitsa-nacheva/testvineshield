@@ -1,6 +1,8 @@
 package com.rncoding.testvineshield.core.presentation.spray
 
 import androidx.compose.foundation.layout.*
+import com.rncoding.testvineshield.resources.*
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -14,24 +16,25 @@ import com.rncoding.testvineshield.core.presentation.root.userAction
 
 @Composable
 internal fun SprayLineInputs(line: SprayLineDraft, index: Int, state: SprayState, vm: SprayViewModel) {
+    val bases = SprayRateBasis.entries.associateWith { rateBasisText(it) }
     OutlinedCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Product ${index + 1}", style = MaterialTheme.typography.titleMedium)
-            SprayLineFieldInput(index, state, vm, SprayLineField.Name, line.name, "Product name * (up to 200 characters)")
-            SprayLineFieldInput(index, state, vm, SprayLineField.Quantity, line.quantity, "Actual product quantity (optional)", true)
-            RecordChoice("Actual quantity unit", line.unit, SprayQuantityUnit.entries, state.canEdit, { it.label }, { vm.lineUnit(index, it) })
+            Text(stringResource(Res.string.spray_product_index, index + 1), style = MaterialTheme.typography.titleMedium)
+            SprayLineFieldInput(index, state, vm, SprayLineField.Name, line.name, stringResource(Res.string.spray_product_name))
+            SprayLineFieldInput(index, state, vm, SprayLineField.Quantity, line.quantity, stringResource(Res.string.spray_product_quantity), true)
+            RecordChoice(stringResource(Res.string.spray_quantity_unit), line.unit, SprayQuantityUnit.entries, state.canEdit, { it.label }, { vm.lineUnit(index, it) }, nullLabel = stringResource(Res.string.unit_unspecified))
             state.errors["line-$index-unit"]?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-            SprayLineFieldInput(index, state, vm, SprayLineField.Reference, line.reference, "User label/registration reference (optional)")
-            Text("Recorded rate / concentration (optional)", style = MaterialTheme.typography.titleSmall)
-            Text("Enter all four parts, or leave them all blank. No denominator of one is assumed and no dose is recommended.")
-            SprayLineFieldInput(index, state, vm, SprayLineField.RateQuantity, line.rateQuantity, "Rate: product amount", true)
-            RecordChoice("Rate: product unit", line.rateUnit, SprayQuantityUnit.entries, state.canEdit, { it.label }, { vm.lineRateUnit(index, it) })
+            SprayLineFieldInput(index, state, vm, SprayLineField.Reference, line.reference, stringResource(Res.string.spray_reference))
+            Text(stringResource(Res.string.spray_rate_title), style = MaterialTheme.typography.titleSmall)
+            Text(stringResource(Res.string.spray_rate_help))
+            SprayLineFieldInput(index, state, vm, SprayLineField.RateQuantity, line.rateQuantity, stringResource(Res.string.spray_rate_quantity), true)
+            RecordChoice(stringResource(Res.string.spray_rate_unit), line.rateUnit, SprayQuantityUnit.entries, state.canEdit, { it.label }, { vm.lineRateUnit(index, it) }, nullLabel = stringResource(Res.string.unit_unspecified))
             state.errors["line-$index-rateunit"]?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-            SprayLineFieldInput(index, state, vm, SprayLineField.RateBasisQuantity, line.rateBasisQuantity, "Per: basis amount", true)
-            RecordChoice("Per: basis unit", line.rateBasis, SprayRateBasis.entries, state.canEdit, { it.label }, { vm.lineRateBasis(index, it) })
+            SprayLineFieldInput(index, state, vm, SprayLineField.RateBasisQuantity, line.rateBasisQuantity, stringResource(Res.string.spray_basis_quantity), true)
+            RecordChoice(stringResource(Res.string.spray_basis_unit), line.rateBasis, SprayRateBasis.entries, state.canEdit, { bases.getValue(it) }, { vm.lineRateBasis(index, it) }, nullLabel = stringResource(Res.string.unit_unspecified))
             state.errors["line-$index-ratebasis"]?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-            TextButton(onClick = userAction { vm.clearRate(index) }, enabled = state.canEdit) { Text("Clear recorded rate") }
-            OutlinedButton(onClick = userAction { vm.removeLine(index) }, enabled = state.canEdit && state.draft.lines.size > 1) { Text("Remove product ${index + 1}") }
+            TextButton(onClick = userAction { vm.clearRate(index) }, enabled = state.canEdit) { Text(stringResource(Res.string.spray_clear_rate)) }
+            OutlinedButton(onClick = userAction { vm.removeLine(index) }, enabled = state.canEdit && state.draft.lines.size > 1) { Text(stringResource(Res.string.spray_remove_index, index + 1)) }
         }
     }
 }
