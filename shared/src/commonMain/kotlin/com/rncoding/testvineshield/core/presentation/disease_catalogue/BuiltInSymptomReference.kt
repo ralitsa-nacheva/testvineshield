@@ -1,24 +1,26 @@
 package com.rncoding.testvineshield.core.presentation.disease_catalogue
 
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseCatalogueCodes
+import com.rncoding.testvineshield.resources.*
+import org.jetbrains.compose.resources.StringResource
 
-internal data class SymptomReference(val plantPart: String, val description: String)
+internal data class SymptomReference(val key: String, val plantPart: StringResource, val description: StringResource)
 
 // Summarized from the UC IPM grape guidelines. These entries are educational
 // copy and do not represent saved observations or symptom table records.
 internal fun builtInSymptomReference(diseaseCode: String?): List<SymptomReference> =
     when (diseaseCode) {
         DiseaseCatalogueCodes.GRAPE_POWDERY_MILDEW -> listOf(
-            SymptomReference("Leaves", "Pale spots can appear on the upper surface. Check the underside for fine white growth that can become powdery."),
-            SymptomReference("Berries and cluster stems", "White powdery patches may spread over berries or cluster stems. Older berry patches can leave dark, web-like scars.")
+            SymptomReference("powdery_leaf", Res.string.catalogue_powdery_leaf_part, Res.string.catalogue_powdery_leaf_description),
+            SymptomReference("powdery_cluster", Res.string.catalogue_powdery_cluster_part, Res.string.catalogue_powdery_cluster_description)
         )
         DiseaseCatalogueCodes.GRAPE_DOWNY_MILDEW -> listOf(
-            SymptomReference("Leaves", "Look for yellow patches with an oily appearance. Older lesions can be angular and stop at the veins."),
-            SymptomReference("Leaf undersides", "Check the area beneath a lesion for fine white growth.")
+            SymptomReference("downy_leaf", Res.string.catalogue_downy_leaf_part, Res.string.catalogue_downy_leaf_description),
+            SymptomReference("downy_underside", Res.string.catalogue_downy_underside_part, Res.string.catalogue_downy_underside_description)
         )
         DiseaseCatalogueCodes.GRAPE_BOTRYTIS -> listOf(
-            SymptomReference("Ripening berries", "Affected berries may turn brown or reddish and develop a gray, velvety coating."),
-            SymptomReference("Shoots", "Soft brown patches can develop before ripening. Affected shoots may wilt or break.")
+            SymptomReference("botrytis_berry", Res.string.catalogue_botrytis_berry_part, Res.string.catalogue_botrytis_berry_description),
+            SymptomReference("botrytis_shoot", Res.string.catalogue_botrytis_shoot_part, Res.string.catalogue_botrytis_shoot_description)
         )
         else -> emptyList()
     }

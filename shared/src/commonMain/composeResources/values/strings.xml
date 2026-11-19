@@ -381,4 +381,26 @@
   <string name="disease_name_downy">Downy mildew</string>
   <string name="disease_name_powdery">Powdery mildew</string>
   <string name="disease_name_botrytis">Botrytis bunch rot</string>
+  <string name="catalogue_title">Disease catalogue</string>
+  <string name="catalogue_details">Disease details</string>
+  <string name="catalogue_load_error">The disease catalogue could not be loaded.</string>
+  <string name="catalogue_unavailable">This built-in disease is unavailable.</string>
+  <string name="catalogue_signs">Signs to look for</string>
+  <string name="catalogue_signs_help">Reference signs can overlap with other problems. Use them to guide inspection.</string>
+  <string name="catalogue_source">Source: UC IPM grape guidelines</string>
+  <string name="catalogue_spread">How it spreads</string>
+  <string name="catalogue_conditions">Conditions that favor it</string>
+  <string name="catalogue_management">General management information</string>
+  <string name="catalogue_botrytis_shoot_part">Shoots</string>
+  <string name="catalogue_botrytis_shoot_description">Soft brown patches can develop before ripening. Affected shoots may wilt or break.</string>
+  <string name="catalogue_botrytis_berry_part">Ripening berries</string>
+  <string name="catalogue_botrytis_berry_description">Affected berries may turn brown or reddish and develop a gray, velvety coating.</string>
+  <string name="catalogue_downy_underside_part">Leaf undersides</string>
+  <string name="catalogue_downy_underside_description">Check the area beneath a lesion for fine white growth.</string>
+  <string name="catalogue_downy_leaf_part">Leaves</string>
+  <string name="catalogue_downy_leaf_description">Look for yellow patches with an oily appearance. Older lesions can be angular and stop at the veins.</string>
+  <string name="catalogue_powdery_cluster_part">Berries and cluster stems</string>
+  <string name="catalogue_powdery_cluster_description">White powdery patches may spread over berries or cluster stems. Older berry patches can leave dark, web-like scars.</string>
+  <string name="catalogue_powdery_leaf_part">Leaves</string>
+  <string name="catalogue_powdery_leaf_description">Pale spots can appear on the upper surface. Check the underside for fine white growth that can become powdery.</string>
 </resources>

@@ -381,4 +381,26 @@
   <string name="disease_name_downy">Мана по лозата</string>
   <string name="disease_name_powdery">Брашнеста мана (оидиум)</string>
   <string name="disease_name_botrytis">Сиво гниене (ботритис)</string>
+  <string name="catalogue_title">Каталог на болестите</string>
+  <string name="catalogue_details">Данни за болестта</string>
+  <string name="catalogue_load_error">Каталогът на болестите не може да се зареди.</string>
+  <string name="catalogue_unavailable">Тази вградена болест не е налична.</string>
+  <string name="catalogue_signs">Признаци за наблюдение</string>
+  <string name="catalogue_signs_help">Описаните признаци може да се срещат и при други проблеми. Използвайте ги като насока при оглед.</string>
+  <string name="catalogue_source">Източник: Насоки на UC IPM за лозата</string>
+  <string name="catalogue_spread">Как се разпространява</string>
+  <string name="catalogue_conditions">Благоприятстващи условия</string>
+  <string name="catalogue_management">Обща информация за управление на болестта</string>
+  <string name="catalogue_botrytis_shoot_part">Леторасти</string>
+  <string name="catalogue_botrytis_shoot_description">Преди узряването може да се развият меки кафяви петна. Засегнатите леторасти може да увяхнат или да се пречупят.</string>
+  <string name="catalogue_botrytis_berry_part">Узряващи зърна</string>
+  <string name="catalogue_botrytis_berry_description">Засегнатите зърна може да станат кафяви или червеникави и да се покрият със сив, кадифен налеп.</string>
+  <string name="catalogue_downy_underside_part">Долна страна на листата</string>
+  <string name="catalogue_downy_underside_description">Проверете областта под петното за фин бял налеп.</string>
+  <string name="catalogue_downy_leaf_part">Листа</string>
+  <string name="catalogue_downy_leaf_description">Търсете жълти петна с маслен вид. По-старите поражения може да са ъгловати и ограничени от жилките.</string>
+  <string name="catalogue_powdery_cluster_part">Зърна и дръжки на грозда</string>
+  <string name="catalogue_powdery_cluster_description">Бели брашнести петна може да се разпространят по зърната или дръжките на грозда. По-старите петна по зърната може да оставят тъмни, мрежести белези.</string>
+  <string name="catalogue_powdery_leaf_part">Листа</string>
+  <string name="catalogue_powdery_leaf_description">Бледи петна може да се появят по горната повърхност. Проверете долната страна за фин бял налеп, който може да стане брашнест.</string>
 </resources>
