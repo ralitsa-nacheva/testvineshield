@@ -1,6 +1,9 @@
 package com.rncoding.testvineshield.core.presentation.blocks
 
 import androidx.compose.foundation.layout.*
+import com.rncoding.testvineshield.resources.*
+import org.jetbrains.compose.resources.stringResource
+import com.rncoding.testvineshield.core.presentation.vineyard_details.localizedStage
 import com.rncoding.testvineshield.core.presentation.components.RecordChoice
 import com.rncoding.testvineshield.core.presentation.components.RecordTopBar
 import androidx.compose.foundation.lazy.LazyColumn
@@ -35,22 +38,22 @@ private val draftValuesSaver = listSaver<ArrayList<String>, String>(
 fun BlockListScreenRoot(vineyardId: Long, ownerId: Long, onBack: ()->Unit, onCreate: ()->Unit, onOpen: (Long)->Unit) {
     val vm = koinViewModel<BlockListViewModel>(key = "blocks-$ownerId-$vineyardId", parameters = { parametersOf(vineyardId) })
     val state by vm.state.collectAsStateWithLifecycle()
-    Scaffold(topBar = { RecordTopBar("Blocks", onBack) }, floatingActionButton = {
-        if (!state.loading && state.error==null) ExtendedFloatingActionButton(onClick = userAction(onCreate)) { Text("Add block") }
+    Scaffold(topBar = { RecordTopBar(stringResource(Res.string.blocks_title), onBack) }, floatingActionButton = {
+        if (!state.loading && state.error==null) ExtendedFloatingActionButton(onClick = userAction(onCreate)) { Text(stringResource(Res.string.add_block)) }
     }) { padding ->
         LazyColumn(Modifier.padding(padding).fillMaxHeight().widthIn(max = 720.dp).fillMaxWidth(), contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 100.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (state.loading) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
             state.error?.let { error -> item { ErrorNotice(error, vm::reload) } }
             if (!state.loading && state.error==null && state.blocks.isEmpty()) item {
-                Text("No blocks yet. Add a block to record its variety, measurements and planting details.")
+                Text(stringResource(Res.string.blocks_empty))
             }
             items(state.blocks, key = {it.blockId}) { block ->
                 OutlinedCard(Modifier.fillMaxWidth()) { Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(block.name, style = MaterialTheme.typography.titleMedium)
-                        Text("Variety: ${block.vineVariety}")
-                        Text("Area: ${formatBlockArea(block.area,block.areaUnit)}")
-                        Text("Stage: ${stageLabel(block.phenologicalStage)}")
-                        TextButton(onClick = userAction { onOpen(block.blockId) }) { Text("Open ${block.name}") }
+                        Text(stringResource(Res.string.variety_value, block.vineVariety))
+                        Text(stringResource(Res.string.area_value, localizedBlockArea(block.area, block.areaUnit)))
+                        Text(stringResource(Res.string.stage_value, localizedStage(block.phenologicalStage)))
+                        TextButton(onClick = userAction { onOpen(block.blockId) }) { Text(stringResource(Res.string.block_open, block.name)) }
                     } }
             }
         }
@@ -67,45 +70,45 @@ fun BlockDetailsScreenRoot(vineyardId: Long, blockId: Long, ownerId: Long, onBac
         onBusyChanged(state.deleting)
         onDispose { onBusyChanged(false) }
     }
-    Scaffold(topBar = { RecordTopBar("Block details", { if (!vm.state.value.deleting) onBack() }, !state.deleting) }) { padding ->
+    Scaffold(topBar = { RecordTopBar(stringResource(Res.string.block_details), { if (!vm.state.value.deleting) onBack() }, !state.deleting) }) { padding ->
         LazyColumn(Modifier.padding(padding).fillMaxHeight().widthIn(max = 720.dp).fillMaxWidth(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (state.loading || state.deleting) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
             state.error?.let { error -> item { ErrorNotice(error, vm::load) } }
             state.block?.let { block ->
                 item { Text(block.name, style = MaterialTheme.typography.headlineSmall) }
-                item { TextButton(onClick=userAction(onActivities),enabled=!state.deleting) { Text("Block activities") } }
-                item { TextButton(onClick=userAction(onHarvests),enabled=!state.deleting) { Text("Harvest records") } }
-                item { TextButton(onClick = userAction(onDiseaseObservations), enabled = !state.deleting) { Text("Disease observations") } }
-                item { Text("Variety: ${block.vineVariety}") }
-                item { Text("Area: ${formatBlockArea(block.area,block.areaUnit)}") }
-                item { Text("Rows: ${block.rowCount?.toString() ?: "Unknown"}") }
-                item { Text("Row spacing: ${block.rowSpacing?.let { "${formatPlainDecimal(it)} ${block.rowSpacingUnit?.symbol ?: "(unit unknown)"}" } ?: "Unknown"}") }
-                item { Text("Planted: ${block.plantedAt?.toString() ?: "Unknown"}") }
+                item { TextButton(onClick=userAction(onActivities),enabled=!state.deleting) { Text(stringResource(Res.string.block_activities)) } }
+                item { TextButton(onClick=userAction(onHarvests),enabled=!state.deleting) { Text(stringResource(Res.string.harvest_records)) } }
+                item { TextButton(onClick = userAction(onDiseaseObservations), enabled = !state.deleting) { Text(stringResource(Res.string.disease_observations)) } }
+                item { Text(stringResource(Res.string.variety_value, block.vineVariety)) }
+                item { Text(stringResource(Res.string.area_value, localizedBlockArea(block.area, block.areaUnit))) }
+                item { Text(stringResource(Res.string.block_rows, block.rowCount?.toString() ?: stringResource(Res.string.unknown_value))) }
+                item { Text(stringResource(Res.string.block_spacing, block.rowSpacing?.let { "${formatPlainDecimal(it)} ${block.rowSpacingUnit?.symbol ?: stringResource(Res.string.unknown_unit)}" } ?: stringResource(Res.string.unknown_value))) }
+                item { Text(stringResource(Res.string.block_planted, block.plantedAt?.toString() ?: stringResource(Res.string.unknown_value))) }
                 item {
-                    Text("Stage (manual): ${stageLabel(block.phenologicalStage)}")
+                    Text(stringResource(Res.string.block_manual_stage, localizedStage(block.phenologicalStage)))
                     if (block.phenologicalStage != null) {
-                        Text("Observed on: ${block.stageObservedOn ?: "Date unknown"}")
+                        Text(stringResource(Res.string.block_observed_on, block.stageObservedOn?.toString() ?: stringResource(Res.string.date_unknown)))
                     }
                 }
-                item { Text("Recent stage observations", style = MaterialTheme.typography.titleMedium) }
+                item { Text(stringResource(Res.string.recent_stage_observations), style = MaterialTheme.typography.titleMedium) }
                 val historyError = state.stageHistoryError
                 when {
                     historyError != null -> item { ErrorNotice(historyError, vm::load) }
-                    state.stageObservations.isEmpty() -> item { Text("No dated stage observations saved.") }
+                    state.stageObservations.isEmpty() -> item { Text(stringResource(Res.string.no_stage_observations)) }
                     else -> items(state.stageObservations, key = { it.observedOn.toString() }) {
-                        Text("${it.observedOn}: ${stageLabel(it.stage)}")
+                        Text("${it.observedOn}: ${localizedStage(it.stage)}")
                     }
                 }
-                item { Text("Rootstock: ${block.rootStock.ifBlank { "Unknown" }}") }
-                item { Text("Colour: ${block.color.ifBlank { "Unknown" }}") }
-                item { Button(onClick = userAction(onEdit), enabled = !state.deleting, modifier = Modifier.fillMaxWidth()) { Text("Edit block") } }
-                item { OutlinedButton(onClick = userAction(vm::requestDelete), enabled = !state.deleting, modifier = Modifier.fillMaxWidth()) { Text("Delete block") } }
+                item { Text(stringResource(Res.string.block_rootstock, block.rootStock.ifBlank { stringResource(Res.string.unknown_value) })) }
+                item { Text(stringResource(Res.string.block_colour, block.color.ifBlank { stringResource(Res.string.unknown_value) })) }
+                item { Button(onClick = userAction(onEdit), enabled = !state.deleting, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.edit_block)) } }
+                item { OutlinedButton(onClick = userAction(vm::requestDelete), enabled = !state.deleting, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.delete_block)) } }
             }
         }
     }
     if (state.confirmDelete) {
         val activity = LocalUserActivity.current
-        AlertDialog(modifier = Modifier.userActivity(activity), onDismissRequest = userAction(vm::cancelDelete), title = { Text("Delete block?") }, text = { Text("Related records will also be deleted. This cannot be undone.") }, confirmButton = { TextButton(onClick = userAction { vm.confirmDelete(); onBusyChanged(vm.state.value.deleting) }, enabled = !state.deleting) { Text("Delete permanently") } }, dismissButton = { TextButton(onClick = userAction(vm::cancelDelete), enabled = !state.deleting) { Text("Cancel") } })
+        AlertDialog(modifier = Modifier.userActivity(activity), onDismissRequest = userAction(vm::cancelDelete), title = { Text(stringResource(Res.string.delete_block_title)) }, text = { Text(stringResource(Res.string.delete_related_warning)) }, confirmButton = { TextButton(onClick = userAction { vm.confirmDelete(); onBusyChanged(vm.state.value.deleting) }, enabled = !state.deleting) { Text(stringResource(Res.string.delete_record)) } }, dismissButton = { TextButton(onClick = userAction(vm::cancelDelete), enabled = !state.deleting) { Text(stringResource(Res.string.cancel_action)) } })
     }
 }
 
@@ -149,30 +152,31 @@ fun BlockEditorScreenRoot(vineyardId: Long, blockId: Long = 0, ownerId: Long, on
 @Composable
 fun BlockEditorScreen(state: BlockEditorState, editing: Boolean, onBack: ()->Unit, onSave: ()->Unit, onRetry: ()->Unit, onText: (BlockField, String)->Unit, onAreaUnit: (AreaUnit?)->Unit, onSpacingUnit: (LengthUnit?)->Unit, onStage: (PhenologicalStage?)->Unit) {
     val activity = LocalUserActivity.current
-    Scaffold(topBar = { RecordTopBar(if (editing) "Edit block" else "New block", onBack, !state.saving) }) { padding ->
+    val stageLabels = PhenologicalStage.entries.associateWith { localizedStage(it) }
+    Scaffold(topBar = { RecordTopBar(if (editing) stringResource(Res.string.edit_block) else stringResource(Res.string.new_block), onBack, !state.saving) }) { padding ->
         LazyColumn(Modifier.padding(padding).imePadding().fillMaxHeight().widthIn(max = 720.dp).fillMaxWidth(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (state.loading || state.saving) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
             state.error?.let { error -> item { ErrorNotice(error, if (!state.ready) onRetry else null) } }
-            item { Text("Save to keep changes. Back discards unsaved changes. Leave optional measurements and planting date blank when unknown.") }
+            item { Text(stringResource(Res.string.block_save_help)) }
             items(BlockField.entries.filter { it != BlockField.StageObservedOn }, key = { it.name }) { field ->
                 val (label, help, keyboard) = when (field) {
                     BlockField.StageObservedOn -> error("Observation date is rendered with the stage picker.")
-                    BlockField.Name -> Triple("Block name *", "Required", KeyboardType.Text)
-                    BlockField.Variety -> Triple("Vine variety *", "Required", KeyboardType.Text)
-                    BlockField.Color -> Triple("Colour", "Optional description", KeyboardType.Text)
-                    BlockField.RootStock -> Triple("Rootstock", "Optional description", KeyboardType.Text)
-                    BlockField.Area -> Triple("Area (${state.draft.areaUnit?.symbol ?: "unit unknown"})", "Optional; one dot or comma decimal separator; no thousands grouping", KeyboardType.Decimal)
-                    BlockField.Rows -> Triple("Row count", "Optional positive whole number", KeyboardType.Number)
-                    BlockField.Spacing -> Triple("Row spacing (${state.draft.spacingUnit?.symbol ?: "unit unknown"})", "Optional; one dot or comma decimal separator", KeyboardType.Decimal)
-                    BlockField.Planted -> Triple("Planting date", "Optional ISO date, e.g. 2020-04-15", KeyboardType.Ascii)
+                    BlockField.Name -> Triple(stringResource(Res.string.block_name), stringResource(Res.string.required_field), KeyboardType.Text)
+                    BlockField.Variety -> Triple(stringResource(Res.string.vine_variety), stringResource(Res.string.required_field), KeyboardType.Text)
+                    BlockField.Color -> Triple(stringResource(Res.string.colour_label), stringResource(Res.string.optional_description), KeyboardType.Text)
+                    BlockField.RootStock -> Triple(stringResource(Res.string.rootstock_label), stringResource(Res.string.optional_description), KeyboardType.Text)
+                    BlockField.Area -> Triple(stringResource(Res.string.block_area_label, state.draft.areaUnit?.symbol ?: stringResource(Res.string.unknown_unit)), stringResource(Res.string.optional_decimal), KeyboardType.Decimal)
+                    BlockField.Rows -> Triple(stringResource(Res.string.row_count), stringResource(Res.string.optional_positive_integer), KeyboardType.Number)
+                    BlockField.Spacing -> Triple(stringResource(Res.string.block_spacing_label, state.draft.spacingUnit?.symbol ?: stringResource(Res.string.unknown_unit)), stringResource(Res.string.optional_decimal_short), KeyboardType.Decimal)
+                    BlockField.Planted -> Triple(stringResource(Res.string.planting_date), stringResource(Res.string.optional_iso_date), KeyboardType.Ascii)
                 }
                 OutlinedTextField(value = state.draft.text(field), onValueChange = { activity()
                     onText(field, it) }, enabled = state.canEdit, modifier = Modifier.fillMaxWidth(), label = {Text(label)}, singleLine = true, isError = field in state.errors, supportingText = {Text(state.errors[field]?: help)}, keyboardOptions = KeyboardOptions(keyboardType = keyboard))
-                if (field==BlockField.Area) RecordChoice("Area unit", state.draft.areaUnit, AreaUnit.entries, state.canEdit, {it.symbol}, onAreaUnit)
-                if (field==BlockField.Spacing) RecordChoice("Spacing unit", state.draft.spacingUnit, LengthUnit.entries, state.canEdit, {it.symbol}, onSpacingUnit)
+                if (field==BlockField.Area) RecordChoice(stringResource(Res.string.area_unit), state.draft.areaUnit, AreaUnit.entries, state.canEdit, {it.symbol}, onAreaUnit, nullLabel = stringResource(Res.string.unit_unspecified))
+                if (field==BlockField.Spacing) RecordChoice(stringResource(Res.string.spacing_unit), state.draft.spacingUnit, LengthUnit.entries, state.canEdit, {it.symbol}, onSpacingUnit, nullLabel = stringResource(Res.string.unit_unspecified))
             }
             item {
-                RecordChoice("Observed growth stage", state.draft.stage, PhenologicalStage.entries, state.canEdit, { stageLabel(it) }, onStage)
+                RecordChoice(stringResource(Res.string.observed_growth_stage), state.draft.stage, PhenologicalStage.entries, state.canEdit, { stageLabels.getValue(it) }, onStage, nullLabel = stringResource(Res.string.unknown_value))
                 if (state.draft.stage != null) {
                     OutlinedTextField(
                         value = state.draft.stageObservedOn,
@@ -180,9 +184,9 @@ fun BlockEditorScreen(state: BlockEditorState, editing: Boolean, onBack: ()->Uni
                             activity()
                             onText(BlockField.StageObservedOn, it)
                         },
-                        label = { Text("Stage observation date") },
+                        label = { Text(stringResource(Res.string.stage_observation_date)) },
                         supportingText = {
-                            Text(state.errors[BlockField.StageObservedOn] ?: "Use YYYY-MM-DD. Saving on an existing date updates that entry. Clearing the field keeps saved history.")
+                            Text(state.errors[BlockField.StageObservedOn] ?: stringResource(Res.string.stage_date_help))
                         },
                         isError = BlockField.StageObservedOn in state.errors,
                         enabled = state.canEdit,
@@ -192,8 +196,8 @@ fun BlockEditorScreen(state: BlockEditorState, editing: Boolean, onBack: ()->Uni
                     )
                 }
             }
-            item { Text("No stage is inferred from planting age. Unknown units never imply metres or hectares.") }
-            item { Button(onClick = userAction(onSave), enabled = state.canEdit, modifier = Modifier.fillMaxWidth()) { Text(if (state.saving) "Saving…" else "Save block") } }
+            item { Text(stringResource(Res.string.block_unknown_help)) }
+            item { Button(onClick = userAction(onSave), enabled = state.canEdit, modifier = Modifier.fillMaxWidth()) { Text(if (state.saving) stringResource(Res.string.saving_action) else stringResource(Res.string.save_block)) } }
         }
     }
 }
@@ -201,6 +205,9 @@ fun BlockEditorScreen(state: BlockEditorState, editing: Boolean, onBack: ()->Uni
 @Composable
 private fun ErrorNotice(message: String, retry: (()->Unit)?) {
     Column { Text(message, color = MaterialTheme.colorScheme.error)
-        retry?.let {TextButton(onClick = userAction(it)) {Text("Retry")} } }
+        retry?.let {TextButton(onClick = userAction(it)) {Text(stringResource(Res.string.retry))} } }
 }
-private fun stageLabel(stage: PhenologicalStage?) = stage?.dbValue?.replace('_', ' ')?.replaceFirstChar {it.uppercaseChar()} ?: "Unknown"
+@Composable
+private fun localizedBlockArea(area: Double?, unit: AreaUnit?): String =
+    area?.let { "${formatPlainDecimal(it)} ${unit?.symbol ?: stringResource(Res.string.unknown_unit)}" }
+        ?: stringResource(Res.string.unknown_value)

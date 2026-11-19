@@ -1,6 +1,8 @@
 package com.rncoding.testvineshield.core.presentation.components
 
 import androidx.compose.foundation.layout.*
+import com.rncoding.testvineshield.resources.*
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -26,5 +28,5 @@ fun <T> RecordChoice(label: String,selected: T?,values: List<T>,enabled: Boolean
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecordTopBar(title: String,onBack: (()->Unit)?=null,enabled: Boolean=true) {
-    TopAppBar(title={Text(title)},navigationIcon={onBack?.let {back -> TextButton(onClick=userAction(back),enabled=enabled) {Text("Back")} }})
+    TopAppBar(title={Text(title)},navigationIcon={onBack?.let {back -> TextButton(onClick=userAction(back),enabled=enabled) {Text(stringResource(Res.string.back_action))} }})
 }
