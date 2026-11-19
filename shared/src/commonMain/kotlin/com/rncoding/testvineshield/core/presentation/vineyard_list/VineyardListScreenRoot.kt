@@ -1,5 +1,7 @@
 package com.rncoding.testvineshield.core.presentation.vineyard_list
 
+import com.rncoding.testvineshield.resources.*
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,7 +30,8 @@ fun VineyardListScreenRoot(
             SnackbarHostState()
         }
 
-    LaunchedEffect(viewModel) {
+    val deletedMessage = stringResource(Res.string.vineyard_deleted)
+    LaunchedEffect(viewModel, deletedMessage) {
 
         viewModel.events.collect { event ->
 
@@ -42,7 +45,7 @@ fun VineyardListScreenRoot(
 
                 VineyardListEvent.VineyardDeleted -> {
                     snackbarHostState.showSnackbar(
-                        "Vineyard deleted."
+                        deletedMessage
                     )
                 }
             }

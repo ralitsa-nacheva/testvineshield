@@ -1,5 +1,7 @@
 package com.rncoding.testvineshield.core.presentation.vineyard_list
 
+import com.rncoding.testvineshield.resources.*
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.scrollBy
@@ -69,6 +71,7 @@ fun VineyardListScreen(
         }
     }
     val latestSearchActive by rememberUpdatedState(searchActive)
+    val createDescription = stringResource(Res.string.create_vineyard)
     val listState = rememberLazyListState()
     val latestState by rememberUpdatedState(state)
     val reorder by rememberUpdatedState(onReorder)
@@ -129,10 +132,10 @@ fun VineyardListScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text("Vineyards")
+                    Text(stringResource(Res.string.nav_vineyards))
                 },
                 actions = {
-                    TextButton(onClick = userAction(onOpenDiseaseCatalogue)) { Text("Diseases") }
+                    TextButton(onClick = userAction(onOpenDiseaseCatalogue)) { Text(stringResource(Res.string.vineyard_diseases)) }
                 }
             )
         },
@@ -145,7 +148,7 @@ fun VineyardListScreen(
             FloatingActionButton(
                 onClick = userAction(onCreateVineyard)
             ) {
-                Text("+")
+                Text("+", Modifier.semantics { contentDescription = createDescription })
             }
         }
     ) { innerPadding ->
@@ -235,7 +238,7 @@ fun VineyardListScreen(
                             OutlinedTextField(
                                 value = searchText,
                                 onValueChange = { activity(); searchText = it },
-                                label = { Text("Search vineyards by name or location") },
+                                label = { Text(stringResource(Res.string.vineyard_search)) },
                                 enabled = !state.isReordering && draggedId == null,
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth()
@@ -244,10 +247,10 @@ fun VineyardListScreen(
                                 TextButton(
                                     onClick = userAction { searchText = "" },
                                     enabled = !state.isReordering && draggedId == null
-                                ) { Text("Clear search") }
+                                ) { Text(stringResource(Res.string.clear_search)) }
                             }
-                            if (searchActive) Text("Clear search to reorder vineyards.")
-                            if (visibleVineyards.isEmpty()) Text("No vineyards match your search.")
+                            if (searchActive) Text(stringResource(Res.string.reorder_clear_search))
+                            if (visibleVineyards.isEmpty()) Text(stringResource(Res.string.vineyard_no_matches))
                         }
                     }
                     if (state.isReordering) {
@@ -297,26 +300,25 @@ fun VineyardListScreen(
             modifier = Modifier.userActivity(com.rncoding.testvineshield.core.presentation.root.LocalUserActivity.current),
             onDismissRequest = userAction(onDeleteCancel),
             title = {
-                Text("Delete vineyard?")
+                Text(stringResource(Res.string.delete_vineyard_title))
             },
             text = {
                 Text(
-                    "This will permanently delete the vineyard " +
-                            "and its related local data."
+                    stringResource(Res.string.delete_vineyard_message)
                 )
             },
             confirmButton = {
                 TextButton(
                     onClick = userAction(onDeleteConfirm)
                 ) {
-                    Text("Delete")
+                    Text(stringResource(Res.string.delete_record))
                 }
             },
             dismissButton = {
                 TextButton(
                     onClick = userAction(onDeleteCancel)
                 ) {
-                    Text("Cancel")
+                    Text(stringResource(Res.string.cancel_action))
                 }
             }
         )
@@ -334,6 +336,7 @@ private fun VineyardListItem(
     onMoveUp: (() -> Unit)?,
     onMoveDown: (() -> Unit)?
 ) {
+    val dragDescription = stringResource(Res.string.drag_vineyard, vineyard.name)
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -361,26 +364,26 @@ private fun VineyardListItem(
                     onClick = userAction { onDelete?.invoke() },
                     enabled = onDelete != null
                 ) {
-                    Text("Delete")
+                    Text(stringResource(Res.string.delete_record))
                 }
             }
 
             if (reorderAvailable) {
                 Text(
-                    if (dropTarget) "Drop here" else "Hold to reorder",
+                    if (dropTarget) stringResource(Res.string.drop_here) else stringResource(Res.string.hold_reorder),
                     modifier = dragModifier
-                        .semantics { contentDescription = "Hold and drag to reorder ${vineyard.name}" }
+                        .semantics { contentDescription = dragDescription }
                         .padding(12.dp)
                 )
                 Row {
                     TextButton(
                         onClick = userAction { onMoveUp?.invoke() },
                         enabled = onMoveUp != null
-                    ) { Text("Move up") }
+                    ) { Text(stringResource(Res.string.move_up)) }
                     TextButton(
                         onClick = userAction { onMoveDown?.invoke() },
                         enabled = onMoveDown != null
-                    ) { Text("Move down") }
+                    ) { Text(stringResource(Res.string.move_down)) }
                 }
 
             }
@@ -396,14 +399,11 @@ private fun VineyardListItem(
             )
 
             Text(
-                text = when (vineyard.blockCount) {
-                    1 -> "1 block"
-                    else -> "${vineyard.blockCount} blocks"
-                }
+                text = stringResource(Res.string.block_count, vineyard.blockCount)
             )
 
             if (vineyard.latestTemperature != null) {
-                Text("Cached weather saved · open vineyard for timestamps")
+                Text(stringResource(Res.string.cached_weather_note))
             }
 
             vineyard.lastActivityStatus?.let { status ->
@@ -413,9 +413,9 @@ private fun VineyardListItem(
 
                 Text(
                     text = if (priority != null) {
-                        "Last activity: $status · $priority"
+                        stringResource(Res.string.last_activity_priority, localizedStatus(status), localizedPriority(priority))
                     } else {
-                        "Last activity: $status"
+                        stringResource(Res.string.last_activity, localizedStatus(status))
                     }
                 )
             }
@@ -423,7 +423,7 @@ private fun VineyardListItem(
             vineyard.activeAlert?.let { alert ->
                 if (alert.isNotBlank()) {
                     Text(
-                        text = "Alert: $alert"
+                        text = stringResource(Res.string.alert_summary, alert)
                     )
                 }
             }
@@ -431,8 +431,7 @@ private fun VineyardListItem(
             if (vineyard.currentDiseaseCount > 0) {
                 Text(
                     text =
-                        "Active diseases: " +
-                                vineyard.currentDiseaseCount
+                        stringResource(Res.string.active_disease_count, vineyard.currentDiseaseCount)
                 )
             }
         }
@@ -465,7 +464,7 @@ private fun EmptyVineyardList(
                 Alignment.CenterHorizontally
         ) {
             Text(
-                text = "No vineyards yet."
+                text = stringResource(Res.string.no_vineyards_yet)
             )
 
             Spacer(
@@ -475,7 +474,7 @@ private fun EmptyVineyardList(
             Button(
                 onClick = userAction(onCreateVineyard)
             ) {
-                Text("Create vineyard")
+                Text(stringResource(Res.string.create_vineyard))
             }
         }
     }
@@ -494,4 +493,21 @@ private fun VineyardListError(
             text = message
         )
     }
+}
+@Composable
+private fun localizedStatus(value: String): String = when (value) {
+    "planned" -> stringResource(Res.string.status_planned)
+    "in_progress" -> stringResource(Res.string.status_progress)
+    "completed" -> stringResource(Res.string.status_completed)
+    "cancelled" -> stringResource(Res.string.status_cancelled)
+    else -> value
+}
+
+@Composable
+private fun localizedPriority(value: String): String = when (value) {
+    "low" -> stringResource(Res.string.priority_low)
+    "medium" -> stringResource(Res.string.priority_medium)
+    "high" -> stringResource(Res.string.priority_high)
+    "urgent" -> stringResource(Res.string.priority_urgent)
+    else -> value
 }
