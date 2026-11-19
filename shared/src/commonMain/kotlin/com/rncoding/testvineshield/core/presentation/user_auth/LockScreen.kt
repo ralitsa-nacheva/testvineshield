@@ -5,6 +5,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
+import com.rncoding.testvineshield.resources.*
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
@@ -24,22 +26,22 @@ fun LockScreen(viewModel: AuthViewModel, reason: AuthState.Locked.LockReason) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
         verticalArrangement = Arrangement.Center) {
         Text("VineShield", style = MaterialTheme.typography.headlineMedium)
-        Text("App locked after inactivity")
-        Text("Use your local account password. Optional methods appear when enabled and available.")
+        Text(stringResource(Res.string.auth_locked_inactivity))
+        Text(stringResource(Res.string.auth_unlock_help))
         OutlinedTextField(value = state.password, onValueChange = viewModel::onPasswordChanged,
-            label = { Text("Account password") }, singleLine = true, enabled = !state.isSubmitting,
+            label = { Text(stringResource(Res.string.auth_account_password)) }, singleLine = true, enabled = !state.isSubmitting,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), modifier = Modifier.fillMaxWidth())
         Button(onClick = viewModel::unlockWithPassword,
             enabled = !state.isSubmitting && state.password.isNotEmpty(), modifier = Modifier.fillMaxWidth()) {
-            Text("Unlock with password")
+            Text(stringResource(Res.string.auth_unlock_password))
         }
         if (options.biometric) Button(onClick = { viewModel.unlock(UnlockRequest.Platform(LocalUnlockMethod.Biometric)) },
-            enabled = !state.isSubmitting, modifier = Modifier.fillMaxWidth()) { Text("Unlock with biometrics") }
+            enabled = !state.isSubmitting, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.auth_unlock_biometrics)) }
         if (options.deviceCredential) Button(onClick = { viewModel.unlock(UnlockRequest.Platform(LocalUnlockMethod.DeviceCredential)) },
-            enabled = !state.isSubmitting, modifier = Modifier.fillMaxWidth()) { Text("Unlock with device screen lock") }
+            enabled = !state.isSubmitting, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.auth_unlock_device)) }
         if (state.isSubmitting) LinearProgressIndicator(Modifier.fillMaxWidth())
         state.errorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-        TextButton(onClick = viewModel::logout, enabled = !state.isSubmitting) { Text("Log out and return to login") }
+        TextButton(onClick = viewModel::logout, enabled = !state.isSubmitting) { Text(stringResource(Res.string.auth_logout_login)) }
     }
 }

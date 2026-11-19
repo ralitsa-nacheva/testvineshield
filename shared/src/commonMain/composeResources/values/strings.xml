@@ -415,4 +415,18 @@
   <string name="catalogue_copy_3_vectors">Fungal spores and infected plant material</string>
   <string name="catalogue_copy_3_factors">Humidity, moisture, damaged berries, and dense clusters</string>
   <string name="catalogue_copy_3_treatmentsuggestion">Improve airflow, minimize berry damage, and follow locally approved disease-control recommendations.</string>
+  <string name="auth_login">Login</string>
+  <string name="auth_email">Email</string>
+  <string name="auth_password">Password</string>
+  <string name="auth_create_account">Create an account</string>
+  <string name="auth_create_account_title">Create Account</string>
+  <string name="auth_register">Register</string>
+  <string name="auth_return_login">Already have an account? Login</string>
+  <string name="auth_locked_inactivity">App locked after inactivity</string>
+  <string name="auth_unlock_help">Use your local account password. Optional methods appear when enabled and available.</string>
+  <string name="auth_account_password">Account password</string>
+  <string name="auth_unlock_password">Unlock with password</string>
+  <string name="auth_unlock_biometrics">Unlock with biometrics</string>
+  <string name="auth_unlock_device">Unlock with device screen lock</string>
+  <string name="auth_logout_login">Log out and return to login</string>
 </resources>

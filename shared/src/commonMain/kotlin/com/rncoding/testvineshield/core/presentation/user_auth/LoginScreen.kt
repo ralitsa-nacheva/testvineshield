@@ -10,6 +10,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import com.rncoding.testvineshield.resources.*
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -38,7 +40,7 @@ fun LoginScreen(
         )
 
         Text(
-            text = "Login"
+            text = stringResource(Res.string.auth_login)
         )
 
         OutlinedTextField(
@@ -46,7 +48,7 @@ fun LoginScreen(
             onValueChange = viewModel::onEmailChanged,
             modifier = Modifier.fillMaxWidth(),
             label = {
-                Text("Email")
+                Text(stringResource(Res.string.auth_email))
             },
             isError = uiState.emailError != null,
             singleLine = true
@@ -63,7 +65,7 @@ fun LoginScreen(
             onValueChange = viewModel::onPasswordChanged,
             modifier = Modifier.fillMaxWidth(),
             label = {
-                Text("Password")
+                Text(stringResource(Res.string.auth_password))
             },
             visualTransformation = PasswordVisualTransformation(),
             isError = uiState.passwordError != null,
@@ -90,7 +92,7 @@ fun LoginScreen(
             if (uiState.isSubmitting) {
                 CircularProgressIndicator()
             } else {
-                Text("Login")
+                Text(stringResource(Res.string.auth_login))
             }
         }
 
@@ -98,7 +100,7 @@ fun LoginScreen(
             onClick = onNavigateToRegister,
             enabled = !uiState.isSubmitting
         ) {
-            Text("Create an account")
+            Text(stringResource(Res.string.auth_create_account))
         }
     }
 }

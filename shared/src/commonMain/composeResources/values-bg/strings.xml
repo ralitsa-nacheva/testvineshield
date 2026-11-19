@@ -415,4 +415,18 @@
   <string name="catalogue_copy_3_vectors">Гъбни спори и заразен растителен материал</string>
   <string name="catalogue_copy_3_factors">Влажност, влага, повредени зърна и сбити гроздове</string>
   <string name="catalogue_copy_3_treatmentsuggestion">Подобрявайте проветрението, свеждайте повредите по зърната до минимум и следвайте местните одобрени препоръки за борба с болестта.</string>
+  <string name="auth_login">Вход</string>
+  <string name="auth_email">Имейл</string>
+  <string name="auth_password">Парола</string>
+  <string name="auth_create_account">Създай профил</string>
+  <string name="auth_create_account_title">Създаване на профил</string>
+  <string name="auth_register">Регистрация</string>
+  <string name="auth_return_login">Вече имате профил? Вход</string>
+  <string name="auth_locked_inactivity">Приложението е заключено след неактивност</string>
+  <string name="auth_unlock_help">Използвайте паролата за локалния си профил. Допълнителните методи се показват, когато са включени и налични.</string>
+  <string name="auth_account_password">Парола за профила</string>
+  <string name="auth_unlock_password">Отключи с парола</string>
+  <string name="auth_unlock_biometrics">Отключи с биометрични данни</string>
+  <string name="auth_unlock_device">Отключи чрез заключването на устройството</string>
+  <string name="auth_logout_login">Изход и връщане към вход</string>
 </resources>
