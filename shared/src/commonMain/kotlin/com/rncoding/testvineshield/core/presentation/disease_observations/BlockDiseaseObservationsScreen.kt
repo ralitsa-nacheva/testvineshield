@@ -42,6 +42,7 @@ fun BlockDiseaseObservationsScreen(
         parameters = { parametersOf(DiseaseObservationsKey(ownerId, vineyardId, blockId)) }
     )
     val state by model.state.collectAsStateWithLifecycle()
+    val diseaseLabels = state.diseases.associate { it.diseaseId to builtInDiseaseName(it.code, it.name) }
     val statusLabels = DiseaseOccurrenceStatus.entries.associateWith { localizedOccurrenceStatus(it) }
     val busyChanged by rememberUpdatedState(onBusyChanged)
     DisposableEffect(state.saving) {
@@ -56,7 +57,7 @@ fun BlockDiseaseObservationsScreen(
         }
         AlertDialog(
             onDismissRequest = model::closeDialog,
-            title = { Text(observation.diseaseName) },
+            title = { Text(builtInDiseaseName(observation.diseaseCode, observation.diseaseName)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(stringResource(Res.string.observation_observed, observation.observedOn.toString(), observation.severity))
@@ -161,7 +162,7 @@ fun BlockDiseaseObservationsScreen(
             title = { Text(stringResource(Res.string.observation_delete_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("${observation.diseaseName} · ${observation.observedOn}")
+                    Text("${builtInDiseaseName(observation.diseaseCode, observation.diseaseName)} · ${observation.observedOn}")
                     Text(stringResource(Res.string.observation_delete_warning))
                     state.dialogError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                 }
@@ -215,7 +216,7 @@ fun BlockDiseaseObservationsScreen(
                                     label = stringResource(Res.string.disease_label), selected = selectedDisease,
                                     values = state.diseases.filter { !it.code.isNullOrBlank() },
                                     enabled = !state.saving,
-                                    text = { it.name }, changed = { diseaseCode = it?.code },
+                                    text = { diseaseLabels.getValue(it.diseaseId) }, changed = { diseaseCode = it?.code },
                                     nullLabel = stringResource(Res.string.all_diseases)
                                 )
                                 RecordChoice(
@@ -242,21 +243,21 @@ fun BlockDiseaseObservationsScreen(
                     items(visibleObservations, key = { it.id }) { observation ->
                         OutlinedCard(Modifier.fillMaxWidth()) {
                             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Text(observation.diseaseName, style = MaterialTheme.typography.titleMedium)
+                                Text(builtInDiseaseName(observation.diseaseCode, observation.diseaseName), style = MaterialTheme.typography.titleMedium)
                                 Text(stringResource(Res.string.observation_summary, observation.observedOn.toString(), observation.severity, localizedOccurrenceStatus(observation.status)))
                                 observation.curedAt?.let { Text(stringResource(Res.string.observation_resolved_on, it.toString())) }
                                 observation.notes?.let { Text(it) }
                                 observation.referenceSymptoms.forEach { recorded ->
-                                    Text("${recorded.kind.label} · ${recorded.observedOn}")
+                                    Text("${referenceSymptomName(recorded.kind)} · ${recorded.observedOn}")
                                     if (recorded.notes.isNotBlank()) Text(recorded.notes)
                                     TextButton(
                                         onClick = userAction { model.openDialog(observation.id, ObservationDialog.Kind.REFERENCE_SYMPTOM, recorded) },
                                         enabled = !state.saving
-                                    ) { Text(stringResource(Res.string.observation_edit_symptom, recorded.kind.label)) }
+                                    ) { Text(stringResource(Res.string.observation_edit_symptom, referenceSymptomName(recorded.kind))) }
                                     TextButton(
                                         onClick = userAction { model.openDialog(observation.id, ObservationDialog.Kind.REMOVE_REFERENCE_SYMPTOM, recorded) },
                                         enabled = !state.saving
-                                    ) { Text(stringResource(Res.string.observation_remove_symptom_named, recorded.kind.label)) }
+                                    ) { Text(stringResource(Res.string.observation_remove_symptom_named, referenceSymptomName(recorded.kind))) }
                                 }
                                 if (availableSymptoms(observation).isNotEmpty()) {
                                     TextButton(
@@ -320,16 +321,17 @@ private fun ObservationForm(
         }
     }
 
+    val diseaseLabels = state.diseases.associate { it.diseaseId to builtInDiseaseName(it.code, it.name) }
     val disease = state.diseases.firstOrNull { it.diseaseId == diseaseId }
     val date = parseObservationDate(dateText)
     val severity = parseObservationSeverity(severityText)
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Record an observation", style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(Res.string.observation_record), style = MaterialTheme.typography.titleMedium)
         RecordChoice(
-            label = "Disease", selected = disease, values = state.diseases, enabled = !state.saving,
-            text = { it.name }, changed = { diseaseId = it?.diseaseId },
-            allowUnknown = false, nullLabel = "Choose a disease"
+            label = stringResource(Res.string.disease_label), selected = disease, values = state.diseases, enabled = !state.saving,
+            text = { diseaseLabels.getValue(it.diseaseId) }, changed = { diseaseId = it?.diseaseId },
+            allowUnknown = false, nullLabel = stringResource(Res.string.choose_disease)
         )
         ObservationFields(
             dateText, severityText, notes, !state.saving,
@@ -340,7 +342,7 @@ private fun ObservationForm(
                 if (disease != null && date != null && severity != null) onSave(disease.diseaseId, date, severity, notes)
             },
             enabled = !state.saving && disease != null && date != null && severity != null && notes.trim().length <= 4000
-        ) { Text(if (state.saving) "Saving…" else "Save active observation") }
+        ) { Text(if (state.saving) stringResource(Res.string.saving_action) else stringResource(Res.string.observation_save_active)) }
         state.saveError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
     }
 }
@@ -368,14 +370,14 @@ private fun EditObservationDialog(
         notes.trim().ifBlank { null } != observation.notes
     AlertDialog(
         onDismissRequest = onClose,
-        title = { Text("Edit observation") },
+        title = { Text(stringResource(Res.string.observation_edit)) },
         text = {
             Column(
                 Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(observation.diseaseName)
-                observation.curedAt?.let { Text("Resolved on $it") }
+                Text(builtInDiseaseName(observation.diseaseCode, observation.diseaseName))
+                observation.curedAt?.let { Text(stringResource(Res.string.observation_resolved_on, it.toString())) }
                 ObservationFields(
                     dateText, severityText, notes, !saving,
                     { dateText = it }, { severityText = it }, { notes = it }
@@ -389,10 +391,10 @@ private fun EditObservationDialog(
                     if (date != null && severity != null) onSave(date, severity, notes)
                 },
                 enabled = !saving && changed && date != null && severity != null && notes.trim().length <= 4000
-            ) { Text(if (saving) "Saving…" else "Save changes") }
+            ) { Text(if (saving) stringResource(Res.string.saving_action) else stringResource(Res.string.save_changes)) }
         },
         dismissButton = {
-            TextButton(onClick = userAction(onClose), enabled = !saving) { Text("Cancel") }
+            TextButton(onClick = userAction(onClose), enabled = !saving) { Text(stringResource(Res.string.cancel_action)) }
         }
     )
 }
@@ -411,6 +413,7 @@ private fun ReferenceSymptomDialog(
     onClose: () -> Unit,
     onSave: (ReferenceSymptom, LocalDate, String) -> Unit
 ) {
+    val symptomLabels = ReferenceSymptom.entries.associateWith { referenceSymptomName(it) }
     val choices = if (existing == null) availableSymptoms(observation) else listOf(existing.kind)
     var selectedCode by rememberSaveable(observation.id, existing?.symptomId) {
         mutableStateOf(choices.singleOrNull()?.code)
@@ -426,7 +429,7 @@ private fun ReferenceSymptomDialog(
     val activity = LocalUserActivity.current
     AlertDialog(
         onDismissRequest = onClose,
-        title = { Text(if (existing == null) "Record symptom" else "Edit ${existing.kind.label.lowercase()}") },
+        title = { Text(if (existing == null) stringResource(Res.string.observation_record_symptom) else stringResource(Res.string.observation_edit_symptom, referenceSymptomName(existing.kind))) },
         text = {
             Column(
                 Modifier.verticalScroll(rememberScrollState()),
@@ -434,21 +437,21 @@ private fun ReferenceSymptomDialog(
             ) {
                 if (existing == null) {
                     RecordChoice(
-                        label = "Symptom", selected = symptom, values = choices, enabled = !saving,
-                        text = { it.label }, changed = { selectedCode = it?.code },
-                        allowUnknown = false, nullLabel = "Choose a symptom"
+                        label = stringResource(Res.string.symptom_label), selected = symptom, values = choices, enabled = !saving,
+                        text = { symptomLabels.getValue(it) }, changed = { selectedCode = it?.code },
+                        allowUnknown = false, nullLabel = stringResource(Res.string.choose_symptom)
                     )
                 }
-                Text("Enter the date you saw the symptom on the vine.")
+                Text(stringResource(Res.string.symptom_date_help))
                 OutlinedTextField(
                     value = dateText, onValueChange = { activity(); dateText = it },
-                    label = { Text("Symptom date (YYYY-MM-DD)") }, enabled = !saving,
+                    label = { Text(stringResource(Res.string.symptom_date_label)) }, enabled = !saving,
                     singleLine = true, isError = dateText.isNotBlank() && date == null,
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
                     value = notes, onValueChange = { activity(); notes = it },
-                    label = { Text("Notes (optional)") }, enabled = !saving, maxLines = 5,
+                    label = { Text(stringResource(Res.string.notes_optional)) }, enabled = !saving, maxLines = 5,
                     isError = notes.trim().length > 4000, modifier = Modifier.fillMaxWidth()
                 )
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
@@ -458,10 +461,10 @@ private fun ReferenceSymptomDialog(
             TextButton(
                 onClick = userAction { if (symptom != null && date != null) onSave(symptom, date, notes) },
                 enabled = !saving && symptom != null && date != null && notes.trim().length <= 4000
-            ) { Text(if (saving) "Saving…" else "Save symptom") }
+            ) { Text(if (saving) stringResource(Res.string.saving_action) else stringResource(Res.string.symptom_save)) }
         },
         dismissButton = {
-            TextButton(onClick = userAction(onClose), enabled = !saving) { Text("Cancel") }
+            TextButton(onClick = userAction(onClose), enabled = !saving) { Text(stringResource(Res.string.cancel_action)) }
         }
     )
 }
@@ -478,14 +481,14 @@ private fun LinkActivityDialog(
     val selected = activities.firstOrNull { it.activityId == selectedId }
     AlertDialog(
         onDismissRequest = onClose,
-        title = { Text("Link completed activity") },
+        title = { Text(stringResource(Res.string.observation_link_completed)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (activities.isEmpty()) {
-                    Text("There are no unlinked completed activities with a completion date in this block.")
+                    Text(stringResource(Res.string.no_completed_activity_links))
                 } else {
                     RecordChoice(
-                        label = "Activity",
+                        label = stringResource(Res.string.activity_label),
                         selected = selected,
                         values = activities,
                         enabled = !saving,
@@ -496,7 +499,7 @@ private fun LinkActivityDialog(
                         },
                         changed = { selectedId = it?.activityId },
                         allowUnknown = false,
-                        nullLabel = "Choose a completed activity"
+                        nullLabel = stringResource(Res.string.choose_completed_activity)
                     )
                     selected?.description?.takeIf { it.isNotBlank() }?.let {
                         Text(it, maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
@@ -509,10 +512,10 @@ private fun LinkActivityDialog(
             TextButton(
                 onClick = userAction { selected?.let(onSave) },
                 enabled = !saving && selected != null
-            ) { Text(if (saving) "Linking…" else "Link activity") }
+            ) { Text(if (saving) stringResource(Res.string.linking_action) else stringResource(Res.string.link_activity_action)) }
         },
         dismissButton = {
-            TextButton(onClick = userAction(onClose), enabled = !saving) { Text("Cancel") }
+            TextButton(onClick = userAction(onClose), enabled = !saving) { Text(stringResource(Res.string.cancel_action)) }
         }
     )
 }
@@ -530,14 +533,14 @@ private fun ObservationFields(
     val activity = LocalUserActivity.current
     OutlinedTextField(
         value = dateText, onValueChange = { activity(); onDateChanged(it) },
-        label = { Text("Observation date (YYYY-MM-DD)") },
+        label = { Text(stringResource(Res.string.observation_date_label)) },
         enabled = enabled, singleLine = true,
         isError = dateText.isNotBlank() && parseObservationDate(dateText) == null,
         modifier = Modifier.fillMaxWidth()
     )
     OutlinedTextField(
         value = severityText, onValueChange = { activity(); onSeverityChanged(it) },
-        label = { Text("Affected tissue or area (%)") },
+        label = { Text(stringResource(Res.string.observation_severity_label)) },
         enabled = enabled, singleLine = true,
         isError = severityText.isNotBlank() && parseObservationSeverity(severityText) == null,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -545,7 +548,7 @@ private fun ObservationFields(
     )
     OutlinedTextField(
         value = notes, onValueChange = { activity(); onNotesChanged(it) },
-        label = { Text("Notes (optional)") }, enabled = enabled, maxLines = 5,
+        label = { Text(stringResource(Res.string.notes_optional)) }, enabled = enabled, maxLines = 5,
         isError = notes.trim().length > 4000,
         modifier = Modifier.fillMaxWidth()
     )
