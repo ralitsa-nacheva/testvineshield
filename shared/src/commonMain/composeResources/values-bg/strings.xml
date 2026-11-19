@@ -429,4 +429,21 @@
   <string name="auth_unlock_biometrics">Отключи с биометрични данни</string>
   <string name="auth_unlock_device">Отключи чрез заключването на устройството</string>
   <string name="auth_logout_login">Изход и връщане към вход</string>
+  <string name="account_title">Профил</string>
+  <string name="account_information">Информация за профила</string>
+  <string name="account_current_password">Текуща парола</string>
+  <string name="account_new_password">Нова парола (незадължително)</string>
+  <string name="account_confirm_password">Потвърдете новата парола</string>
+  <string name="account_updating">Обновяване…</string>
+  <string name="account_update">Обнови профила</string>
+  <string name="dismiss_action">Затвори</string>
+  <string name="security_title">Сигурност</string>
+  <string name="security_settings">Настройки за сигурност</string>
+  <string name="account_actions">Действия с профила</string>
+  <string name="account_logging_out">Излизане…</string>
+  <string name="account_logout">Изход</string>
+  <string name="account_delete">Изтрий профила</string>
+  <string name="account_delete_title">Изтриване на профила?</string>
+  <string name="account_logout_help">Изходът връща към екрана за вход. Локалният профил и запазените записи за лозята остават на устройството. Незапазените промени се отхвърлят.</string>
+  <string name="account_delete_warning">Това изтрива окончателно профила и локалните му данни за лозята. Действието е необратимо.</string>
 </resources>

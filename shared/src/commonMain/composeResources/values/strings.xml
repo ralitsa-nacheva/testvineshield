@@ -429,4 +429,21 @@
   <string name="auth_unlock_biometrics">Unlock with biometrics</string>
   <string name="auth_unlock_device">Unlock with device screen lock</string>
   <string name="auth_logout_login">Log out and return to login</string>
+  <string name="account_title">Account</string>
+  <string name="account_information">Account information</string>
+  <string name="account_current_password">Current password</string>
+  <string name="account_new_password">New password (optional)</string>
+  <string name="account_confirm_password">Confirm new password</string>
+  <string name="account_updating">Updating...</string>
+  <string name="account_update">Update account</string>
+  <string name="dismiss_action">Dismiss</string>
+  <string name="security_title">Security</string>
+  <string name="security_settings">Security settings</string>
+  <string name="account_actions">Account actions</string>
+  <string name="account_logging_out">Logging out...</string>
+  <string name="account_logout">Log out</string>
+  <string name="account_delete">Delete account</string>
+  <string name="account_delete_title">Delete account?</string>
+  <string name="account_logout_help">Logging out returns to login. Your local account and saved vineyard records stay on this device. Unsaved edits are discarded.</string>
+  <string name="account_delete_warning">This permanently deletes your account and its local vineyard data. This action cannot be undone.</string>
 </resources>

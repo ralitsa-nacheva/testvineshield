@@ -17,6 +17,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.imePadding
+import com.rncoding.testvineshield.resources.*
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.runtime.Composable
 import com.rncoding.testvineshield.core.presentation.root.LocalUserActivity
 import androidx.compose.runtime.getValue
@@ -58,14 +63,14 @@ fun AccountScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text("Account")
+                    Text(stringResource(Res.string.account_title))
                 },
                 navigationIcon = {
                     TextButton(
                         onClick = userAction(onBack),
                         enabled = !isBusy
                     ) {
-                        Text("Back")
+                        Text(stringResource(Res.string.back_action))
                     }
                 }
             )
@@ -76,18 +81,36 @@ fun AccountScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .imePadding()
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
 
-            Text("Account information")
+            OutlinedButton(
+                onClick = userAction(onLogout),
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isBusy
+            ) {
+                Text(
+                    if (uiState.isLoggingOut) {
+                        stringResource(Res.string.account_logging_out)
+                    } else {
+                        stringResource(Res.string.account_logout)
+                    }
+                )
+            }
+
+            Text(stringResource(Res.string.account_logout_help))
+
+            Text(stringResource(Res.string.account_information))
 
             OutlinedTextField(
                 value = uiState.newEmail,
                 onValueChange = { activity(); onNewEmailChanged(it) },
                 modifier = Modifier.fillMaxWidth(),
                 label = {
-                    Text("Email")
+                    Text(stringResource(Res.string.auth_email))
                 },
                 singleLine = true,
                 enabled = !isBusy
@@ -98,7 +121,7 @@ fun AccountScreen(
                 onValueChange = { activity(); onCurrentPasswordChanged(it) },
                 modifier = Modifier.fillMaxWidth(),
                 label = {
-                    Text("Current password")
+                    Text(stringResource(Res.string.account_current_password))
                 },
                 visualTransformation = PasswordVisualTransformation(),
                 singleLine = true,
@@ -110,7 +133,7 @@ fun AccountScreen(
                 onValueChange = { activity(); onNewPasswordChanged(it) },
                 modifier = Modifier.fillMaxWidth(),
                 label = {
-                    Text("New password (optional)")
+                    Text(stringResource(Res.string.account_new_password))
                 },
                 visualTransformation = PasswordVisualTransformation(),
                 singleLine = true,
@@ -122,7 +145,7 @@ fun AccountScreen(
                 onValueChange = { activity(); onConfirmNewPasswordChanged(it) },
                 modifier = Modifier.fillMaxWidth(),
                 label = {
-                    Text("Confirm new password")
+                    Text(stringResource(Res.string.account_confirm_password))
                 },
                 visualTransformation = PasswordVisualTransformation(),
                 singleLine = true,
@@ -136,9 +159,9 @@ fun AccountScreen(
             ) {
                 Text(
                     if (uiState.isUpdating) {
-                        "Updating..."
+                        stringResource(Res.string.account_updating)
                     } else {
-                        "Update account"
+                        stringResource(Res.string.account_update)
                     }
                 )
             }
@@ -149,7 +172,7 @@ fun AccountScreen(
                 TextButton(
                     onClick = userAction(onClearError)
                 ) {
-                    Text("Dismiss")
+                    Text(stringResource(Res.string.dismiss_action))
                 }
             }
 
@@ -159,14 +182,14 @@ fun AccountScreen(
 
             HorizontalDivider()
 
-            Text("Security")
+            Text(stringResource(Res.string.security_title))
 
             OutlinedButton(
                 onClick = userAction(onSecuritySettings),
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isBusy
             ) {
-                Text("Security settings")
+                Text(stringResource(Res.string.security_settings))
             }
 
             Spacer(
@@ -175,21 +198,7 @@ fun AccountScreen(
 
             HorizontalDivider()
 
-            Text("Account actions")
-
-            OutlinedButton(
-                onClick = userAction(onLogout),
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !isBusy
-            ) {
-                Text(
-                    if (uiState.isLoggingOut) {
-                        "Logging out..."
-                    } else {
-                        "Log out"
-                    }
-                )
-            }
+            Text(stringResource(Res.string.account_actions))
 
             OutlinedButton(
                 onClick = userAction {
@@ -198,7 +207,7 @@ fun AccountScreen(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isBusy
             ) {
-                Text("Delete account")
+                Text(stringResource(Res.string.account_delete))
             }
         }
     }
@@ -212,12 +221,11 @@ fun AccountScreen(
                 }
             },
             title = {
-                Text("Delete account?")
+                Text(stringResource(Res.string.account_delete_title))
             },
             text = {
                 Text(
-                    "This permanently deletes your account and its local vineyard data. " +
-                            "This action cannot be undone."
+                    stringResource(Res.string.account_delete_warning)
                 )
             },
             confirmButton = {
@@ -230,9 +238,9 @@ fun AccountScreen(
                 ) {
                     Text(
                         if (uiState.isDeleting) {
-                            "Deleting..."
+                            stringResource(Res.string.deleting_action)
                         } else {
-                            "Delete"
+                            stringResource(Res.string.delete_record)
                         }
                     )
                 }
@@ -244,7 +252,7 @@ fun AccountScreen(
                     },
                     enabled = !uiState.isDeleting
                 ) {
-                    Text("Cancel")
+                    Text(stringResource(Res.string.cancel_action))
                 }
             }
         )

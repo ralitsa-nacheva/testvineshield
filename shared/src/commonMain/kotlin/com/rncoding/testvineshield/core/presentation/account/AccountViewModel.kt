@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
+import com.rncoding.testvineshield.core.domain.error.UnexpectedError
 
 class AccountViewModel(
     private val authSessionCoordinator: AuthSessionCoordinator,
@@ -149,39 +151,26 @@ class AccountViewModel(
 
     fun logout() {
         val state = _uiState.value
+        if (state.isUpdating || state.isDeleting || state.isLoggingOut) return
 
-        if (state.isUpdating ||
-            state.isDeleting ||
-            state.isLoggingOut
-        ) {
-            return
+        // Claim the action before launching: two taps in the same event loop
+        // must not enqueue two session-clearing operations.
+        _uiState.update {
+            it.copy(isLoggingOut = true, errorMessage = null,
+                currentPassword = "", newPassword = "", confirmNewPassword = "")
         }
-
         viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    isLoggingOut = true,
-                    errorMessage = null
-                )
-            }
-
-            when (val result = authSessionCoordinator.logout()) {
-                is Result.Success -> {
-                    _uiState.update {
-                        it.copy(
-                            isLoggingOut = false
-                        )
-                    }
+            try {
+                when (val result = authSessionCoordinator.logout()) {
+                    is Result.Success -> _uiState.value = AccountUiState()
+                    is Result.Error -> _uiState.update { it.copy(errorMessage = result.error.userMessage) }
                 }
-
-                is Result.Error -> {
-                    _uiState.update {
-                        it.copy(
-                            isLoggingOut = false,
-                            errorMessage = result.error.userMessage
-                        )
-                    }
-                }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                _uiState.update { it.copy(errorMessage = UnexpectedError().userMessage) }
+            } finally {
+                _uiState.update { it.copy(isLoggingOut = false) }
             }
         }
     }
