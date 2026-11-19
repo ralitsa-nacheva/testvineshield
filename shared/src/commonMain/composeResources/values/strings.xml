@@ -97,4 +97,25 @@
   <string name="stage_harvest">Harvest</string>
   <string name="stage_post_harvest">Post-harvest</string>
   <string name="stage_leaf_fall">Leaf fall</string>
+  <string name="edit_vineyard">Edit vineyard</string>
+  <string name="vineyard_name">Vineyard name</string>
+  <string name="vineyard_size">Size (in the selected unit)</string>
+  <string name="area_unit">Area unit</string>
+  <string name="unit_unspecified">Unit not specified</string>
+  <string name="unit_change_note">Changing the unit does not convert the entered number.</string>
+  <string name="country_label">Country</string>
+  <string name="locality_label">City / town / village</string>
+  <string name="choose_online_map">Choose location on online map</string>
+  <string name="location_change_note">Saving changed coordinates or time zone resets calculated risk progress and invalidates previous active alerts. Farm records and historical weather remain stored.</string>
+  <string name="latitude_label">Latitude</string>
+  <string name="longitude_label">Longitude</string>
+  <string name="elevation_label">Elevation (m, optional)</string>
+  <string name="change_elevation_sign">Change elevation sign</string>
+  <string name="elevation_help">Blank means unknown. Decimal dot or comma; no grouping separators.</string>
+  <string name="save_changes">Save changes</string>
+  <string name="choose_time_zone">Choose time zone</string>
+  <string name="current_zone">Current: %1$s</string>
+  <string name="search_time_zone">Search city or zone, e.g. Sofia</string>
+  <string name="no_time_zones">No matching time zones.</string>
+  <string name="selected_zone">%1$s (selected)</string>
 </resources>

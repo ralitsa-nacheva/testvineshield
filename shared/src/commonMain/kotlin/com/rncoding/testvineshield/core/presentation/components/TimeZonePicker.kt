@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
+import com.rncoding.testvineshield.resources.*
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
@@ -29,7 +31,7 @@ internal fun TimeZonePicker(
         OutlinedButton(
             modifier = Modifier.fillMaxWidth(), enabled = enabled,
             onClick = userAction { query = ""; open = true }
-        ) { Text("Time zone: " + selectedId.ifBlank { "Choose time zone" }) }
+        ) { Text(stringResource(Res.string.zone_value, selectedId.ifBlank { stringResource(Res.string.choose_time_zone) })) }
         if (errorMessage != null) Text(errorMessage, color = MaterialTheme.colorScheme.error)
     }
     if (open && enabled) {
@@ -37,23 +39,23 @@ internal fun TimeZonePicker(
         Dialog(onDismissRequest = userAction { open = false }) {
             Surface(modifier = Modifier.userActivity(activity), shape = MaterialTheme.shapes.large) {
                 Column(Modifier.fillMaxWidth().heightIn(max = 560.dp).padding(16.dp)) {
-                    Text("Choose time zone", style = MaterialTheme.typography.titleLarge)
-                    if (selectedId.isNotBlank()) Text("Current: $selectedId")
+                    Text(stringResource(Res.string.choose_time_zone), style = MaterialTheme.typography.titleLarge)
+                    if (selectedId.isNotBlank()) Text(stringResource(Res.string.current_zone, selectedId))
                     OutlinedTextField(
                         value = query, onValueChange = { activity(); query = it }, singleLine = true,
-                        label = { Text("Search city or zone, e.g. Sofia") },
+                        label = { Text(stringResource(Res.string.search_time_zone)) },
                         modifier = Modifier.fillMaxWidth()
                     )
-                    if (matches.isEmpty()) Text("No matching time zones.")
+                    if (matches.isEmpty()) Text(stringResource(Res.string.no_time_zones))
                     LazyColumn(modifier = Modifier.weight(1f, fill = false)) {
                         items(matches, key = { it }) { id ->
                             TextButton(
                                 modifier = Modifier.fillMaxWidth(),
                                 onClick = userAction { activity(); if (enabled) { onSelect(id); open = false } }
-                            ) { Text(if (id == selectedId) "$id (selected)" else id) }
+                            ) { Text(if (id == selectedId) stringResource(Res.string.selected_zone, id) else id) }
                         }
                     }
-                    TextButton(onClick = userAction { open = false }) { Text("Cancel") }
+                    TextButton(onClick = userAction { open = false }) { Text(stringResource(Res.string.cancel_action)) }
                 }
             }
         }

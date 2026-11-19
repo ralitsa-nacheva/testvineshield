@@ -24,6 +24,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.ui.text.input.KeyboardType
+import com.rncoding.testvineshield.resources.*
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.runtime.Composable
 import com.rncoding.testvineshield.core.presentation.root.LocalUserActivity
 import androidx.compose.ui.Alignment
@@ -55,13 +57,16 @@ fun VineyardEditorScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(state.title)
+                    Text(stringResource(when (state.mode) {
+                        VineyardEditorMode.Create -> Res.string.create_vineyard
+                        is VineyardEditorMode.Edit -> Res.string.edit_vineyard
+                    }))
                 },
                 navigationIcon = {
                     TextButton(
                         onClick = userAction(onBack)
                     ) {
-                        Text("Back")
+                        Text(stringResource(Res.string.back_action))
                     }
                 }
             )
@@ -109,7 +114,7 @@ fun VineyardEditorScreen(
                         Button(
                             onClick = userAction(onBack)
                         ) {
-                            Text("Back")
+                            Text(stringResource(Res.string.back_action))
                         }
                     }
                 }
@@ -161,6 +166,7 @@ private fun VineyardEditorForm(
     onSizeUnitChange: (AreaUnit?) -> Unit,
     onMap: () -> Unit
 ) {
+    val elevationSignDescription = stringResource(Res.string.change_elevation_sign)
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
@@ -179,7 +185,7 @@ private fun VineyardEditorForm(
                 enabled = state.canEdit,
                 value = state.name,
                 onValueChange = onNameChange,
-                label = "Vineyard name",
+                label = stringResource(Res.string.vineyard_name),
                 error = state.nameError
             )
         }
@@ -189,7 +195,7 @@ private fun VineyardEditorForm(
                 enabled = state.canEdit,
                 value = state.size,
                 onValueChange = onSizeChange,
-                label = "Size (in the selected unit)",
+                label = stringResource(Res.string.vineyard_size),
                 error = state.sizeError,
                 keyboardType =
                     KeyboardType.Decimal
@@ -198,7 +204,7 @@ private fun VineyardEditorForm(
 
         item {
             Column(modifier = Modifier.selectableGroup()) {
-                Text("Area unit")
+                Text(stringResource(Res.string.area_unit))
                 (listOf<AreaUnit?>(null) + AreaUnit.entries).forEach { unit ->
                     androidx.compose.foundation.layout.Row(
                         modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).selectable(
@@ -212,10 +218,10 @@ private fun VineyardEditorForm(
                         androidx.compose.material3.RadioButton(
                             selected = state.sizeUnit == unit, onClick = null, enabled = state.canEdit
                         )
-                        Text(unit?.symbol ?: "Unit not specified")
+                        Text(unit?.symbol ?: stringResource(Res.string.unit_unspecified))
                     }
                 }
-                Text("Changing the unit does not convert the entered number.")
+                Text(stringResource(Res.string.unit_change_note))
             }
         }
 
@@ -224,7 +230,7 @@ private fun VineyardEditorForm(
                 enabled = state.canEdit,
                 value = state.country,
                 onValueChange = onCountryChange,
-                label = "Country",
+                label = stringResource(Res.string.country_label),
                 error = state.countryError
             )
         }
@@ -234,14 +240,14 @@ private fun VineyardEditorForm(
                 enabled = state.canEdit,
                 value = state.city,
                 onValueChange = onCityChange,
-                label = "City / town / village",
+                label = stringResource(Res.string.locality_label),
                 error = state.cityError
             )
         }
 
         item {
-            TextButton(onClick=userAction(onMap),enabled=state.canEdit) { Text("Choose location on online map") }
-            Text("Saving changed coordinates or time zone resets calculated risk progress and invalidates previous active alerts. Farm records and historical weather remain stored.")
+            TextButton(onClick=userAction(onMap),enabled=state.canEdit) { Text(stringResource(Res.string.choose_online_map)) }
+            Text(stringResource(Res.string.location_change_note))
         }
 
         item {
@@ -250,7 +256,7 @@ private fun VineyardEditorForm(
                 value = state.latitude,
                 onValueChange =
                     onLatitudeChange,
-                label = "Latitude",
+                label = stringResource(Res.string.latitude_label),
                 error = state.latitudeError,
                 keyboardType =
                     KeyboardType.Decimal
@@ -263,7 +269,7 @@ private fun VineyardEditorForm(
                 value = state.longitude,
                 onValueChange =
                     onLongitudeChange,
-                label = "Longitude",
+                label = stringResource(Res.string.longitude_label),
                 error = state.longitudeError,
                 keyboardType =
                     KeyboardType.Decimal
@@ -285,16 +291,16 @@ private fun VineyardEditorForm(
                 value = state.elevation,
                 onValueChange =
                     onElevationChange,
-                label = "Elevation (m, optional)",
+                label = stringResource(Res.string.elevation_label),
                 error = state.elevationError,
                 trailingIcon = {
                     TextButton(
                         enabled = state.canEdit,
-                        modifier = Modifier.semantics { contentDescription = "Change elevation sign" },
+                        modifier = Modifier.semantics { contentDescription = elevationSignDescription },
                         onClick = userAction { onElevationChange(toggleElevationSign(state.elevation)) }
                     ) { Text("±") }
                 },
-                supportingText = "Blank means unknown. Decimal dot or comma; no grouping separators.",
+                supportingText = stringResource(Res.string.elevation_help),
                 keyboardType = KeyboardType.Decimal
             )
         }
@@ -313,10 +319,10 @@ private fun VineyardEditorForm(
                     Text(
                         when (state.mode) {
                             VineyardEditorMode.Create ->
-                                "Create vineyard"
+                                stringResource(Res.string.create_vineyard)
 
                             is VineyardEditorMode.Edit ->
-                                "Save changes"
+                                stringResource(Res.string.save_changes)
                         }
                     )
                 }

@@ -97,4 +97,25 @@
   <string name="stage_harvest">Гроздобер</string>
   <string name="stage_post_harvest">След гроздобер</string>
   <string name="stage_leaf_fall">Листопад</string>
+  <string name="edit_vineyard">Редактиране на лозето</string>
+  <string name="vineyard_name">Име на лозето</string>
+  <string name="vineyard_size">Площ (в избраната мерна единица)</string>
+  <string name="area_unit">Мерна единица за площ</string>
+  <string name="unit_unspecified">Мерната единица не е посочена</string>
+  <string name="unit_change_note">Промяната на мерната единица не преобразува въведеното число.</string>
+  <string name="country_label">Държава</string>
+  <string name="locality_label">Град / село</string>
+  <string name="choose_online_map">Избор на местоположение на онлайн карта</string>
+  <string name="location_change_note">Запазването на променени координати или часова зона нулира натрупаните изчисления за риска и обезсилва предишните активни известия. Записите за стопанството и метеорологичната история се запазват.</string>
+  <string name="latitude_label">Географска ширина</string>
+  <string name="longitude_label">Географска дължина</string>
+  <string name="elevation_label">Надморска височина (m, незадължително)</string>
+  <string name="change_elevation_sign">Промяна на знака на надморската височина</string>
+  <string name="elevation_help">Празното поле означава неизвестна стойност. Използвайте десетична точка или запетая, без разделители за хилядите.</string>
+  <string name="save_changes">Запазване на промените</string>
+  <string name="choose_time_zone">Избор на часова зона</string>
+  <string name="current_zone">Текуща: %1$s</string>
+  <string name="search_time_zone">Търсене по град или зона, напр. Sofia</string>
+  <string name="no_time_zones">Няма съвпадащи часови зони.</string>
+  <string name="selected_zone">%1$s (избрана)</string>
 </resources>
