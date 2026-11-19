@@ -1,6 +1,8 @@
 package com.rncoding.testvineshield.core.presentation.harvest
 
 import androidx.compose.foundation.layout.*
+import com.rncoding.testvineshield.resources.*
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
@@ -28,30 +30,30 @@ fun HarvestListScreenRoot(ownerId: Long, scope: HarvestScope, onBack: () -> Unit
     val vm = koinViewModel<HarvestListViewModel>(key = "harvests-$ownerId-${scope.vineyardId}-${scope.blockId}", parameters = { parametersOf(scope) })
     val state by vm.state.collectAsStateWithLifecycle()
     var season by rememberSaveable(ownerId, scope.vineyardId, scope.blockId) { mutableStateOf<String?>(null) }
-    Scaffold(topBar = { RecordTopBar("Harvest records", onBack) }, floatingActionButton = {
-        if (!state.loading && state.snapshot != null) ExtendedFloatingActionButton(onClick = userAction(onCreate)) { Text("Add harvest") }
+    Scaffold(topBar = { RecordTopBar(stringResource(Res.string.harvest_records), onBack) }, floatingActionButton = {
+        if (!state.loading && state.snapshot != null) ExtendedFloatingActionButton(onClick = userAction(onCreate)) { Text(stringResource(Res.string.harvest_add)) }
     }) { padding ->
         LazyColumn(Modifier.padding(padding).fillMaxHeight().widthIn(max = 720.dp).fillMaxWidth(), contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 100.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (state.loading) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
             state.error?.let { item { HarvestErrorNotice(it, vm::reload) } }
             state.snapshot?.let { snapshot ->
                 item { Text(snapshot.blockName, style = MaterialTheme.typography.headlineSmall) }
-                item { OutlinedButton(onClick = userAction { onExport(season) }, enabled = snapshot.records.any { season == null || it.season == season }) { Text("Export harvest records") } }
-                item { RecordChoice("Season", season, snapshot.records.map { it.season }.distinct().sortedDescending(), true, { it }, { season = it }, nullLabel = "All seasons") }
+                item { OutlinedButton(onClick = userAction { onExport(season) }, enabled = snapshot.records.any { season == null || it.season == season }) { Text(stringResource(Res.string.harvest_export_records)) } }
+                item { RecordChoice(stringResource(Res.string.season_filter_label), season, snapshot.records.map { it.season }.distinct().sortedDescending(), true, { it }, { season = it }, nullLabel = stringResource(Res.string.all_seasons)) }
                 val visible = snapshot.records.filter { season == null || it.season == season }
-                if (visible.isEmpty()) item { Text(if (snapshot.records.isEmpty()) "No harvest records yet. Record a harvest for this block." else "No records for the selected season. Choose All seasons to see every record.") }
+                if (visible.isEmpty()) item { Text(if (snapshot.records.isEmpty()) stringResource(Res.string.harvest_empty) else stringResource(Res.string.harvest_season_empty)) }
                 items(visible, key = { it.harvestId }) { record ->
                     OutlinedCard(Modifier.fillMaxWidth()) {
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text(record.harvestDate.toString(), style = MaterialTheme.typography.titleMedium)
-                            Text("Season: ${record.season}")
-                            Text("Quantity: ${harvestNumberText(record.quantity)} ${record.units.ifBlank { "(unit unknown)" }}")
-                            Text("Brix: ${record.brixSugarContent?.let(::harvestNumberText) ?: "Not measured / not recorded"}")
-                            TextButton(onClick = userAction { onOpen(record.harvestId) }) { Text("Open harvest") }
+                            Text(stringResource(Res.string.activity_season, record.season))
+                            Text(stringResource(Res.string.harvest_quantity_value, harvestNumberText(record.quantity), record.units.ifBlank { stringResource(Res.string.unknown_unit) }))
+                            Text(stringResource(Res.string.harvest_brix_value, record.brixSugarContent?.let(::harvestNumberText) ?: stringResource(Res.string.harvest_not_measured)))
+                            TextButton(onClick = userAction { onOpen(record.harvestId) }) { Text(stringResource(Res.string.harvest_open)) }
                         }
                     }
                 }
-                item { Text("Quantities are shown in their recorded units. No total combines different units.") }
+                item { Text(stringResource(Res.string.harvest_units_help)) }
             }
         }
     }
@@ -67,25 +69,25 @@ fun HarvestDetailsScreenRoot(ownerId: Long, key: HarvestKey, onBack: () -> Unit,
         onBusyChanged(state.deleting)
         onDispose { onBusyChanged(false) }
     }
-    Scaffold(topBar = { RecordTopBar("Harvest details", { if (!vm.state.value.deleting) onBack() }, !state.deleting) }) { padding ->
+    Scaffold(topBar = { RecordTopBar(stringResource(Res.string.harvest_details), { if (!vm.state.value.deleting) onBack() }, !state.deleting) }) { padding ->
         LazyColumn(Modifier.padding(padding).fillMaxHeight().widthIn(max = 720.dp).fillMaxWidth(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (state.loading || state.deleting) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
             state.error?.let { item { HarvestErrorNotice(it, if (state.deleting) null else vm::load) } }
             state.record?.let { record ->
                 item { Text(record.harvestDate.toString(), style = MaterialTheme.typography.headlineSmall) }
-                item { Text("Season: ${record.season}") }
-                item { Text("Quantity: ${harvestNumberText(record.quantity)} ${record.units.ifBlank { "(unit unknown)" }}") }
-                item { Text("Brix: ${record.brixSugarContent?.let(::harvestNumberText) ?: "Not measured / not recorded"}") }
-                item { Button(onClick = userAction(onEdit), enabled = !state.deleting, modifier = Modifier.fillMaxWidth()) { Text("Edit harvest") } }
-                item { OutlinedButton(onClick = userAction(vm::requestDelete), enabled = !state.deleting, modifier = Modifier.fillMaxWidth()) { Text("Delete harvest") } }
+                item { Text(stringResource(Res.string.activity_season, record.season)) }
+                item { Text(stringResource(Res.string.harvest_quantity_value, harvestNumberText(record.quantity), record.units.ifBlank { stringResource(Res.string.unknown_unit) })) }
+                item { Text(stringResource(Res.string.harvest_brix_value, record.brixSugarContent?.let(::harvestNumberText) ?: stringResource(Res.string.harvest_not_measured))) }
+                item { Button(onClick = userAction(onEdit), enabled = !state.deleting, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.harvest_edit)) } }
+                item { OutlinedButton(onClick = userAction(vm::requestDelete), enabled = !state.deleting, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.harvest_delete)) } }
             }
         }
     }
     if (state.confirmDelete) {
         val activity = LocalUserActivity.current
-        AlertDialog(modifier = Modifier.userActivity(activity), onDismissRequest = userAction(vm::cancelDelete), title = { Text("Delete harvest?") }, text = { Text("This harvest record will be permanently deleted. This cannot be undone.") }, confirmButton = {
-            TextButton(onClick = userAction { vm.confirmDelete(); onBusyChanged(vm.state.value.deleting) }, enabled = !state.deleting) { Text("Delete permanently") }
-        }, dismissButton = { TextButton(onClick = userAction(vm::cancelDelete), enabled = !state.deleting) { Text("Cancel") } })
+        AlertDialog(modifier = Modifier.userActivity(activity), onDismissRequest = userAction(vm::cancelDelete), title = { Text(stringResource(Res.string.harvest_delete_title)) }, text = { Text(stringResource(Res.string.harvest_delete_warning)) }, confirmButton = {
+            TextButton(onClick = userAction { vm.confirmDelete(); onBusyChanged(vm.state.value.deleting) }, enabled = !state.deleting) { Text(stringResource(Res.string.delete_record)) }
+        }, dismissButton = { TextButton(onClick = userAction(vm::cancelDelete), enabled = !state.deleting) { Text(stringResource(Res.string.cancel_action)) } })
     }
 }
 
@@ -105,30 +107,32 @@ fun HarvestEditorScreenRoot(ownerId: Long, key: HarvestKey, onBack: () -> Unit, 
         onDispose { onBusyChanged(false) }
     }
     val activity = LocalUserActivity.current
-    Scaffold(topBar = { RecordTopBar(if (key.harvestId == 0L) "New harvest" else "Edit harvest", { if (!vm.state.value.saving) onBack() }, !state.saving) }) { padding ->
+    val tonneLabel = stringResource(Res.string.unit_tonne)
+    val poundLabel = stringResource(Res.string.unit_pound)
+    Scaffold(topBar = { RecordTopBar(if (key.harvestId == 0L) stringResource(Res.string.harvest_new) else stringResource(Res.string.harvest_edit), { if (!vm.state.value.saving) onBack() }, !state.saving) }) { padding ->
         LazyColumn(Modifier.padding(padding).imePadding().fillMaxHeight().widthIn(max = 720.dp).fillMaxWidth(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (state.loading || state.saving) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
             state.error?.let { item { HarvestErrorNotice(it, if (state.ready) null else vm::load) } }
             item { Text(state.blockName, style = MaterialTheme.typography.titleMedium) }
-            item { Text("Save to keep changes. Back discards unsaved changes. Leave Brix blank when it was not measured.") }
+            item { Text(stringResource(Res.string.harvest_save_help)) }
             items(HarvestField.entries, key = { it.name }) { field ->
                 val (label, help, keyboard) = when (field) {
-                    HarvestField.Season -> Triple("Season *", "Explicit season, e.g. 2026 or 2026/2027", KeyboardType.Text)
-                    HarvestField.Date -> Triple("Harvest date *", "Actual calendar date: YYYY-MM-DD", KeyboardType.Ascii)
-                    HarvestField.Quantity -> Triple("Quantity *", "Positive amount; one dot or comma decimal separator; no thousands grouping", KeyboardType.Decimal)
-                    HarvestField.Brix -> Triple("Brix (°Bx)", "Optional measured value, 0–100; blank means not recorded", KeyboardType.Decimal)
+                    HarvestField.Season -> Triple(stringResource(Res.string.harvest_season_required), stringResource(Res.string.harvest_season_help), KeyboardType.Text)
+                    HarvestField.Date -> Triple(stringResource(Res.string.harvest_date_required), stringResource(Res.string.harvest_date_help), KeyboardType.Ascii)
+                    HarvestField.Quantity -> Triple(stringResource(Res.string.harvest_quantity_required), stringResource(Res.string.harvest_quantity_help), KeyboardType.Decimal)
+                    HarvestField.Brix -> Triple(stringResource(Res.string.harvest_brix_label), stringResource(Res.string.harvest_brix_help), KeyboardType.Decimal)
                 }
                 OutlinedTextField(value = state.draft.text(field), onValueChange = { activity(); vm.text(field, it) }, enabled = state.canEdit, modifier = Modifier.fillMaxWidth(), label = { Text(label) }, singleLine = true, isError = field in state.errors, supportingText = { Text(state.errors[field] ?: help) }, keyboardOptions = KeyboardOptions(keyboardType = keyboard))
                 if (field == HarvestField.Quantity) {
                     // Keep arbitrary legacy unit labels visible and selectable without interpreting them.
                     val units = (HarvestDraft.commonUnits + listOfNotNull(state.legacyUnit, state.draft.units)).distinct()
-                    RecordChoice("Quantity unit *", state.draft.units, units, state.canEdit,
-                        { when (it) { "t" -> "t (tonne)"; "lb" -> "lb (pound)"; else -> it } }, vm::units, nullLabel = "Select a unit")
+                    RecordChoice(stringResource(Res.string.harvest_unit_required), state.draft.units, units, state.canEdit,
+                        { when (it) { "t" -> tonneLabel; "lb" -> poundLabel; else -> it } }, vm::units, nullLabel = stringResource(Res.string.select_unit))
                     state.unitError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                 }
             }
-            item { Text("Changing the unit only changes its label; it does not convert the number. Existing other unit labels are retained. Zero Brix is a recorded value, not an alias for unknown.") }
-            item { Button(onClick = userAction { vm.save(); onBusyChanged(vm.state.value.saving) }, enabled = state.canEdit, modifier = Modifier.fillMaxWidth()) { Text(if (state.saving) "Saving…" else "Save harvest") } }
+            item { Text(stringResource(Res.string.harvest_unit_change_help)) }
+            item { Button(onClick = userAction { vm.save(); onBusyChanged(vm.state.value.saving) }, enabled = state.canEdit, modifier = Modifier.fillMaxWidth()) { Text(if (state.saving) stringResource(Res.string.saving_action) else stringResource(Res.string.harvest_save)) } }
         }
     }
 }
@@ -137,6 +141,6 @@ fun HarvestEditorScreenRoot(ownerId: Long, key: HarvestKey, onBack: () -> Unit, 
 private fun HarvestErrorNotice(message: String, retry: (() -> Unit)?) {
     Column {
         Text(message, color = MaterialTheme.colorScheme.error)
-        retry?.let { TextButton(onClick = userAction(it)) { Text("Retry") } }
+        retry?.let { TextButton(onClick = userAction(it)) { Text(stringResource(Res.string.retry)) } }
     }
 }
