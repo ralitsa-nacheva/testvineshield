@@ -1,6 +1,9 @@
 package com.rncoding.testvineshield.core.presentation.disease_observations
 
 import androidx.compose.foundation.layout.*
+import com.rncoding.testvineshield.resources.*
+import org.jetbrains.compose.resources.stringResource
+import com.rncoding.testvineshield.core.presentation.vineyard_details.localizedOccurrenceStatus
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -39,6 +42,7 @@ fun BlockDiseaseObservationsScreen(
         parameters = { parametersOf(DiseaseObservationsKey(ownerId, vineyardId, blockId)) }
     )
     val state by model.state.collectAsStateWithLifecycle()
+    val statusLabels = DiseaseOccurrenceStatus.entries.associateWith { localizedOccurrenceStatus(it) }
     val busyChanged by rememberUpdatedState(onBusyChanged)
     DisposableEffect(state.saving) {
         busyChanged(state.saving)
@@ -55,21 +59,21 @@ fun BlockDiseaseObservationsScreen(
             title = { Text(observation.diseaseName) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Observed ${observation.observedOn} · ${observation.severity}% affected")
-                    Text("Current status: ${observation.status.label()}")
-                    observation.curedAt?.let { Text("Resolved on $it") }
+                    Text(stringResource(Res.string.observation_observed, observation.observedOn.toString(), observation.severity))
+                    Text(stringResource(Res.string.observation_current_status, localizedOccurrenceStatus(observation.status)))
+                    observation.curedAt?.let { Text(stringResource(Res.string.observation_resolved_on, it.toString())) }
                     observation.notes?.let { Text(it, maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) }
                     RecordChoice(
-                        label = "New status", selected = selected,
+                        label = stringResource(Res.string.observation_new_status), selected = selected,
                         values = DiseaseOccurrenceStatus.entries, enabled = !state.saving,
-                        text = { it.label() }, changed = { if (it != null) selected = it },
+                        text = { statusLabels.getValue(it) }, changed = { if (it != null) selected = it },
                         allowUnknown = false
                     )
                     if (selected == DiseaseOccurrenceStatus.RESOLVED && selected != observation.status) {
-                        Text("Resolution is dated today in the vineyard’s time zone.")
+                        Text(stringResource(Res.string.observation_resolution_help))
                     }
                     if (selected != DiseaseOccurrenceStatus.ACTIVE && selected != observation.status) {
-                        Text("Only active observations are included in active disease summaries.")
+                        Text(stringResource(Res.string.observation_active_help))
                     }
                     state.dialogError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                 }
@@ -78,10 +82,10 @@ fun BlockDiseaseObservationsScreen(
                 TextButton(
                     onClick = userAction { model.saveStatus(selected) },
                     enabled = !state.saving && selected != observation.status
-                ) { Text(if (state.saving) "Saving…" else "Save status") }
+                ) { Text(if (state.saving) stringResource(Res.string.saving_action) else stringResource(Res.string.observation_save_status)) }
             },
             dismissButton = {
-                TextButton(onClick = userAction(model::closeDialog), enabled = !state.saving) { Text("Cancel") }
+                TextButton(onClick = userAction(model::closeDialog), enabled = !state.saving) { Text(stringResource(Res.string.cancel_action)) }
             }
         )
     }
@@ -99,20 +103,20 @@ fun BlockDiseaseObservationsScreen(
     state.dialog?.takeIf { it.kind == ObservationDialog.Kind.REMOVE_REFERENCE_SYMPTOM }?.symptomToChange?.let { referenceSymptom ->
         AlertDialog(
             onDismissRequest = model::closeDialog,
-            title = { Text("Remove recorded symptom?") },
+            title = { Text(stringResource(Res.string.observation_remove_symptom_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Remove the symptom recorded on ${referenceSymptom.observedOn}.")
+                    Text(stringResource(Res.string.observation_remove_symptom_date, referenceSymptom.observedOn.toString()))
                     state.dialogError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                 }
             },
             confirmButton = {
                 TextButton(onClick = userAction(model::removeReferenceSymptom), enabled = !state.saving) {
-                    Text(if (state.saving) "Removing…" else "Remove symptom")
+                    Text(if (state.saving) stringResource(Res.string.removing_action) else stringResource(Res.string.observation_remove_symptom))
                 }
             },
             dismissButton = {
-                TextButton(onClick = userAction(model::closeDialog), enabled = !state.saving) { Text("Cancel") }
+                TextButton(onClick = userAction(model::closeDialog), enabled = !state.saving) { Text(stringResource(Res.string.cancel_action)) }
             }
         )
     }
@@ -131,21 +135,21 @@ fun BlockDiseaseObservationsScreen(
     state.dialog?.activityToUnlink?.let { link ->
         AlertDialog(
             onDismissRequest = model::closeDialog,
-            title = { Text("Remove activity link?") },
+            title = { Text(stringResource(Res.string.observation_unlink_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("${link.appliedOn} · ${link.activityType}")
-                    Text("The activity will remain in the activity notebook.")
+                    Text(stringResource(Res.string.observation_keep_activity))
                     state.dialogError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                 }
             },
             confirmButton = {
                 TextButton(onClick = userAction(model::removeActivityLink), enabled = !state.saving) {
-                    Text(if (state.saving) "Removing…" else "Remove link")
+                    Text(if (state.saving) stringResource(Res.string.removing_action) else stringResource(Res.string.observation_remove_link))
                 }
             },
             dismissButton = {
-                TextButton(onClick = userAction(model::closeDialog), enabled = !state.saving) { Text("Cancel") }
+                TextButton(onClick = userAction(model::closeDialog), enabled = !state.saving) { Text(stringResource(Res.string.cancel_action)) }
             }
         )
     }
@@ -154,21 +158,21 @@ fun BlockDiseaseObservationsScreen(
         val observation = dialog.observation
         AlertDialog(
             onDismissRequest = model::closeDialog,
-            title = { Text("Delete disease observation?") },
+            title = { Text(stringResource(Res.string.observation_delete_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("${observation.diseaseName} · ${observation.observedOn}")
-                    Text("This permanently removes the observation, its symptoms, and its activity links. The activities stay in the activity notebook.")
+                    Text(stringResource(Res.string.observation_delete_warning))
                     state.dialogError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                 }
             },
             confirmButton = {
                 TextButton(onClick = userAction(model::deleteObservation), enabled = !state.saving) {
-                    Text(if (state.saving) "Deleting…" else "Delete observation", color = MaterialTheme.colorScheme.error)
+                    Text(if (state.saving) stringResource(Res.string.deleting_action) else stringResource(Res.string.observation_delete), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
-                TextButton(onClick = userAction(model::closeDialog), enabled = !state.saving) { Text("Cancel") }
+                TextButton(onClick = userAction(model::closeDialog), enabled = !state.saving) { Text(stringResource(Res.string.cancel_action)) }
             }
         )
     }
@@ -185,7 +189,7 @@ fun BlockDiseaseObservationsScreen(
         }
     }
 
-    Scaffold(topBar = { RecordTopBar("Disease observations", { if (!model.state.value.saving) onBack() }, !state.saving) }) { padding ->
+    Scaffold(topBar = { RecordTopBar(stringResource(Res.string.disease_observations), { if (!model.state.value.saving) onBack() }, !state.saving) }) { padding ->
         LazyColumn(
             Modifier.padding(padding).fillMaxSize(),
             contentPadding = PaddingValues(16.dp),
@@ -196,29 +200,29 @@ fun BlockDiseaseObservationsScreen(
                 state.loading -> item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
                 error != null -> item {
                     Text(error)
-                    TextButton(onClick = userAction(model::reload)) { Text("Retry") }
+                    TextButton(onClick = userAction(model::reload)) { Text(stringResource(Res.string.retry)) }
                 }
                 else -> {
-                    if (state.diseases.isEmpty()) item { Text("No built-in diseases are available.") }
+                    if (state.diseases.isEmpty()) item { Text(stringResource(Res.string.observation_no_diseases)) }
                     else item(key = "observation-form") { ObservationForm(state, model::save) }
                     if (state.observations.isEmpty()) {
-                        item { Text("No observations for built-in diseases in this block.") }
+                        item { Text(stringResource(Res.string.observation_empty)) }
                     } else {
                         item(key = "observation-filters") {
                             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Text("Filter observations", style = MaterialTheme.typography.titleMedium)
+                                Text(stringResource(Res.string.observation_filters), style = MaterialTheme.typography.titleMedium)
                                 RecordChoice(
-                                    label = "Disease", selected = selectedDisease,
+                                    label = stringResource(Res.string.disease_label), selected = selectedDisease,
                                     values = state.diseases.filter { !it.code.isNullOrBlank() },
                                     enabled = !state.saving,
                                     text = { it.name }, changed = { diseaseCode = it?.code },
-                                    nullLabel = "All diseases"
+                                    nullLabel = stringResource(Res.string.all_diseases)
                                 )
                                 RecordChoice(
-                                    label = "Status", selected = status,
+                                    label = stringResource(Res.string.status_label), selected = status,
                                     values = DiseaseOccurrenceStatus.entries, enabled = !state.saving,
-                                    text = { it.label() }, changed = { statusName = it?.name },
-                                    nullLabel = "All statuses"
+                                    text = { statusLabels.getValue(it) }, changed = { statusName = it?.name },
+                                    nullLabel = stringResource(Res.string.all_statuses)
                                 )
                                 if (selectedDisease != null || status != null) {
                                     TextButton(
@@ -227,10 +231,10 @@ fun BlockDiseaseObservationsScreen(
                                             statusName = null
                                         },
                                         enabled = !state.saving
-                                    ) { Text("Clear filters") }
+                                    ) { Text(stringResource(Res.string.clear_filters)) }
                                 }
                                 if (visibleObservations.isEmpty()) {
-                                    Text("No observations match these filters.")
+                                    Text(stringResource(Res.string.observation_no_matches))
                                 }
                             }
                         }
@@ -239,8 +243,8 @@ fun BlockDiseaseObservationsScreen(
                         OutlinedCard(Modifier.fillMaxWidth()) {
                             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Text(observation.diseaseName, style = MaterialTheme.typography.titleMedium)
-                                Text("${observation.observedOn} · ${observation.severity}% affected · ${observation.status.label()}")
-                                observation.curedAt?.let { Text("Resolved on $it") }
+                                Text(stringResource(Res.string.observation_summary, observation.observedOn.toString(), observation.severity, localizedOccurrenceStatus(observation.status)))
+                                observation.curedAt?.let { Text(stringResource(Res.string.observation_resolved_on, it.toString())) }
                                 observation.notes?.let { Text(it) }
                                 observation.referenceSymptoms.forEach { recorded ->
                                     Text("${recorded.kind.label} · ${recorded.observedOn}")
@@ -248,45 +252,45 @@ fun BlockDiseaseObservationsScreen(
                                     TextButton(
                                         onClick = userAction { model.openDialog(observation.id, ObservationDialog.Kind.REFERENCE_SYMPTOM, recorded) },
                                         enabled = !state.saving
-                                    ) { Text("Edit ${recorded.kind.label.lowercase()}") }
+                                    ) { Text(stringResource(Res.string.observation_edit_symptom, recorded.kind.label)) }
                                     TextButton(
                                         onClick = userAction { model.openDialog(observation.id, ObservationDialog.Kind.REMOVE_REFERENCE_SYMPTOM, recorded) },
                                         enabled = !state.saving
-                                    ) { Text("Remove ${recorded.kind.label.lowercase()}") }
+                                    ) { Text(stringResource(Res.string.observation_remove_symptom_named, recorded.kind.label)) }
                                 }
                                 if (availableSymptoms(observation).isNotEmpty()) {
                                     TextButton(
                                         onClick = userAction { model.openDialog(observation.id, ObservationDialog.Kind.REFERENCE_SYMPTOM) },
                                         enabled = !state.saving
-                                    ) { Text("Record symptom") }
+                                    ) { Text(stringResource(Res.string.observation_record_symptom)) }
                                 }
                                 TextButton(
                                     onClick = userAction { model.openDialog(observation.id, ObservationDialog.Kind.STATUS) },
                                     enabled = !state.saving
-                                ) { Text("Change status") }
+                                ) { Text(stringResource(Res.string.observation_change_status)) }
                                 TextButton(
                                     onClick = userAction { model.openDialog(observation.id, ObservationDialog.Kind.DETAILS) },
                                     enabled = !state.saving
-                                ) { Text("Edit details") }
+                                ) { Text(stringResource(Res.string.observation_edit_details)) }
                                 state.activityLinks[observation.id].orEmpty().forEach { link ->
                                     Text(
-                                        "Linked activity · ${link.appliedOn} · ${link.activityType}",
+                                        stringResource(Res.string.observation_linked_activity, link.appliedOn.toString(), link.activityType),
                                         style = MaterialTheme.typography.bodyMedium
                                     )
                                     if (link.description.isNotBlank()) Text(link.description)
                                     TextButton(
                                         onClick = userAction { model.openUnlinkDialog(link) },
                                         enabled = !state.saving
-                                    ) { Text("Remove activity link") }
+                                    ) { Text(stringResource(Res.string.observation_unlink)) }
                                 }
                                 TextButton(
                                     onClick = userAction { model.openDialog(observation.id, ObservationDialog.Kind.LINK_ACTIVITY) },
                                     enabled = !state.saving
-                                ) { Text("Link completed activity") }
+                                ) { Text(stringResource(Res.string.observation_link_completed)) }
                                 TextButton(
                                     onClick = userAction { model.openDialog(observation.id, ObservationDialog.Kind.DELETE) },
                                     enabled = !state.saving
-                                ) { Text("Delete observation", color = MaterialTheme.colorScheme.error) }
+                                ) { Text(stringResource(Res.string.observation_delete), color = MaterialTheme.colorScheme.error) }
                             }
                         }
                     }
@@ -556,8 +560,3 @@ private fun parseObservationDate(text: String): LocalDate? = try {
 private fun parseObservationSeverity(text: String): Int? =
     text.trim().toIntOrNull()?.takeIf { it in 0..100 }
 
-private fun DiseaseOccurrenceStatus.label(): String = when (this) {
-    DiseaseOccurrenceStatus.ACTIVE -> "Active"
-    DiseaseOccurrenceStatus.MONITORING -> "Monitoring"
-    DiseaseOccurrenceStatus.RESOLVED -> "Resolved"
-}
