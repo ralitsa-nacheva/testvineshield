@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="nav_vineyards">Vineyards</string>
+  <string name="nav_activities">Activities</string>
+  <string name="nav_alerts">Alerts</string>
+  <string name="nav_account">Account</string>
+  <string name="selector_blocks">Blocks</string>
+  <string name="search_vineyards">Search vineyards</string>
+  <string name="search_blocks">Search blocks</string>
+  <string name="loading_vineyards">Loading vineyards…</string>
+  <string name="loading_blocks">Loading blocks…</string>
+  <string name="empty_vineyards">No vineyards saved.</string>
+  <string name="empty_blocks">No blocks saved.</string>
+  <string name="no_matches">No matches.</string>
+  <string name="retry">Retry</string>
+</resources>

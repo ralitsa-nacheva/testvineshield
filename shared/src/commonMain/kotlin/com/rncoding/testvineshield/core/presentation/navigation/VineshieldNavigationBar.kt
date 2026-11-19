@@ -20,6 +20,8 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Text
+import com.rncoding.testvineshield.resources.*
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.runtime.Composable
 import com.rncoding.testvineshield.core.presentation.root.userAction
 
@@ -37,7 +39,7 @@ fun VineShieldNavigationBar(
                 selected = selectedDestination == destination,
                 onClick = userAction { onDestinationSelected(destination) },
                 icon = { DestinationBadge(destination, alertBadgeCount, activityBadgeCount) },
-                label = { Text(destination.label) }
+                label = { Text(destination.localizedLabel()) }
             )
         }
     }
@@ -57,7 +59,7 @@ internal fun VineShieldNavigationRail(
                 selected = selectedDestination == destination,
                 onClick = userAction { onDestinationSelected(destination) },
                 icon = { DestinationBadge(destination, alertBadgeCount, activityBadgeCount) },
-                label = { Text(destination.label) }
+                label = { Text(destination.localizedLabel()) }
             )
         }
     }
@@ -77,7 +79,7 @@ private fun DestinationBadge(
     BadgedBox(badge = {
         if (count > 0) Badge { Text(if (count > 99) "99+" else count.toString()) }
     }) {
-        Text(destination.label.take(1))
+        Text(destination.localizedLabel().take(1))
     }
 }
 
@@ -128,3 +130,13 @@ internal fun AdaptiveVineShieldScaffold(
         }
     }
 }
+
+@Composable
+private fun TopLevelDestination.localizedLabel(): String = stringResource(
+    when (this) {
+        TopLevelDestination.VINEYARDS -> Res.string.nav_vineyards
+        TopLevelDestination.ACTIVITIES -> Res.string.nav_activities
+        TopLevelDestination.ALERTS -> Res.string.nav_alerts
+        TopLevelDestination.ACCOUNT -> Res.string.nav_account
+    }
+)

@@ -9,6 +9,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import com.rncoding.testvineshield.resources.*
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
@@ -47,21 +49,21 @@ internal fun VineyardSelectionPane(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        item { Text("Vineyards", style = MaterialTheme.typography.titleLarge) }
+        item { Text(stringResource(Res.string.nav_vineyards), style = MaterialTheme.typography.titleLarge) }
         item {
             OutlinedTextField(
                 value = searchText,
                 onValueChange = { activity(); searchText = it },
-                label = { Text("Search vineyards") },
+                label = { Text(stringResource(Res.string.search_vineyards)) },
                 enabled = enabled,
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
         }
         when {
-            state.isLoading -> item { Text("Loading vineyards…") }
-            state.vineyards.isEmpty() -> item { Text(state.errorMessage ?: "No vineyards saved.") }
-            visibleRecords.isEmpty() -> item { Text("No matches.") }
+            state.isLoading -> item { Text(stringResource(Res.string.loading_vineyards)) }
+            state.vineyards.isEmpty() -> item { Text(state.errorMessage ?: stringResource(Res.string.empty_vineyards)) }
+            visibleRecords.isEmpty() -> item { Text(stringResource(Res.string.no_matches)) }
             else -> items(visibleRecords, key = { it.vineyardId }) { vineyard ->
                 val isSelected = vineyard.vineyardId == selectedVineyardId
                 OutlinedButton(

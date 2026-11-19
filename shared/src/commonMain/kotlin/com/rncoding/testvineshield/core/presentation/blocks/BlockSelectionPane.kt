@@ -10,6 +10,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import com.rncoding.testvineshield.resources.*
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
@@ -52,25 +54,25 @@ internal fun BlockSelectionPane(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        item { Text("Blocks", style = MaterialTheme.typography.titleLarge) }
+        item { Text(stringResource(Res.string.selector_blocks), style = MaterialTheme.typography.titleLarge) }
         item {
             OutlinedTextField(
                 value = searchText,
                 onValueChange = { activity(); searchText = it },
-                label = { Text("Search blocks") },
+                label = { Text(stringResource(Res.string.search_blocks)) },
                 enabled = enabled,
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
         }
         when {
-            state.loading -> item { Text("Loading blocks…") }
+            state.loading -> item { Text(stringResource(Res.string.loading_blocks)) }
             state.error != null -> item {
                 Text(state.error.orEmpty())
-                TextButton(onClick = userAction(viewModel::reload), enabled = enabled) { Text("Retry") }
+                TextButton(onClick = userAction(viewModel::reload), enabled = enabled) { Text(stringResource(Res.string.retry)) }
             }
-            state.blocks.isEmpty() -> item { Text("No blocks saved.") }
-            visibleRecords.isEmpty() -> item { Text("No matches.") }
+            state.blocks.isEmpty() -> item { Text(stringResource(Res.string.empty_blocks)) }
+            visibleRecords.isEmpty() -> item { Text(stringResource(Res.string.no_matches)) }
             else -> items(visibleRecords, key = { it.blockId }) { block ->
                 val isSelected = block.blockId == selectedBlockId
                 OutlinedButton(

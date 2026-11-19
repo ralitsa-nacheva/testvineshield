@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="nav_vineyards">Лозя</string>
+  <string name="nav_activities">Дейности</string>
+  <string name="nav_alerts">Известия</string>
+  <string name="nav_account">Профил</string>
+  <string name="selector_blocks">Парцели</string>
+  <string name="search_vineyards">Търсене на лозя</string>
+  <string name="search_blocks">Търсене на парцели</string>
+  <string name="loading_vineyards">Зареждане на лозя…</string>
+  <string name="loading_blocks">Зареждане на парцели…</string>
+  <string name="empty_vineyards">Няма запазени лозя.</string>
+  <string name="empty_blocks">Няма запазени парцели.</string>
+  <string name="no_matches">Няма съвпадения.</string>
+  <string name="retry">Опитайте отново</string>
+</resources>
