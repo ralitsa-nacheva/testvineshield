@@ -12,7 +12,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-data class SprayExportState(val snapshot: SpraySnapshot? = null, val loading: Boolean = false, val busy: Boolean = false, val message: String? = null, val error: String? = null)
+sealed interface SprayExportNotice {
+    data class Saved(val productCount: Int) : SprayExportNotice
+    data object Cancelled : SprayExportNotice
+    data object Interrupted : SprayExportNotice
+}
+
+data class SprayExportState(val snapshot: SpraySnapshot? = null, val loading: Boolean = false, val busy: Boolean = false, val notice: SprayExportNotice? = null, val noSavedApplication: Boolean = false, val error: String? = null)
 
 class SprayExportViewModel(private val key: SprayKey, private val get: GetSprayRecordUseCase, private val prepare: PrepareSprayExportUseCase) : ViewModel() {
     private val _state = MutableStateFlow(SprayExportState())
@@ -21,12 +27,12 @@ class SprayExportViewModel(private val key: SprayKey, private val get: GetSprayR
     init { load() }
     fun load() {
         if (_state.value.loading || _state.value.busy) return
-        _state.update { it.copy(loading = true, snapshot = null, error = null) }
+        _state.update { it.copy(loading = true, snapshot = null, error = null, noSavedApplication = false) }
         viewModelScope.launch {
             try {
                 when (val result = get(key)) {
                     is Result.Error -> _state.update { it.copy(error = result.error.userMessage) }
-                    is Result.Success -> if (result.data.record == null) _state.update { it.copy(error = "There is no saved spray application to export.") }
+                    is Result.Success -> if (result.data.record == null) _state.update { it.copy(noSavedApplication = true) }
                         else _state.update { it.copy(snapshot = result.data) }
                 }
             } catch (e: CancellationException) { throw e }
@@ -36,19 +42,19 @@ class SprayExportViewModel(private val key: SprayKey, private val get: GetSprayR
     }
     fun export(format: DocumentExportFormat, saver: DocumentSaver) {
         if (_state.value.loading || _state.value.busy || _state.value.snapshot == null) return
-        _state.update { it.copy(busy = true, message = null, error = null) }
+        _state.update { it.copy(busy = true, notice = null, error = null) }
         job = viewModelScope.launch {
             try {
                 when (val result = prepare(key, format)) {
                     is Result.Error -> _state.update { it.copy(error = result.error.userMessage) }
                     is Result.Success -> when (val saved = saver.save(result.data)) {
-                        DocumentSaveResult.Saved -> _state.update { it.copy(message = "Saved one spray application with ${result.data.recordCount} product lines.") }
-                        DocumentSaveResult.Cancelled -> _state.update { it.copy(message = "Export cancelled.") }
+                        DocumentSaveResult.Saved -> _state.update { it.copy(notice = SprayExportNotice.Saved(result.data.recordCount)) }
+                        DocumentSaveResult.Cancelled -> _state.update { it.copy(notice = SprayExportNotice.Cancelled) }
                         is DocumentSaveResult.Failed -> _state.update { it.copy(error = saved.message) }
                     }
                 }
             } catch (e: CancellationException) {
-                _state.update { it.copy(message = "Export interrupted. Check the destination before retrying.") }; throw e
+                _state.update { it.copy(notice = SprayExportNotice.Interrupted) }; throw e
             } catch (_: Exception) { _state.update { it.copy(error = UnexpectedError().userMessage) } }
             finally { _state.update { it.copy(busy = false) } }
         }

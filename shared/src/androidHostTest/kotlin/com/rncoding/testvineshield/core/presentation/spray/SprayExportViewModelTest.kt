@@ -43,27 +43,41 @@ class SprayExportViewModelTest {
         val v = vm(); advanceUntilIdle(); v.export(DocumentExportFormat.JSON, saver); v.export(DocumentExportFormat.JSON, saver); runCurrent()
         assertTrue(v.state.value.busy); gate.complete(Unit); advanceUntilIdle()
         coVerify(exactly = 1) { saver.save(document) }
-        assertEquals("Saved one spray application with 2 product lines.", v.state.value.message)
+        assertEquals(SprayExportNotice.Saved(2), v.state.value.notice)
     }
     @Test fun failedPreparationNeverOpensSaverAndPickerCancelIsNotSuccess() = runTest {
         coEvery { prepare(key, DocumentExportFormat.JSON) } returns Result.Error(ActivityError.NotFound)
         val v = vm(); advanceUntilIdle(); v.export(DocumentExportFormat.JSON, saver); advanceUntilIdle(); verify { saver wasNot Called }
         coEvery { prepare(key, DocumentExportFormat.JSON) } returns Result.Success(document)
         coEvery { saver.save(document) } returns DocumentSaveResult.Cancelled
-        v.export(DocumentExportFormat.JSON, saver); advanceUntilIdle(); assertEquals("Export cancelled.", v.state.value.message)
+        v.export(DocumentExportFormat.JSON, saver); advanceUntilIdle(); assertEquals(SprayExportNotice.Cancelled, v.state.value.notice)
     }
     @Test fun providerFailureAllowsRetry() = runTest {
         coEvery { saver.save(document) } returns DocumentSaveResult.Failed("Provider unavailable")
         val v = vm(); advanceUntilIdle(); v.export(DocumentExportFormat.JSON, saver); advanceUntilIdle()
         assertEquals("Provider unavailable", v.state.value.error)
         coEvery { saver.save(document) } returns DocumentSaveResult.Saved
-        v.export(DocumentExportFormat.JSON, saver); advanceUntilIdle(); assertNotNull(v.state.value.message)
+        v.export(DocumentExportFormat.JSON, saver); advanceUntilIdle(); assertNotNull(v.state.value.notice)
     }
     @Test fun cancellationRunsSaverCleanupAndNeverReportsSaved() = runTest {
         var cleaned = false
         coEvery { saver.save(document) } coAnswers { try { awaitCancellation() } finally { cleaned = true } }
         val v = vm(); advanceUntilIdle(); v.export(DocumentExportFormat.JSON, saver); runCurrent(); v.cancelExport(); advanceUntilIdle()
         assertTrue(cleaned); assertFalse(v.state.value.busy)
-        assertTrue(assertNotNull(v.state.value.message).startsWith("Export interrupted"))
+        assertEquals(SprayExportNotice.Interrupted, v.state.value.notice)
     }
+    @Test fun missingSavedApplicationIsExplicitAndReloadClearsIt() = runTest {
+        val snapshot = SpraySnapshot(mockk<ActivityDomainModel>(), "UTC", null)
+        coEvery { get(key) } returns Result.Success(snapshot)
+        val v = vm(); advanceUntilIdle()
+        assertTrue(v.state.value.noSavedApplication)
+        assertNull(v.state.value.snapshot)
+        v.export(DocumentExportFormat.JSON, saver); advanceUntilIdle()
+        verify { saver wasNot Called }
+        coEvery { get(key) } returns Result.Error(ActivityError.NotFound)
+        v.load(); advanceUntilIdle()
+        assertFalse(v.state.value.noSavedApplication)
+        assertNotNull(v.state.value.error)
+    }
+
 }

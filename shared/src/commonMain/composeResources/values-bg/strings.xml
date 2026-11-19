@@ -268,4 +268,17 @@
   <string name="spray_rate_value">%1$s на %2$s</string>
   <string name="spray_basis_area">%1$s третирана площ</string>
   <string name="spray_basis_water">%1$s вода за разтвора</string>
+  <string name="export_file_format">Файлов формат</string>
+  <string name="export_json_exact">JSON — точен текст</string>
+  <string name="export_csv_view">CSV — изглед за електронна таблица</string>
+  <string name="spray_export_contents">Включва дата, местен час и зона на приложението, площ, вода, продукти, записана норма и база, номера и бележки. Старите полета за единичен продукт не се включват, но наличието им се отбелязва. Това не е резервно копие, препоръка по етикет или образец за нормативно отчитане.</string>
+  <string name="spray_export_plaintext">Файловете са нешифрован текст. Изберете локална папка за запис без интернет; системата може да предлага и облачни услуги. JSON запазва точния текст. В CSV текстът, наподобяващ формула, получава префикс за преглед в таблица; поведението при отваряне и повторно запазване зависи от програмата.</string>
+  <string name="spray_export_csv_help">CSV съдържа един ред за всеки продукт. Данните за приложението се повтарят на всеки ред: не сумирайте повторените стойности за площ или вода. При импорт използвайте UTF-8, разделител запетая и десетична точка.</string>
+  <string name="export_choose_save">Избери място и запази</string>
+  <string name="export_cancel">Откажи експортирането</string>
+  <string name="spray_export_summary">Едно запазено приложение; брой продукти: %1$d. Експортирането зарежда запазените данни; незапазените промени не се включват.</string>
+  <string name="spray_export_success">Запазено е едно приложение; брой продукти: %1$d.</string>
+  <string name="spray_export_missing">Няма запазено приложение за експортиране.</string>
+  <string name="export_cancelled">Експортирането е отказано.</string>
+  <string name="export_interrupted">Експортирането е прекъснато. Проверете избраното място, преди да опитате отново.</string>
 </resources>

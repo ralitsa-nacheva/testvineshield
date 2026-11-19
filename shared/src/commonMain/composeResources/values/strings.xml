@@ -268,4 +268,17 @@
   <string name="spray_rate_value">%1$s per %2$s</string>
   <string name="spray_basis_area">%1$s treated area</string>
   <string name="spray_basis_water">%1$s carrier water</string>
+  <string name="export_file_format">File format</string>
+  <string name="export_json_exact">JSON — exact text</string>
+  <string name="export_csv_view">CSV — spreadsheet view</string>
+  <string name="spray_export_contents">Includes application date/local time/zone, area/carrier water, products, recorded rate/basis, references and notes. Old single-product activity fields are excluded and their presence is flagged. This is not a backup, label recommendation or compliant reporting template.</string>
+  <string name="spray_export_plaintext">Files are plaintext. Choose a local folder for offline output; the system may also offer cloud providers. JSON preserves exact strings. CSV prefixes formula-like text for spreadsheet viewing; spreadsheet/re-save behavior varies.</string>
+  <string name="spray_export_csv_help">CSV has one row per product. Application fields repeat on each row: do not sum repeated area or water values. Use UTF-8/comma delimiter and decimal dots when importing.</string>
+  <string name="export_choose_save">Choose location and save</string>
+  <string name="export_cancel">Cancel export</string>
+  <string name="spray_export_summary">One saved application; product lines: %1$d. Export reloads saved data; unsaved edits are not included.</string>
+  <string name="spray_export_success">Saved one spray application; product lines: %1$d.</string>
+  <string name="spray_export_missing">There is no saved spray application to export.</string>
+  <string name="export_cancelled">Export cancelled.</string>
+  <string name="export_interrupted">Export interrupted. Check the destination before retrying.</string>
 </resources>
