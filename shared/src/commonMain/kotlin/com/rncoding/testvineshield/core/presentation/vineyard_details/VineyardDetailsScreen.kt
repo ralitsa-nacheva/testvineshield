@@ -1,7 +1,9 @@
 package com.rncoding.testvineshield.core.presentation.vineyard_details
 
 import com.rncoding.testvineshield.core.presentation.formatting.formatPlainDecimal
-import com.rncoding.testvineshield.core.presentation.formatting.formatBlockArea
+import com.rncoding.testvineshield.resources.*
+import org.jetbrains.compose.resources.stringResource
+import com.rncoding.testvineshield.core.domain.datamodels.enums.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,14 +52,14 @@ fun VineyardDetailsScreen(
                 title = {
                     Text(
                         state.details?.name
-                            ?: "Vineyard"
+                            ?: stringResource(Res.string.vineyard_title)
                     )
                 },
                 navigationIcon = {
                     TextButton(
                         onClick = userAction(onBack)
                     ) {
-                        Text("Back")
+                        Text(stringResource(Res.string.back_action))
                     }
                 },
                 actions = {
@@ -66,7 +68,7 @@ fun VineyardDetailsScreen(
                             onClick = userAction(onEdit),
                             enabled = !state.isDeleting
                         ) {
-                            Text("Edit")
+                            Text(stringResource(Res.string.edit_action))
                         }
                     }
                 }
@@ -123,22 +125,22 @@ fun VineyardDetailsScreen(
                     }
 
                     item {
-                        SectionTitle("Weather and monitoring")
-                        Text("Review cached history, forecast age and saved monitoring settings.")
-                        TextButton(onClick = userAction(onWeather)) { Text("Open weather and monitoring") }
-                        Text("Disease risk is not assessed here. No active alerts does not establish that the vineyard is safe.")
+                        SectionTitle(stringResource(Res.string.weather_monitoring))
+                        Text(stringResource(Res.string.weather_monitoring_intro))
+                        TextButton(onClick = userAction(onWeather)) { Text(stringResource(Res.string.open_weather_monitoring)) }
+                        Text(stringResource(Res.string.risk_not_assessed))
                     }
 
                     item {
-                        TextButton(onClick=userAction(onActivities)) { Text("Vineyard activities") }
-                        SectionTitle("Blocks")
-                        TextButton(onClick=userAction(onBlocks)) { Text("Manage blocks") }
+                        TextButton(onClick=userAction(onActivities)) { Text(stringResource(Res.string.vineyard_activities)) }
+                        SectionTitle(stringResource(Res.string.selector_blocks))
+                        TextButton(onClick=userAction(onBlocks)) { Text(stringResource(Res.string.manage_blocks)) }
                     }
 
                     if (details.blocks.isEmpty()) {
                         item {
                             EmptySectionText(
-                                "No blocks have been added."
+                                stringResource(Res.string.no_blocks_added)
                             )
                         }
                     } else {
@@ -151,13 +153,13 @@ fun VineyardDetailsScreen(
                     }
 
                     item {
-                        SectionTitle("Active diseases")
+                        SectionTitle(stringResource(Res.string.active_diseases_title))
                     }
 
                     if (details.activeDiseases.isEmpty()) {
                         item {
                             EmptySectionText(
-                                "No active disease occurrences."
+                                stringResource(Res.string.no_active_occurrences)
                             )
                         }
                     } else {
@@ -170,13 +172,13 @@ fun VineyardDetailsScreen(
                     }
 
                     item {
-                        SectionTitle("Active alerts")
+                        SectionTitle(stringResource(Res.string.active_alerts_title))
                     }
 
                     if (details.activeAlerts.isEmpty()) {
                         item {
                             EmptySectionText(
-                                "No active disease alerts."
+                                stringResource(Res.string.no_active_alerts)
                             )
                         }
                     } else {
@@ -194,7 +196,7 @@ fun VineyardDetailsScreen(
                             enabled = !state.isDeleting,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Delete vineyard")
+                            Text(stringResource(Res.string.delete_vineyard_action))
                         }
                     }
                 }
@@ -210,12 +212,11 @@ fun VineyardDetailsScreen(
                     }
                 },
                 title = {
-                    Text("Delete vineyard?")
+                    Text(stringResource(Res.string.delete_vineyard_title))
                 },
                 text = {
                     Text(
-                        "This will permanently delete the vineyard " +
-                                "and its related local data."
+                        stringResource(Res.string.delete_vineyard_message)
                     )
                 },
                 confirmButton = {
@@ -226,7 +227,7 @@ fun VineyardDetailsScreen(
                         if (state.isDeleting) {
                             CircularProgressIndicator()
                         } else {
-                            Text("Delete")
+                            Text(stringResource(Res.string.delete_record))
                         }
                     }
                 },
@@ -235,7 +236,7 @@ fun VineyardDetailsScreen(
                         onClick = userAction(onDeleteCancel),
                         enabled = !state.isDeleting
                     ) {
-                        Text("Cancel")
+                        Text(stringResource(Res.string.cancel_action))
                     }
                 }
             )
@@ -265,14 +266,20 @@ fun VineyardDetailsScreen(
                     .joinToString(", ")
             )
 
-            Text("Size: ${details.size} ${details.sizeUnit?.symbol ?: "(unit unknown)"}")
+            Text(stringResource(
+                Res.string.size_value, formatPlainDecimal(details.size),
+                details.sizeUnit?.symbol ?: stringResource(Res.string.unknown_unit)
+            ))
 
             Text(
-                "Elevation: " + (details.elevation?.let { "${formatPlainDecimal(it)} m" } ?: "Unknown")
+                stringResource(
+                    Res.string.elevation_value,
+                    details.elevation?.let { "${formatPlainDecimal(it)} m" } ?: stringResource(Res.string.unknown_value)
+                )
             )
 
             Text(
-                "Time zone: ${details.timeZone}"
+                stringResource(Res.string.zone_value, details.timeZone)
             )
         }
     }
@@ -296,35 +303,35 @@ private fun BlockSummaryCard(
             )
 
             Text(
-                "Variety: ${block.vineVariety}"
+                stringResource(Res.string.variety_value, block.vineVariety)
             )
 
             Text(
-                "Area: ${formatBlockArea(block.area, block.areaUnit)}"
+                stringResource(Res.string.area_value, block.area?.let {
+                    "${formatPlainDecimal(it)} ${block.areaUnit?.symbol ?: stringResource(Res.string.unknown_unit)}"
+                } ?: stringResource(Res.string.unknown_value))
             )
 
-            Text("Phenological stage: ${block.phenologicalStage?.name ?: "Unknown"}")
+            Text(stringResource(Res.string.stage_value, localizedStage(block.phenologicalStage)))
 
             block.latestActivityType?.let {
                 Text(
-                    "Latest activity: $it"
+                    stringResource(Res.string.latest_activity_value, it)
                 )
             }
 
             block.latestActivityStatus?.let {
                 Text(
-                    "Activity status: ${it.name}"
+                    stringResource(Res.string.activity_status_value, localizedActivityStatus(it))
                 )
             }
 
             Text(
-                "Active diseases: " +
-                        block.activeDiseaseCount
+                stringResource(Res.string.active_disease_count, block.activeDiseaseCount)
             )
 
             Text(
-                "Active alerts: " +
-                        block.activeAlertCount
+                stringResource(Res.string.active_alert_count, block.activeAlertCount)
             )
         }
     }
@@ -351,20 +358,20 @@ private fun DiseaseSummaryCard(
             Text(
                 text =
                     disease.blockName
-                        ?.let { "Block: $it" }
-                        ?: "Whole vineyard"
+                        ?.let { stringResource(Res.string.block_value, it) }
+                        ?: stringResource(Res.string.whole_vineyard)
             )
 
             Text(
-                "Severity: ${disease.severity}%"
+                stringResource(Res.string.severity_value, "${disease.severity}%")
             )
 
             Text(
-                "Observed: ${disease.observedAt}"
+                stringResource(Res.string.observed_value, disease.observedAt.toString())
             )
 
             Text(
-                "Status: ${disease.status.name}"
+                stringResource(Res.string.status_value, localizedOccurrenceStatus(disease.status))
             )
         }
     }
@@ -392,21 +399,20 @@ private fun AlertSummaryCard(
 
             Text(
                 alert.blockName
-                    ?.let { "Block: $it" }
-                    ?: "Whole vineyard"
+                    ?.let { stringResource(Res.string.block_value, it) }
+                    ?: stringResource(Res.string.whole_vineyard)
             )
 
             Text(
-                "Severity: ${alert.severity.name}"
+                stringResource(Res.string.severity_value, localizedAlertSeverity(alert.severity))
             )
 
             Text(
-                "Phenological stage: " +
-                        alert.phenologicalStage.name
+                stringResource(Res.string.stage_value, localizedStage(alert.phenologicalStage))
             )
 
             Text(
-                "Created: ${alert.createdAt}"
+                stringResource(Res.string.created_value, alert.createdAt.toString())
             )
         }
     }
