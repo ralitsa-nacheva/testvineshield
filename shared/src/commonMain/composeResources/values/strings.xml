@@ -461,4 +461,10 @@
   <string name="security_reload">Reload availability</string>
   <string name="security_timeout_summary">Lock after this many minutes without interaction: %1$d</string>
   <string name="security_timeout_minutes">Minutes: %1$d</string>
+  <string name="loading_generic">Loading…</string>
+  <string name="startup_preparing_records">Preparing your local records…</string>
+  <string name="startup_restoring_session">Restoring your session…</string>
+  <string name="startup_unable">Unable to start the application.</string>
+  <string name="error_generic_heading">Something went wrong</string>
+  <string name="startup_data_unavailable">Local application data could not be prepared. Please try again.</string>
 </resources>

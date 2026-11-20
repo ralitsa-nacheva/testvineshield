@@ -3,6 +3,8 @@ package com.rncoding.testvineshield.core.presentation.root
 import com.rncoding.testvineshield.core.presentation.navigation.VineyardLinkInbox
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import com.rncoding.testvineshield.resources.*
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -36,7 +38,7 @@ fun AppRoot(
 
     Box(modifier = modifier.fillMaxSize()) {
         when (startupState) {
-            AppStartupUiState.Loading -> LoadingScreen("Preparing your local records…")
+            AppStartupUiState.Loading -> LoadingScreen(stringResource(Res.string.startup_preparing_records))
             AppStartupUiState.Failed -> AuthStartupErrorScreen(
                 error = AppInitializationError,
                 onRetry = startupViewModel::retry
@@ -80,7 +82,7 @@ private fun SessionRoot(vineyardLinks: VineyardLinkInbox?) {
     when (val state = authState) {
 
         AuthState.Loading -> {
-            LoadingScreen("Restoring your session…")
+            LoadingScreen(stringResource(Res.string.startup_restoring_session))
         }
 
         is AuthState.Unauthenticated -> {

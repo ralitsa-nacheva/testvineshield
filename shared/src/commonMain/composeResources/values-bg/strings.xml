@@ -461,4 +461,10 @@
   <string name="security_reload">Провери отново наличността</string>
   <string name="security_timeout_summary">Заключване след толкова минути без взаимодействие: %1$d</string>
   <string name="security_timeout_minutes">Минути: %1$d</string>
+  <string name="loading_generic">Зареждане…</string>
+  <string name="startup_preparing_records">Подготовка на локалните записи…</string>
+  <string name="startup_restoring_session">Възстановяване на сесията…</string>
+  <string name="startup_unable">Приложението не може да се стартира.</string>
+  <string name="error_generic_heading">Възникна грешка</string>
+  <string name="startup_data_unavailable">Локалните данни на приложението не могат да бъдат подготвени. Моля, опитайте отново.</string>
 </resources>
