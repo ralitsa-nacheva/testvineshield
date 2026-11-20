@@ -85,20 +85,31 @@ private fun coverage(times: List<Long>) = HourCoverage(times.size, times.firstOr
     times.zipWithNext().count { (a, b) -> b - a != HOUR })
 
 /** Includes the UTC offset: repeated local hours at autumn DST remain distinguishable. */
-fun weatherTime(timestamp: Long?, zoneId: String): String {
-    if (timestamp == null) return "Unknown"
+fun weatherTime(
+    timestamp: Long?,
+    zoneId: String,
+    unknown: String = "Unknown",
+    zoneUnavailable: String = "vineyard time zone unavailable",
+    invalidTimestamp: String = "Invalid timestamp"
+): String {
+    if (timestamp == null) return unknown
     return try {
         val instant = Instant.fromEpochMilliseconds(timestamp)
         val zone = TimeZone.of(zoneId)
         "${instant.toLocalDateTime(zone)} ${zone.offsetAt(instant)} ($zoneId)"
     } catch (_: Exception) {
-        try { "${Instant.fromEpochMilliseconds(timestamp)} (UTC; vineyard time zone unavailable)" }
-        catch (_: Exception) { "Invalid timestamp" }
+        try { "${Instant.fromEpochMilliseconds(timestamp)} (UTC; $zoneUnavailable)" }
+        catch (_: Exception) { invalidTimestamp }
     }
 }
 
-fun weatherMetric(value: Double, unit: String, range: ClosedFloatingPointRange<Double>? = null): String =
-    if (!value.isFinite() || (range != null && value !in range)) "Unavailable" else "$value $unit"
+fun weatherMetric(
+    value: Double,
+    unit: String,
+    range: ClosedFloatingPointRange<Double>? = null,
+    unavailable: String = "Unavailable"
+): String =
+    if (!value.isFinite() || (range != null && value !in range)) unavailable else "$value $unit"
 
 fun savedRefreshMessage(code: String): String = when(code) {
     "timeout" -> "The previous request timed out. Retry when ready."

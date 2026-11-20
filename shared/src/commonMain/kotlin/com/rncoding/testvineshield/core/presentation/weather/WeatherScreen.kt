@@ -69,17 +69,17 @@ fun WeatherScreen(
                     if(snapshot.cacheStatus.isEmpty()) Text(stringResource(Res.string.weather_no_refresh))
                     snapshot.cacheStatus.forEach { status ->
                         val label=when(status.state) { "succeeded" -> stringResource(Res.string.weather_status_success); "failed" -> stringResource(Res.string.weather_status_failed); "started" -> stringResource(Res.string.weather_status_started); else -> stringResource(Res.string.weather_status_unknown) }
-                        Text("${status.kind}: $label")
-                        Text(stringResource(Res.string.weather_saved_attempt, weatherTime(status.attemptedAt,zone), weatherTime(status.succeededAt,zone)))
-                        status.errorCode?.let { Text(savedRefreshMessage(it)) }
+                        Text("${localizedRefreshKind(status.kind)}: $label")
+                        Text(stringResource(Res.string.weather_saved_attempt, localizedWeatherTime(status.attemptedAt,zone), localizedWeatherTime(status.succeededAt,zone)))
+                        status.errorCode?.let { Text(localizedSavedRefreshMessage(it)) }
                     }
                     Text(stringResource(Res.string.weather_unfinished_help))
                 }
                 state.refreshReport?.let { report -> item {
-                    Text("Refresh attempt completed: ${weatherTime(report.completedAt, zone)}")
-                    Text(report.historyError?.let { "History failed: ${it.userMessage}" } ?: "History request completed.")
-                    Text(report.forecastError?.let { "Forecast failed: ${it.userMessage}" } ?: "Forecast request completed.")
-                    Text("This refresh updates weather caches only; it does not run disease models or create alerts.")
+                    Text(stringResource(Res.string.weather_attempt_completed, localizedWeatherTime(report.completedAt, zone)))
+                    Text(report.historyError?.let { stringResource(Res.string.weather_history_failed, it.userMessage) } ?: stringResource(Res.string.weather_history_completed))
+                    Text(report.forecastError?.let { stringResource(Res.string.weather_forecast_failed, it.userMessage) } ?: stringResource(Res.string.weather_forecast_completed))
+                    Text(stringResource(Res.string.weather_refresh_scope))
                 } }
                 state.refreshError?.let { error -> item { Text(error, color = MaterialTheme.colorScheme.error) } }
                 item {
@@ -87,14 +87,14 @@ fun WeatherScreen(
                     Text(cacheLabel(display.historyAge))
                     CoverageText(display.historyCoverage, zone)
                     Text(stringResource(Res.string.weather_history_coverage_help))
-                    Text(stringResource(Res.string.weather_last_history, weatherTime(historyRefresh?.succeededAt,zone)))
+                    Text(stringResource(Res.string.weather_last_history, localizedWeatherTime(historyRefresh?.succeededAt,zone)))
                     if (display.excludedHistoryHours > 0) Text(stringResource(Res.string.weather_excluded_hours, display.excludedHistoryHours))
                 }
                 display.history.lastOrNull()?.let { hour -> item { WeatherHourCard(hour, zone, stringResource(Res.string.weather_latest_hour)) } }
                 item {
                     Text(stringResource(Res.string.weather_forecast_heading), style = MaterialTheme.typography.titleLarge)
                     Text(cacheLabel(display.forecastAge))
-                    Text(stringResource(Res.string.weather_refresh_start, weatherTime(display.forecastFetchedAt, zone)))
+                    Text(stringResource(Res.string.weather_refresh_start, localizedWeatherTime(display.forecastFetchedAt, zone)))
                     CoverageText(display.forecastCoverage, zone)
                     if (display.mixedForecastFetchTimes) Text(stringResource(Res.string.weather_mixed_fetch))
                     Text(stringResource(Res.string.weather_forecast_help))
@@ -218,19 +218,19 @@ private fun BotrytisDraftEditor(
 
 @Composable
 private fun CoverageText(coverage: HourCoverage, zone: String) {
-    Text("${coverage.count} cached hours · ${coverage.discontinuities} discontinuities between stored timestamps")
-    Text("From: ${weatherTime(coverage.first, zone)}")
-    Text("Through: ${weatherTime(coverage.last, zone)}")
+    Text(stringResource(Res.string.weather_coverage_counts, coverage.count, coverage.discontinuities))
+    Text(stringResource(Res.string.weather_coverage_from, localizedWeatherTime(coverage.first, zone)))
+    Text(stringResource(Res.string.weather_coverage_through, localizedWeatherTime(coverage.last, zone)))
 }
 @Composable
 private fun WeatherHourCard(hour: WeatherHistoryDomainModel, zone: String, label: String) {
     Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(label, style = MaterialTheme.typography.titleMedium)
-        Text(weatherTime(hour.timestamp, zone))
-        Text("Temperature: ${weatherMetric(hour.hourlyTemp2m, "°C")}")
-        Text("Relative humidity: ${weatherMetric(hour.relativeHumidity2m, "%", 0.0..100.0)}")
-        Text("Precipitation (preceding hour): ${weatherMetric(hour.precipitation, "mm", 0.0..Double.MAX_VALUE)}")
-        Text("Wind at 10 m: ${weatherMetric(hour.windSpeed10m, "km/h", 0.0..Double.MAX_VALUE)}")
+        Text(localizedWeatherTime(hour.timestamp, zone))
+        Text(stringResource(Res.string.weather_temperature, localizedWeatherMetric(hour.hourlyTemp2m, "°C")))
+        Text(stringResource(Res.string.weather_humidity, localizedWeatherMetric(hour.relativeHumidity2m, "%", 0.0..100.0)))
+        Text(stringResource(Res.string.weather_precipitation, localizedWeatherMetric(hour.precipitation, "mm", 0.0..Double.MAX_VALUE)))
+        Text(stringResource(Res.string.weather_wind, localizedWeatherMetric(hour.windSpeed10m, "km/h", 0.0..Double.MAX_VALUE)))
     } }
 }
 @Composable
