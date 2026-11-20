@@ -1,5 +1,7 @@
 package com.rncoding.testvineshield.core.presentation.weather
 
+import com.rncoding.testvineshield.resources.*
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -40,12 +42,12 @@ fun WeatherScreen(
     onRefresh: () -> Unit,
     onSaveDraft: (Long, LocalDate) -> Unit
 ) {
-    Scaffold(topBar = { RecordTopBar("Weather and monitoring", onBack) }) { padding ->
+    Scaffold(topBar = { RecordTopBar(stringResource(Res.string.weather_heading), onBack) }) { padding ->
         LazyColumn(Modifier.padding(padding).fillMaxSize().widthIn(max = 840.dp), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (state.loading || state.refreshing) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
             state.error?.let { error -> item {
                 Text(error, color = MaterialTheme.colorScheme.error)
-                TextButton(onClick = userAction(onRetry)) { Text("Retry loading") }
+                TextButton(onClick = userAction(onRetry)) { Text(stringResource(Res.string.weather_retry)) }
             } }
             state.snapshot?.let { snapshot ->
                 val zone = snapshot.vineyard.timeZone
@@ -55,23 +57,23 @@ fun WeatherScreen(
                 val historyRefresh=snapshot.cacheStatus.firstOrNull { it.kind=="history" }
                 item {
                     Text(snapshot.vineyard.name, style = MaterialTheme.typography.headlineSmall)
-                    Text("Source: Open-Meteo · modeled weather, not a vineyard sensor measurement.")
-                    Text("Vineyard time zone: $zone")
-                    Text("Only weather attributed to this saved location is shown. Older unattributed/previous-location cache rows are retained but excluded; refresh to obtain current-location data.")
-                    Text("Cached records are available offline. A refresh needs internet and sends the vineyard coordinates and time zone to Open-Meteo.")
-                    Button(onClick = userAction(onRefresh), enabled = !state.refreshing, modifier = Modifier.fillMaxWidth()) { Text(if (state.refreshing) "Refreshing…" else "Refresh history and forecast") }
-                    Text("A failed refresh alone does not establish whether the device is offline. Previously saved data remains visible.")
+                    Text(stringResource(Res.string.weather_source))
+                    Text(stringResource(Res.string.weather_zone, zone))
+                    Text(stringResource(Res.string.weather_location_cache))
+                    Text(stringResource(Res.string.weather_offline_help))
+                    Button(onClick = userAction(onRefresh), enabled = !state.refreshing, modifier = Modifier.fillMaxWidth()) { Text(if (state.refreshing) stringResource(Res.string.weather_refreshing) else stringResource(Res.string.weather_refresh)) }
+                    Text(stringResource(Res.string.weather_refresh_failure_help))
                 }
                 item {
-                    Text("Saved refresh status",style=MaterialTheme.typography.titleMedium)
-                    if(snapshot.cacheStatus.isEmpty()) Text("No completed refresh is recorded for this location yet.")
+                    Text(stringResource(Res.string.weather_saved_refresh),style=MaterialTheme.typography.titleMedium)
+                    if(snapshot.cacheStatus.isEmpty()) Text(stringResource(Res.string.weather_no_refresh))
                     snapshot.cacheStatus.forEach { status ->
-                        val label=when(status.state) { "succeeded" -> "completed"; "failed" -> "failed or interrupted"; "started" -> "started; completion not recorded"; else -> "status unavailable" }
+                        val label=when(status.state) { "succeeded" -> stringResource(Res.string.weather_status_success); "failed" -> stringResource(Res.string.weather_status_failed); "started" -> stringResource(Res.string.weather_status_started); else -> stringResource(Res.string.weather_status_unknown) }
                         Text("${status.kind}: $label")
-                        Text("Attempt: ${weatherTime(status.attemptedAt,zone)} · Last success: ${weatherTime(status.succeededAt,zone)}")
+                        Text(stringResource(Res.string.weather_saved_attempt, weatherTime(status.attemptedAt,zone), weatherTime(status.succeededAt,zone)))
                         status.errorCode?.let { Text(savedRefreshMessage(it)) }
                     }
-                    Text("A saved unfinished attempt is not proof that a request is still running. Coverage is cached evidence, not a disease safety assessment.")
+                    Text(stringResource(Res.string.weather_unfinished_help))
                 }
                 state.refreshReport?.let { report -> item {
                     Text("Refresh attempt completed: ${weatherTime(report.completedAt, zone)}")
@@ -81,23 +83,23 @@ fun WeatherScreen(
                 } }
                 state.refreshError?.let { error -> item { Text(error, color = MaterialTheme.colorScheme.error) } }
                 item {
-                    Text("Recent modeled history", style = MaterialTheme.typography.titleLarge)
+                    Text(stringResource(Res.string.weather_history_heading), style = MaterialTheme.typography.titleLarge)
                     Text(cacheLabel(display.historyAge))
                     CoverageText(display.historyCoverage, zone)
-                    Text("Coverage is the stored part of the last seven elapsed days, not proof of a complete disease-model input window.")
-                    Text("Last completed history refresh: ${weatherTime(historyRefresh?.succeededAt,zone)}")
-                    if (display.excludedHistoryHours > 0) Text("${display.excludedHistoryHours} incomplete/future history hours excluded; check the device clock.")
+                    Text(stringResource(Res.string.weather_history_coverage_help))
+                    Text(stringResource(Res.string.weather_last_history, weatherTime(historyRefresh?.succeededAt,zone)))
+                    if (display.excludedHistoryHours > 0) Text(stringResource(Res.string.weather_excluded_hours, display.excludedHistoryHours))
                 }
-                display.history.lastOrNull()?.let { hour -> item { WeatherHourCard(hour, zone, "Latest cached time step (at least one hour old)") } }
+                display.history.lastOrNull()?.let { hour -> item { WeatherHourCard(hour, zone, stringResource(Res.string.weather_latest_hour)) } }
                 item {
-                    Text("Forecast", style = MaterialTheme.typography.titleLarge)
+                    Text(stringResource(Res.string.weather_forecast_heading), style = MaterialTheme.typography.titleLarge)
                     Text(cacheLabel(display.forecastAge))
-                    Text("Recorded refresh start: ${weatherTime(display.forecastFetchedAt, zone)}")
+                    Text(stringResource(Res.string.weather_refresh_start, weatherTime(display.forecastFetchedAt, zone)))
                     CoverageText(display.forecastCoverage, zone)
-                    if (display.mixedForecastFetchTimes) Text("Stored forecast contains inconsistent fetch times. Refresh before relying on it.")
-                    Text("Showing up to the next 24 cached hourly values. Forecasts are predictions; refresh does not guarantee local conditions.")
+                    if (display.mixedForecastFetchTimes) Text(stringResource(Res.string.weather_mixed_fetch))
+                    Text(stringResource(Res.string.weather_forecast_help))
                 }
-                items(display.forecast.take(24)) { cached -> WeatherHourCard(cached.weather, zone, "Forecast hour") }
+                items(display.forecast.take(24)) { cached -> WeatherHourCard(cached.weather, zone, stringResource(Res.string.weather_forecast_hour)) }
                 item {
                     Text("Botrytis weather input · previous local day", style = MaterialTheme.typography.titleMedium)
                     when {
@@ -231,11 +233,12 @@ private fun WeatherHourCard(hour: WeatherHistoryDomainModel, zone: String, label
         Text("Wind at 10 m: ${weatherMetric(hour.windSpeed10m, "km/h", 0.0..Double.MAX_VALUE)}")
     } }
 }
+@Composable
 private fun cacheLabel(age: CacheAge) = when (age) {
-    CacheAge.EMPTY -> "No cached data available."
-    CacheAge.RECENT -> "Cache age is within the display threshold; this is not a quality or disease-risk guarantee."
-    CacheAge.STALE -> "Cache is stale or its forecast horizon has ended. Refresh when connected."
-    CacheAge.INVALID_CLOCK -> "Cache timestamps are inconsistent with the device clock or fetch metadata."
+    CacheAge.EMPTY -> stringResource(Res.string.weather_cache_empty)
+    CacheAge.RECENT -> stringResource(Res.string.weather_cache_recent)
+    CacheAge.STALE -> stringResource(Res.string.weather_cache_stale)
+    CacheAge.INVALID_CLOCK -> stringResource(Res.string.weather_cache_clock)
 }
 private fun modelLabel(type: DiseaseRiskModelType) = when (type) {
     DiseaseRiskModelType.POWDERY_MILDEW_ASCOSPORE -> "Powdery mildew · ascospore model"
