@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.presentation.user_auth
 
+import com.rncoding.testvineshield.core.presentation.error.localizedAppErrorMessage
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -43,7 +44,7 @@ fun LockScreen(viewModel: AuthViewModel, reason: AuthState.Locked.LockReason) {
         if (options.deviceCredential) Button(onClick = { viewModel.unlock(UnlockRequest.Platform(LocalUnlockMethod.DeviceCredential)) },
             enabled = !state.isSubmitting, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.auth_unlock_device)) }
         if (state.isSubmitting) LinearProgressIndicator(Modifier.fillMaxWidth())
-        state.errorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+        state.operationError?.let { Text(localizedAppErrorMessage(it), color = MaterialTheme.colorScheme.error) }
         TextButton(onClick = viewModel::logout, enabled = !state.isSubmitting) { Text(stringResource(Res.string.auth_logout_login)) }
     }
 }

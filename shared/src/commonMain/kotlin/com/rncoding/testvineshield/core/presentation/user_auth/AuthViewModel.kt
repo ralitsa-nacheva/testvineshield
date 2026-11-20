@@ -167,7 +167,7 @@ class AuthViewModel(
             _uiState.value.copy(
                 email = value,
                 emailError = null,
-                errorMessage = null
+                operationError = null
             )
     }
 
@@ -177,7 +177,7 @@ class AuthViewModel(
             _uiState.value.copy(
                 password = value,
                 passwordError = null,
-                errorMessage = null
+                operationError = null
             )
     }
 
@@ -213,7 +213,7 @@ class AuthViewModel(
             _uiState.value =
                 current.copy(
                     isSubmitting = true,
-                    errorMessage = null,
+                    operationError = null,
                     emailError = null,
                     passwordError = null
                 )
@@ -231,7 +231,7 @@ class AuthViewModel(
                     _uiState.value =
                         _uiState.value.copy(
                             isSubmitting = false,
-                            errorMessage = null,
+                            operationError = null,
                             password = ""
                         )
                 }
@@ -260,7 +260,7 @@ class AuthViewModel(
             _uiState.value =
                 current.copy(
                     isSubmitting = true,
-                    errorMessage = null,
+                    operationError = null,
                     emailError = null,
                     passwordError = null
                 )
@@ -284,7 +284,7 @@ class AuthViewModel(
                     _uiState.value =
                         _uiState.value.copy(
                             isSubmitting = false,
-                            errorMessage = null,
+                            operationError = null,
                             password = ""
                         )
                     _events.send(
@@ -305,7 +305,7 @@ class AuthViewModel(
 
     fun unlock(request: UnlockRequest) {
         if (_uiState.value.isSubmitting || authState.value !is AuthState.Locked) return
-        _uiState.value = _uiState.value.copy(isSubmitting = true, password = "", errorMessage = null)
+        _uiState.value = _uiState.value.copy(isSubmitting = true, password = "", operationError = null)
         viewModelScope.launch {
             try {
                 // Small per-attempt delay; no automatic destructive lockout of local vineyard data.
@@ -339,7 +339,7 @@ class AuthViewModel(
             _uiState.value =
                 current.copy(
                     isSubmitting = true,
-                    errorMessage = null
+                    operationError = null
                 )
 
             when (
@@ -371,7 +371,7 @@ class AuthViewModel(
         _uiState.value =
             _uiState.value.copy(
                 isSubmitting = false,
-                errorMessage = error.userMessage
+                operationError = error
             )
     }
 

@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.presentation.user_auth
 
+import com.rncoding.testvineshield.core.domain.error.AppError
 
 data class AuthUiState(
     val email: String = "",
@@ -7,5 +8,5 @@ data class AuthUiState(
     val isSubmitting: Boolean = false,
     val emailError: String? = null,
     val passwordError: String? = null,
-    val errorMessage: String? = null
+    val operationError: AppError? = null
 )

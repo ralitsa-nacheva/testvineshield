@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.presentation.user_auth
 
+import com.rncoding.testvineshield.core.presentation.error.localizedAppErrorMessage
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -86,9 +87,9 @@ fun LoginScreen(
             )
         }
 
-        uiState.errorMessage?.let { message ->
+        uiState.operationError?.let { message ->
             Text(
-                text = message
+                text = localizedAppErrorMessage(message)
             )
         }
 
