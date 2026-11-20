@@ -449,4 +449,16 @@
   <string name="language_title">App language</string>
   <string name="language_follow_system">Follow system</string>
   <string name="language_partial_help">Some screens and error messages are still being translated.</string>
+  <string name="security_lock_help">Inactivity lock is optional and off by default. Your account password is always available when locked.</string>
+  <string name="security_lock_toggle">Lock after inactivity</string>
+  <string name="security_password_available">Account password — always available</string>
+  <string name="security_biometric">Biometric unlock</string>
+  <string name="security_biometric_unavailable">Biometrics are unavailable or not enrolled. Password unlock still works.</string>
+  <string name="security_device_unlock">Device screen-lock unlock</string>
+  <string name="security_device_help">Uses your device PIN, pattern, password or passcode. On iOS, the system may also offer biometrics. No separate app PIN is stored.</string>
+  <string name="security_device_unavailable">Configure a screen lock in device settings to enable this option.</string>
+  <string name="security_disable_help">Turning inactivity lock off also turns both optional unlock methods off. Turning it on again starts with password unlock.</string>
+  <string name="security_reload">Reload availability</string>
+  <string name="security_timeout_summary">Lock after this many minutes without interaction: %1$d</string>
+  <string name="security_timeout_minutes">Minutes: %1$d</string>
 </resources>

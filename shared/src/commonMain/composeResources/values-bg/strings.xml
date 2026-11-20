@@ -449,4 +449,16 @@
   <string name="language_title">Език на приложението</string>
   <string name="language_follow_system">Следвай системния език</string>
   <string name="language_partial_help">Някои екрани и съобщения за грешки все още се превеждат.</string>
+  <string name="security_lock_help">Заключването след неактивност е незадължително и е изключено по подразбиране. Паролата за профила винаги е налична при заключване.</string>
+  <string name="security_lock_toggle">Заключване след неактивност</string>
+  <string name="security_password_available">Парола за профила — винаги налична</string>
+  <string name="security_biometric">Биометрично отключване</string>
+  <string name="security_biometric_unavailable">Биометричните данни не са налични или не са регистрирани. Отключването с парола остава достъпно.</string>
+  <string name="security_device_unlock">Отключване чрез заключването на устройството</string>
+  <string name="security_device_help">Използва ПИН, шаблон, парола или код на устройството. В iOS системата може да предложи и биометрични данни. Не се съхранява отделен ПИН за приложението.</string>
+  <string name="security_device_unavailable">Настройте заключване на екрана в настройките на устройството, за да включите тази опция.</string>
+  <string name="security_disable_help">Изключването на заключването след неактивност изключва и двата допълнителни метода за отключване. При повторно включване се започва с отключване с парола.</string>
+  <string name="security_reload">Провери отново наличността</string>
+  <string name="security_timeout_summary">Заключване след толкова минути без взаимодействие: %1$d</string>
+  <string name="security_timeout_minutes">Минути: %1$d</string>
 </resources>
