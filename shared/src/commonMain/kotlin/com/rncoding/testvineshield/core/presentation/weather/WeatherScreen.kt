@@ -47,7 +47,7 @@ fun WeatherScreen(
         LazyColumn(Modifier.padding(padding).fillMaxSize().widthIn(max = 840.dp), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (state.loading || state.refreshing) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
             state.error?.let { error -> item {
-                Text(error, color = MaterialTheme.colorScheme.error)
+                Text(localizedWeatherError(error), color = MaterialTheme.colorScheme.error)
                 TextButton(onClick = userAction(onRetry)) { Text(stringResource(Res.string.weather_retry)) }
             } }
             state.snapshot?.let { snapshot ->
@@ -78,11 +78,11 @@ fun WeatherScreen(
                 }
                 state.refreshReport?.let { report -> item {
                     Text(stringResource(Res.string.weather_attempt_completed, localizedWeatherTime(report.completedAt, zone)))
-                    Text(report.historyError?.let { stringResource(Res.string.weather_history_failed, it.userMessage) } ?: stringResource(Res.string.weather_history_completed))
-                    Text(report.forecastError?.let { stringResource(Res.string.weather_forecast_failed, it.userMessage) } ?: stringResource(Res.string.weather_forecast_completed))
+                    Text(report.historyError?.let { stringResource(Res.string.weather_history_failed, localizedWeatherError(it)) } ?: stringResource(Res.string.weather_history_completed))
+                    Text(report.forecastError?.let { stringResource(Res.string.weather_forecast_failed, localizedWeatherError(it)) } ?: stringResource(Res.string.weather_forecast_completed))
                     Text(stringResource(Res.string.weather_refresh_scope))
                 } }
-                state.refreshError?.let { error -> item { Text(error, color = MaterialTheme.colorScheme.error) } }
+                state.refreshError?.let { error -> item { Text(localizedWeatherError(error), color = MaterialTheme.colorScheme.error) } }
                 item {
                     Text(stringResource(Res.string.weather_history_heading), style = MaterialTheme.typography.titleLarge)
                     Text(cacheLabel(display.historyAge))
@@ -139,13 +139,13 @@ fun WeatherScreen(
                     Text(stringResource(Res.string.monitor_enabled_help))
                     Text(stringResource(Res.string.monitor_risk_help))
                     if (snapshot.monitoringError != null) {
-                        Text(stringResource(Res.string.monitor_settings_failed, snapshot.monitoringError.userMessage), color = MaterialTheme.colorScheme.error)
+                        Text(stringResource(Res.string.monitor_settings_failed, localizedWeatherError(snapshot.monitoringError)), color = MaterialTheme.colorScheme.error)
                         TextButton(onClick = userAction(onRetry)) { Text(stringResource(Res.string.monitor_retry_settings)) }
                     } else if (snapshot.configurations.isEmpty()) Text(stringResource(Res.string.monitor_no_settings))
                 }
                 if (snapshot.blocks.isNotEmpty() && snapshot.monitoringError == null) {
                     item(key = "botrytis-monitoring-draft") {
-                        BotrytisDraftEditor(snapshot, state.savingMonitoringDraft, state.monitoringDraftMessage, onSaveDraft)
+                        BotrytisDraftEditor(snapshot, state.savingMonitoringDraft, state.monitoringDraftNotice, onSaveDraft)
                     }
                 }
                 items(snapshot.configurations) { config ->
@@ -172,7 +172,7 @@ fun WeatherScreen(
 private fun BotrytisDraftEditor(
     snapshot: VineyardWeatherSnapshot,
     saving: Boolean,
-    message: String?,
+    notice: WeatherDraftNotice?,
     onSave: (Long, LocalDate) -> Unit
 ) {
     var selectedId by rememberSaveable(snapshot.vineyard.vineyardId) { mutableStateOf<Long?>(null) }
@@ -213,7 +213,7 @@ private fun BotrytisDraftEditor(
             onClick = userAction { if (selected != null && date != null) onSave(selected.blockId, date) },
             enabled = !saving && selected != null && date != null
         ) { Text(if (saving) stringResource(Res.string.monitor_saving) else stringResource(Res.string.monitor_save_draft)) }
-        if (message != null) Text(message)
+        if (notice != null) Text(localizedWeatherDraftNotice(notice))
     }
 }
 

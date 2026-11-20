@@ -2,13 +2,13 @@ package com.rncoding.testvineshield.core.presentation.weather
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.rncoding.testvineshield.core.domain.error.AppError
 import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.error.UnexpectedError
 import com.rncoding.testvineshield.core.domain.time.AppClock
 import com.rncoding.testvineshield.core.domain.usecases.weather.*
 import kotlinx.coroutines.*
 import kotlinx.datetime.LocalDate
-import com.rncoding.testvineshield.core.domain.disease_risk.MonitoringDraftSaveOutcome
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.flow.*
 
@@ -16,12 +16,12 @@ data class WeatherScreenState(
     val snapshot: VineyardWeatherSnapshot? = null,
     val loading: Boolean = true,
     val now: Long = 0,
-    val error: String? = null,
+    val error: AppError? = null,
     val refreshing: Boolean = false,
     val refreshReport: WeatherRefreshReport? = null,
-    val refreshError: String? = null,
+    val refreshError: AppError? = null,
     val savingMonitoringDraft: Boolean = false,
-    val monitoringDraftMessage: String? = null
+    val monitoringDraftNotice: WeatherDraftNotice? = null
 )
 
 class WeatherViewModel(
@@ -53,7 +53,7 @@ class WeatherViewModel(
                     is Result.Error -> {
                         refreshJob?.cancel()
                         draftJob?.cancel()
-                        _state.value = WeatherScreenState(now = now, loading = false, error = result.error.userMessage)
+                        _state.value = WeatherScreenState(now = now, loading = false, error = result.error)
                     }
                 }
             }
@@ -74,21 +74,16 @@ class WeatherViewModel(
         ) return
 
         val token = generation
-        _state.update { it.copy(savingMonitoringDraft = true, monitoringDraftMessage = null) }
+        _state.update { it.copy(savingMonitoringDraft = true, monitoringDraftNotice = null) }
         draftJob = viewModelScope.launch {
             try {
-                val message = when (val result = saveDraft(vineyardId, blockId, startDate)) {
-                    is Result.Error -> result.error.userMessage
-                    is Result.Success -> when (result.data) {
-                        MonitoringDraftSaveOutcome.SAVED -> "Botrytis draft saved. Monitoring is off."
-                        MonitoringDraftSaveOutcome.BLOCK_UNAVAILABLE -> "That block is no longer available."
-                        MonitoringDraftSaveOutcome.DISEASE_UNAVAILABLE -> "The Botrytis catalogue entry is unavailable."
-                        MonitoringDraftSaveOutcome.ALREADY_ENABLED -> "This block already has an enabled Botrytis configuration."
-                    }
+                val notice = when (val result = saveDraft(vineyardId, blockId, startDate)) {
+                    is Result.Error -> WeatherDraftNotice.Failure(result.error)
+                    is Result.Success -> WeatherDraftNotice.Outcome(result.data)
                 }
                 currentCoroutineContext().ensureActive()
                 if (token == generation && _state.value.snapshot != null) {
-                    _state.update { it.copy(monitoringDraftMessage = message) }
+                    _state.update { it.copy(monitoringDraftNotice = notice) }
                 }
             } finally {
                 if (token == generation) _state.update { it.copy(savingMonitoringDraft = false) }
@@ -106,11 +101,11 @@ class WeatherViewModel(
                 currentCoroutineContext().ensureActive()
                 if (token == generation && _state.value.snapshot != null) when (result) {
                     is Result.Success -> _state.update { it.copy(refreshReport = result.data, now = clock.nowMillis()) }
-                    is Result.Error -> _state.update { it.copy(refreshError = result.error.userMessage) }
+                    is Result.Error -> _state.update { it.copy(refreshError = result.error) }
                 }
             } catch (e: CancellationException) { throw e }
             catch (_: Exception) {
-                if (token == generation && _state.value.snapshot != null) _state.update { it.copy(refreshError = UnexpectedError().userMessage) }
+                if (token == generation && _state.value.snapshot != null) _state.update { it.copy(refreshError = UnexpectedError()) }
             } finally {
                 if (token == generation) _state.update { it.copy(refreshing = false) }
             }

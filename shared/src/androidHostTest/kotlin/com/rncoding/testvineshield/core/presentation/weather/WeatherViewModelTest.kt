@@ -1,5 +1,8 @@
 package com.rncoding.testvineshield.core.presentation.weather
 
+import com.rncoding.testvineshield.core.domain.datamodels.BlockDomainModel
+import com.rncoding.testvineshield.core.domain.disease_risk.MonitoringDraftSaveOutcome
+import kotlinx.datetime.LocalDate
 import androidx.lifecycle.ViewModelStore
 import com.rncoding.testvineshield.core.domain.error.*
 import com.rncoding.testvineshield.core.domain.error.Result
@@ -61,7 +64,7 @@ class WeatherViewModelTest {
         val v = vm(); v.start(); runCurrent(); v.refresh(); runCurrent()
         data.value = Result.Error(AuthError.NoActiveSession); runCurrent()
         assertTrue(cleaned); assertNull(v.state.value.snapshot); assertFalse(v.state.value.refreshing)
-        assertEquals(AuthError.NoActiveSession.userMessage, v.state.value.error); v.stop()
+        assertEquals(AuthError.NoActiveSession, v.state.value.error); v.stop()
     }
     @Test fun lifecycleStopCancelsWorkAndRestartReloadsWithoutOldReport() = runTest {
         var cleaned = false
@@ -77,9 +80,52 @@ class WeatherViewModelTest {
         every { observe(10) } returns flowOf(Result.Success(snapshot))
         v.retry(); runCurrent(); assertNull(v.state.value.error)
         coEvery { refresh(10) } returns Result.Error(NetworkError.Timeout)
-        v.refresh(); runCurrent(); assertNotNull(v.state.value.refreshError); assertEquals(snapshot,v.state.value.snapshot)
+        v.refresh(); runCurrent(); assertEquals(NetworkError.Timeout, v.state.value.refreshError); assertEquals(snapshot,v.state.value.snapshot)
         coEvery { refresh(10) } returns Result.Success(WeatherRefreshReport(null,null,1_000_000L))
         v.refresh(); runCurrent(); assertNull(v.state.value.refreshError); assertNotNull(v.state.value.refreshReport)
         v.stop()
     }
+    @Test fun draftOutcomesAndFailuresRemainTypedAndResetOnStop() = runTest {
+        val block = mockk<BlockDomainModel>()
+        every { block.blockId } returns 20L
+        every { snapshot.blocks } returns listOf(block)
+        val date = LocalDate(2026, 11, 1)
+        val v = vm(); v.start(); runCurrent()
+        for (outcome in MonitoringDraftSaveOutcome.entries) {
+            coEvery { saveDraft(10, 20, date) } returns Result.Success(outcome)
+            v.saveMonitoringDraft(20, date)
+            assertTrue(v.state.value.savingMonitoringDraft)
+            assertNull(v.state.value.monitoringDraftNotice)
+            runCurrent()
+            assertEquals(WeatherDraftNotice.Outcome(outcome), v.state.value.monitoringDraftNotice)
+            assertFalse(v.state.value.savingMonitoringDraft)
+        }
+        val failure = UnexpectedError(IllegalStateException("private diagnostic"))
+        coEvery { saveDraft(10, 20, date) } returns Result.Error(failure)
+        v.saveMonitoringDraft(20, date); runCurrent()
+        val notice = assertIs<WeatherDraftNotice.Failure>(v.state.value.monitoringDraftNotice)
+        assertSame(failure, notice.error)
+        assertEquals(snapshot, v.state.value.snapshot)
+        assertFalse(v.state.value.savingMonitoringDraft)
+        v.stop()
+        assertNull(v.state.value.monitoringDraftNotice)
+    }
+
+    @Test fun stoppingDraftSaveCancelsWithoutPublishingAnOutcome() = runTest {
+        val block = mockk<BlockDomainModel>()
+        every { block.blockId } returns 20L
+        every { snapshot.blocks } returns listOf(block)
+        var cancelled = false
+        coEvery { saveDraft(any(), any(), any()) } coAnswers {
+            try { awaitCancellation() } finally { cancelled = true }
+        }
+        val v = vm(); v.start(); runCurrent()
+        v.saveMonitoringDraft(20, LocalDate(2026, 11, 1)); runCurrent()
+        assertTrue(v.state.value.savingMonitoringDraft)
+        v.stop(); runCurrent()
+        assertTrue(cancelled)
+        assertNull(v.state.value.monitoringDraftNotice)
+        assertFalse(v.state.value.savingMonitoringDraft)
+    }
+
 }
