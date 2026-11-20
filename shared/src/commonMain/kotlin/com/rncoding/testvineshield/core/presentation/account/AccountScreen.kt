@@ -169,8 +169,8 @@ fun AccountScreen(
                 )
             }
 
-            uiState.errorMessage?.let { message ->
-                Text(message)
+            uiState.operationIssue?.let { issue ->
+                Text(localizedAccountIssue(issue))
 
                 TextButton(
                     onClick = userAction(onClearError)

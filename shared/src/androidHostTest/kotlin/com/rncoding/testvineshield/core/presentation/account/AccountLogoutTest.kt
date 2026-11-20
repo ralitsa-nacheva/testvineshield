@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModelStore
 import com.rncoding.testvineshield.core.domain.auth.*
 import com.rncoding.testvineshield.core.domain.datamodels.UserDomainModel
 import com.rncoding.testvineshield.core.domain.error.AuthError
+import com.rncoding.testvineshield.core.domain.error.DatabaseError
 import com.rncoding.testvineshield.core.domain.error.Result
 import io.mockk.*
 import kotlinx.coroutines.*
@@ -54,7 +55,7 @@ class AccountLogoutTest {
         coEvery { coordinator.logout() } returns Result.Error(AuthError.NoActiveSession)
         val v = vm(); runCurrent(); v.logout(); advanceUntilIdle()
         assertFalse(v.uiState.value.isLoggingOut)
-        assertEquals(AuthError.NoActiveSession.userMessage, v.uiState.value.errorMessage)
+        assertEquals(AccountIssue.Failure(AuthError.NoActiveSession), v.uiState.value.operationIssue)
         coEvery { coordinator.logout() } returns Result.Success(Unit)
         v.logout(); advanceUntilIdle()
         assertEquals(AccountUiState(), v.uiState.value)
@@ -65,7 +66,18 @@ class AccountLogoutTest {
         coEvery { coordinator.logout() } throws IllegalStateException("Storage unavailable")
         val v = vm(); runCurrent(); v.logout(); advanceUntilIdle()
         assertFalse(v.uiState.value.isLoggingOut)
-        assertNotNull(v.uiState.value.errorMessage)
+        assertNotNull(v.uiState.value.operationIssue)
+    }
+
+    @Test fun passwordMismatchIsLocalAndEditingClearsItWithoutDomainCall() = runTest {
+        val v = vm(); runCurrent()
+        v.onNewPasswordChanged("Password1"); v.onConfirmNewPasswordChanged("Different1")
+        v.updateAccount(); runCurrent()
+        assertEquals(AccountIssue.PasswordMismatch, v.uiState.value.operationIssue)
+        assertFalse(v.uiState.value.isUpdating)
+        coVerify(exactly = 0) { coordinator.updateAccount(any(), any(), any()) }
+        v.onConfirmNewPasswordChanged("Password1")
+        assertNull(v.uiState.value.operationIssue)
     }
 
     @Test fun viewModelCancellationPropagatesAndReleasesGuard() = runTest {
@@ -77,6 +89,21 @@ class AccountLogoutTest {
         store.clear(); advanceUntilIdle()
         assertTrue(cleaned)
         assertFalse(v.uiState.value.isLoggingOut)
-        assertNull(v.uiState.value.errorMessage)
+        assertNull(v.uiState.value.operationIssue)
     }
+    @Test fun updateAndDeleteKeepTypedFailuresAndReleaseTheirGuards() = runTest {
+        val failure = DatabaseError.Unknown(DatabaseError.Operation.UPDATE, IllegalStateException("private diagnostic"))
+        coEvery { coordinator.updateAccount(any(), any(), any()) } returns Result.Error(failure)
+        coEvery { coordinator.deleteAccount(any()) } returns Result.Error(AuthError.InvalidCredentials)
+        val v = vm(); runCurrent()
+        v.onCurrentPasswordChanged("incorrect")
+        v.updateAccount(); advanceUntilIdle()
+        assertSame(failure, assertIs<AccountIssue.Failure>(v.uiState.value.operationIssue).error)
+        assertFalse(v.uiState.value.isUpdating)
+        v.clearError(); assertNull(v.uiState.value.operationIssue)
+        v.deleteAccount(); advanceUntilIdle()
+        assertEquals(AccountIssue.Failure(AuthError.InvalidCredentials), v.uiState.value.operationIssue)
+        assertFalse(v.uiState.value.isDeleting)
+    }
+
 }

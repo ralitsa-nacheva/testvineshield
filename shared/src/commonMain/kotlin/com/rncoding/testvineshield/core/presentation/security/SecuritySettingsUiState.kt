@@ -9,5 +9,5 @@ data class SecuritySettingsUiState(
     val loaded: Boolean = false,
     val isLoading: Boolean = false,
     val isUpdating: Boolean = false,
-    val errorMessage: String? = null
+    val operationIssue: SecuritySettingsIssue? = null
 ) { val canEdit: Boolean get() = loaded && !isLoading && !isUpdating }

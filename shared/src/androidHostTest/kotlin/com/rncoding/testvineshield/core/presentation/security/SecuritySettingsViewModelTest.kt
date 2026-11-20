@@ -51,7 +51,7 @@ class SecuritySettingsViewModelTest {
         saved = SecuritySettings(inactivityLockEnabled = true)
         coEvery { local.isAvailable(any()) } returns Result.Success(false)
         val v = vm(); v.load(); advanceUntilIdle(); v.setBiometricEnabled(true); advanceUntilIdle()
-        assertNotNull(v.state.value.errorMessage); coVerify(exactly = 0) { repo.saveSettings(any(), any()) }
+        assertEquals(SecuritySettingsIssue.MethodUnavailable, v.state.value.operationIssue); coVerify(exactly = 0) { repo.saveSettings(any(), any()) }
     }
     @Test fun enablingWaitsForSuccessfulPromptAndSave() = runTest {
         saved = SecuritySettings(inactivityLockEnabled = true)
@@ -71,7 +71,7 @@ class SecuritySettingsViewModelTest {
     @Test fun failedSaveKeepsPreviousPolicy() = runTest {
         coEvery { repo.saveSettings(1, any()) } returns Result.Error(UnexpectedError())
         val v = vm(); v.load(); advanceUntilIdle(); v.setLockEnabled(true); advanceUntilIdle()
-        assertFalse(v.state.value.settings.inactivityLockEnabled); assertNotNull(v.state.value.errorMessage)
+        assertFalse(v.state.value.settings.inactivityLockEnabled); assertNotNull(v.state.value.operationIssue)
     }
     @Test fun supportedTimeoutPersistsInvalidIsIgnored() = runTest {
         saved = SecuritySettings(inactivityLockEnabled = true)
@@ -96,4 +96,25 @@ class SecuritySettingsViewModelTest {
         val v = vm(); v.load(); advanceUntilIdle(); v.setBiometricEnabled(false); advanceUntilIdle()
         assertFalse(saved.biometricEnabled); coVerify(exactly = 0) { local.authenticate(any(), any()) }
     }
+    @Test fun typedLoadFailureIsPreservedClearedAndRetryable() = runTest {
+        val failure = StorageError.ReadError(IllegalStateException("private diagnostic"))
+        coEvery { repo.getSettings(1) } returns Result.Error(failure)
+        val v = vm(); v.load(); advanceUntilIdle()
+        assertSame(failure, assertIs<SecuritySettingsIssue.Failure>(v.state.value.operationIssue).error)
+        assertFalse(v.state.value.canEdit)
+        v.clearError(); assertNull(v.state.value.operationIssue)
+        coEvery { repo.getSettings(1) } returns Result.Success(SecuritySettings())
+        v.load(); advanceUntilIdle()
+        assertTrue(v.state.value.canEdit); assertNull(v.state.value.operationIssue)
+    }
+
+    @Test fun promptFailureRetainsItsTypeWithoutSaving() = runTest {
+        saved = SecuritySettings(inactivityLockEnabled = true)
+        coEvery { local.authenticate(any(), any()) } returns Result.Error(SecurityError.AuthenticationCancelled)
+        val v = vm(); v.load(); advanceUntilIdle(); v.setBiometricEnabled(true); advanceUntilIdle()
+        assertEquals(SecuritySettingsIssue.Failure(SecurityError.AuthenticationCancelled), v.state.value.operationIssue)
+        assertFalse(v.state.value.isUpdating); assertFalse(v.state.value.settings.biometricEnabled)
+        coVerify(exactly = 0) { repo.saveSettings(any(), any()) }
+    }
+
 }

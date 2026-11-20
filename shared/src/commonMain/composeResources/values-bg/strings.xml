@@ -619,4 +619,14 @@
     <string name="auth_validation_uppercase">Паролата трябва да съдържа поне една главна буква.</string>
     <string name="auth_validation_digit">Паролата трябва да съдържа поне една цифра.</string>
     <string name="error_unexpected">Възникна неочаквана грешка.</string>
+    <string name="account_password_mismatch">Новите пароли не съвпадат.</string>
+    <string name="security_method_unavailable">Този метод не е наличен. Използвайте паролата на профила си или настройте защитата на устройството.</string>
+    <string name="local_error_missing">Заявените данни не са намерени.</string>
+    <string name="local_error_conflict">Операцията не може да завърши, защото данните са в конфликт със съществуваща информация.</string>
+    <string name="local_error_transaction">Операцията не можа да завърши.</string>
+    <string name="local_error_database">Възникна грешка при достъп до данните ви.</string>
+    <string name="local_error_session_read">Запазената ви сесия не може да бъде прочетена.</string>
+    <string name="local_error_session_write">Сесията ви не може да бъде запазена.</string>
+    <string name="local_error_session_delete">Запазената ви сесия не може да бъде изчистена.</string>
+    <string name="local_error_session_corrupted">Запазената ви сесия не може да бъде възстановена.</string>
 </resources>

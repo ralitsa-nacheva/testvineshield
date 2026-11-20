@@ -48,7 +48,7 @@ class AccountViewModel(
         _uiState.update {
             it.copy(
                 newEmail = value,
-                errorMessage = null
+                operationIssue = null
             )
         }
     }
@@ -57,7 +57,7 @@ class AccountViewModel(
         _uiState.update {
             it.copy(
                 currentPassword = value,
-                errorMessage = null
+                operationIssue = null
             )
         }
     }
@@ -66,7 +66,7 @@ class AccountViewModel(
         _uiState.update {
             it.copy(
                 newPassword = value,
-                errorMessage = null
+                operationIssue = null
             )
         }
     }
@@ -75,7 +75,7 @@ class AccountViewModel(
         _uiState.update {
             it.copy(
                 confirmNewPassword = value,
-                errorMessage = null
+                operationIssue = null
             )
         }
     }
@@ -99,7 +99,7 @@ class AccountViewModel(
         ) {
             _uiState.update {
                 it.copy(
-                    errorMessage = "New passwords do not match."
+                    operationIssue = AccountIssue.PasswordMismatch
                 )
             }
             return
@@ -109,7 +109,7 @@ class AccountViewModel(
             _uiState.update {
                 it.copy(
                     isUpdating = true,
-                    errorMessage = null
+                    operationIssue = null
                 )
             }
 
@@ -132,7 +132,7 @@ class AccountViewModel(
                             newPassword = "",
                             confirmNewPassword = "",
                             isUpdating = false,
-                            errorMessage = null
+                            operationIssue = null
                         )
                     }
                 }
@@ -141,7 +141,7 @@ class AccountViewModel(
                     _uiState.update {
                         it.copy(
                             isUpdating = false,
-                            errorMessage = result.error.userMessage
+                            operationIssue = AccountIssue.Failure(result.error)
                         )
                     }
                 }
@@ -156,19 +156,19 @@ class AccountViewModel(
         // Claim the action before launching: two taps in the same event loop
         // must not enqueue two session-clearing operations.
         _uiState.update {
-            it.copy(isLoggingOut = true, errorMessage = null,
+            it.copy(isLoggingOut = true, operationIssue = null,
                 currentPassword = "", newPassword = "", confirmNewPassword = "")
         }
         viewModelScope.launch {
             try {
                 when (val result = authSessionCoordinator.logout()) {
                     is Result.Success -> _uiState.value = AccountUiState()
-                    is Result.Error -> _uiState.update { it.copy(errorMessage = result.error.userMessage) }
+                    is Result.Error -> _uiState.update { it.copy(operationIssue = AccountIssue.Failure(result.error)) }
                 }
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (_: Exception) {
-                _uiState.update { it.copy(errorMessage = UnexpectedError().userMessage) }
+                _uiState.update { it.copy(operationIssue = AccountIssue.Failure(UnexpectedError())) }
             } finally {
                 _uiState.update { it.copy(isLoggingOut = false) }
             }
@@ -189,7 +189,7 @@ class AccountViewModel(
             _uiState.update {
                 it.copy(
                     isDeleting = true,
-                    errorMessage = null
+                    operationIssue = null
                 )
             }
 
@@ -211,7 +211,7 @@ class AccountViewModel(
                     _uiState.update {
                         it.copy(
                             isDeleting = false,
-                            errorMessage = result.error.userMessage
+                            operationIssue = AccountIssue.Failure(result.error)
                         )
                     }
                 }
@@ -221,7 +221,7 @@ class AccountViewModel(
 
     fun clearError() {
         _uiState.update {
-            it.copy(errorMessage = null)
+            it.copy(operationIssue = null)
         }
     }
 }

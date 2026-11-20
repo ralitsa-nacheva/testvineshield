@@ -619,4 +619,14 @@
     <string name="auth_validation_uppercase">Password must contain at least one uppercase letter.</string>
     <string name="auth_validation_digit">Password must contain at least one digit.</string>
     <string name="error_unexpected">Something unexpected happened.</string>
+    <string name="account_password_mismatch">New passwords do not match.</string>
+    <string name="security_method_unavailable">This method is unavailable. Use your account password or configure device security.</string>
+    <string name="local_error_missing">The requested data could not be found.</string>
+    <string name="local_error_conflict">The operation could not be completed because the data conflicts with existing information.</string>
+    <string name="local_error_transaction">The operation could not be completed.</string>
+    <string name="local_error_database">Something went wrong while accessing your data.</string>
+    <string name="local_error_session_read">Unable to read your saved session.</string>
+    <string name="local_error_session_write">Unable to save your session.</string>
+    <string name="local_error_session_delete">Unable to clear your saved session.</string>
+    <string name="local_error_session_corrupted">Your saved session could not be restored.</string>
 </resources>

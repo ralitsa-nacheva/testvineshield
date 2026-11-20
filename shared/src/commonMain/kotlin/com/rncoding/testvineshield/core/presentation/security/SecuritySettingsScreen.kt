@@ -51,8 +51,8 @@ fun SecuritySettingsScreen(
             Text(stringResource(Res.string.security_device_help))
             if (!state.deviceCredentialAvailable) Text(stringResource(Res.string.security_device_unavailable))
             Text(stringResource(Res.string.security_disable_help))
-            state.errorMessage?.let {
-                Text(it, color = MaterialTheme.colorScheme.error)
+            state.operationIssue?.let {
+                Text(localizedSecuritySettingsIssue(it), color = MaterialTheme.colorScheme.error)
                 TextButton(onClick = userAction(onClearError)) { Text(stringResource(Res.string.dismiss_action)) }
             }
             TextButton(onClick = userAction(onReload), enabled = !state.isLoading && !state.isUpdating) { Text(stringResource(Res.string.security_reload)) }

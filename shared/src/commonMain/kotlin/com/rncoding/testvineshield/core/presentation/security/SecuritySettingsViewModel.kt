@@ -19,11 +19,11 @@ class SecuritySettingsViewModel(
 
     fun load() {
         if (_state.value.isLoading || _state.value.isUpdating) return
-        _state.update { it.copy(isLoading = true, errorMessage = null) }
+        _state.update { it.copy(isLoading = true, operationIssue = null) }
         viewModelScope.launch {
             try {
                 when (val saved = repository.getSettings(userId)) {
-                    is Result.Error -> error(saved.error.userMessage)
+                    is Result.Error -> error(saved.error)
                     is Result.Success -> {
                         _state.update { it.copy(settings = saved.data.normalized(), loaded = true) }
                         val biometric = localAuthenticator.isAvailable(LocalUnlockMethod.Biometric)
@@ -36,7 +36,7 @@ class SecuritySettingsViewModel(
                     }
                 }
             } catch (cancelled: CancellationException) { throw cancelled }
-            catch (_: Exception) { error(UnexpectedError().userMessage) }
+            catch (_: Exception) { error(UnexpectedError()) }
             finally { _state.update { it.copy(isLoading = false) } }
         }
     }
@@ -66,33 +66,33 @@ class SecuritySettingsViewModel(
         if (!_state.value.canEdit) return
         val next = transform(_state.value.settings).normalized()
         if (next == _state.value.settings) return
-        _state.update { it.copy(isUpdating = true, errorMessage = null) }
+        _state.update { it.copy(isUpdating = true, operationIssue = null) }
         viewModelScope.launch {
             try {
                 if (prove != null) {
                     when (val availability = localAuthenticator.isAvailable(prove)) {
-                        is Result.Error -> { error(availability.error.userMessage); return@launch }
+                        is Result.Error -> { error(availability.error); return@launch }
                         is Result.Success -> if (!availability.data) {
-                            error("This method is unavailable. Use your account password or configure device security.")
+                            _state.update { it.copy(operationIssue = SecuritySettingsIssue.MethodUnavailable) }
                             return@launch
                         }
                     }
                     when (val auth = localAuthenticator.authenticate("Enable optional vineyard unlock", prove)) {
-                        is Result.Error -> { error(auth.error.userMessage); return@launch }
+                        is Result.Error -> { error(auth.error); return@launch }
                         is Result.Success -> Unit
                     }
                 }
                 currentCoroutineContext().ensureActive()
                 // Save the whole policy in one upsert: disabling also clears both optional methods.
                 when (val saved = repository.saveSettings(userId, next)) {
-                    is Result.Error -> error(saved.error.userMessage)
+                    is Result.Error -> error(saved.error)
                     is Result.Success -> _state.update { it.copy(settings = next) }
                 }
             } catch (cancelled: CancellationException) { throw cancelled }
-            catch (_: Exception) { error(UnexpectedError().userMessage) }
+            catch (_: Exception) { error(UnexpectedError()) }
             finally { _state.update { it.copy(isUpdating = false) } }
         }
     }
-    private fun error(message: String) { _state.update { it.copy(errorMessage = message) } }
-    fun clearError() { _state.update { it.copy(errorMessage = null) } }
+    private fun error(error: AppError) { _state.update { it.copy(operationIssue = SecuritySettingsIssue.Failure(error)) } }
+    fun clearError() { _state.update { it.copy(operationIssue = null) } }
 }

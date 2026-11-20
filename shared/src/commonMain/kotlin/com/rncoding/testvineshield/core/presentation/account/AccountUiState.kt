@@ -9,5 +9,5 @@ data class AccountUiState(
     val isUpdating: Boolean = false,
     val isDeleting: Boolean = false,
     val isLoggingOut: Boolean = false,
-    val errorMessage: String? = null
+    val operationIssue: AccountIssue? = null
 )

@@ -12,5 +12,7 @@ internal fun localizedAppErrorMessage(error: AppError): String = when (error) {
     AppInitializationError -> stringResource(Res.string.startup_data_unavailable)
     is AuthError, is SecurityError, is ValidationError -> localizedAuthErrorMessage(error)
     is UnexpectedError -> stringResource(Res.string.error_unexpected)
+    is DatabaseError -> localizedDatabaseError(error)
+    is StorageError -> localizedStorageError(error)
     else -> error.userMessage
 }
