@@ -2,6 +2,7 @@ package com.rncoding.testvineshield.core.presentation.weather
 
 import com.rncoding.testvineshield.resources.*
 import org.jetbrains.compose.resources.stringResource
+import com.rncoding.testvineshield.core.presentation.vineyard_details.localizedStage
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -101,46 +102,46 @@ fun WeatherScreen(
                 }
                 items(display.forecast.take(24)) { cached -> WeatherHourCard(cached.weather, zone, stringResource(Res.string.weather_forecast_hour)) }
                 item {
-                    Text("Botrytis weather input · previous local day", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(Res.string.monitor_weather_day), style = MaterialTheme.typography.titleMedium)
                     when {
-                        coverage == null -> Text("The vineyard time zone is unavailable.")
-                        coverage.expectedHours == null -> Text("${coverage.date}: This day does not fit the hourly weather grid.")
+                        coverage == null -> Text(stringResource(Res.string.monitor_zone_missing))
+                        coverage.expectedHours == null -> Text(stringResource(Res.string.monitor_grid_mismatch, coverage.date.toString()))
                         else -> {
-                            Text("${coverage.date}: ${coverage.matchedHours} of ${coverage.expectedHours} expected weather hours cached.")
+                            Text(stringResource(Res.string.monitor_day_coverage, coverage.date.toString(), coverage.matchedHours, coverage.expectedHours))
                             if (coverage.unexpectedRows > 0) {
-                                Text("The cache also contains ${coverage.unexpectedRows} duplicate or off-grid rows for this day.")
+                                Text(stringResource(Res.string.monitor_unexpected_rows, coverage.unexpectedRows))
                             }
                         }
                     }
-                    Text("Weather coverage counts timestamps. Wetness and model validation require separate checks.")
+                    Text(stringResource(Res.string.monitor_coverage_help))
                 }
                 item {
-                    Text("Block stages for the previous local day", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(Res.string.monitor_day_stages), style = MaterialTheme.typography.titleMedium)
                     when {
-                        coverage == null -> Text("The vineyard time zone is unavailable.")
+                        coverage == null -> Text(stringResource(Res.string.monitor_zone_missing))
                         stageEvidence is Result.Error -> {
-                            Text("Stage observations could not be read.", color = MaterialTheme.colorScheme.error)
-                            TextButton(onClick = userAction(onRetry)) { Text("Retry loading stages") }
+                            Text(stringResource(Res.string.monitor_stages_failed), color = MaterialTheme.colorScheme.error)
+                            TextButton(onClick = userAction(onRetry)) { Text(stringResource(Res.string.monitor_retry_stages)) }
                         }
-                        stageEvidence == null -> Text("Loading stage observations…")
-                        snapshot.blocks.isEmpty() -> Text("No blocks saved.")
+                        stageEvidence == null -> Text(stringResource(Res.string.monitor_stages_loading))
+                        snapshot.blocks.isEmpty() -> Text(stringResource(Res.string.monitor_no_blocks))
                         else -> Unit
                     }
                 }
                 if (stageEvidence is Result.Success) {
                     items(snapshot.blocks, key = { "day-stage-${it.blockId}" }) { block ->
                         val stage = stageEvidence.data[block.blockId]
-                        Text("${block.name}: ${stage?.dbValue?.replace('_', ' ') ?: "No observation for this date"}")
+                        Text("${block.name}: ${if (stage != null) localizedStage(stage) else stringResource(Res.string.monitor_no_day_observation)}")
                     }
                 }
                 item {
-                    Text("Saved monitoring configuration", style = MaterialTheme.typography.titleLarge)
-                    Text("An enabled setting does not confirm that a validated model has run.")
-                    Text("Disease risk is not assessed by this screen. No configurations or alerts must never be interpreted as no disease risk.")
+                    Text(stringResource(Res.string.monitor_settings_heading), style = MaterialTheme.typography.titleLarge)
+                    Text(stringResource(Res.string.monitor_enabled_help))
+                    Text(stringResource(Res.string.monitor_risk_help))
                     if (snapshot.monitoringError != null) {
-                        Text("Monitoring settings could not be read: ${snapshot.monitoringError.userMessage}", color = MaterialTheme.colorScheme.error)
-                        TextButton(onClick = userAction(onRetry)) { Text("Retry loading settings") }
-                    } else if (snapshot.configurations.isEmpty()) Text("No monitoring configurations saved.")
+                        Text(stringResource(Res.string.monitor_settings_failed, snapshot.monitoringError.userMessage), color = MaterialTheme.colorScheme.error)
+                        TextButton(onClick = userAction(onRetry)) { Text(stringResource(Res.string.monitor_retry_settings)) }
+                    } else if (snapshot.configurations.isEmpty()) Text(stringResource(Res.string.monitor_no_settings))
                 }
                 if (snapshot.blocks.isNotEmpty() && snapshot.monitoringError == null) {
                     item(key = "botrytis-monitoring-draft") {
@@ -150,16 +151,16 @@ fun WeatherScreen(
                 items(snapshot.configurations) { config ->
                     Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(modelLabel(config.modelType), style = MaterialTheme.typography.titleMedium)
-                        Text("Block: ${snapshot.blocks.firstOrNull { it.blockId == config.blockId }?.name ?: "Unavailable"}")
-                        Text("Monitoring start: ${config.monitoringStartDate}")
+                        Text(stringResource(Res.string.monitor_block_value, snapshot.blocks.firstOrNull { it.blockId == config.blockId }?.name ?: stringResource(Res.string.weather_value_unavailable)))
+                        Text(stringResource(Res.string.monitor_start_value, config.monitoringStartDate.toString()))
                         if (config.modelType == DiseaseRiskModelType.DOWNY_MILDEW_PRIMARY) {
-                            Text("Evaluation unavailable: this app lacks the required soil-wetness input.")
+                            Text(stringResource(Res.string.monitor_soil_missing))
                         }
-                        Text(if (config.enabled) "Saved setting: enabled" else "Saved setting: disabled")
+                        Text(if (config.enabled) stringResource(Res.string.monitor_saved_on) else stringResource(Res.string.monitor_saved_off))
                         val block = snapshot.blocks.firstOrNull { it.blockId == config.blockId }
-                        Text("Recorded block stage: ${block?.phenologicalStage?.dbValue?.replace('_', ' ') ?: "Unknown"}")
+                        Text(stringResource(Res.string.monitor_stage_value, localizedStage(block?.phenologicalStage)))
                         if (block?.phenologicalStage != null) {
-                            Text("Observed on: ${block.stageObservedOn ?: "Date unknown"}")
+                            Text(stringResource(Res.string.monitor_observed_date, block.stageObservedOn?.toString() ?: stringResource(Res.string.monitor_date_unknown)))
                         }
                     } }
                 }
@@ -181,10 +182,10 @@ private fun BotrytisDraftEditor(
     val userActivity = LocalUserActivity.current
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Botrytis monitoring draft", style = MaterialTheme.typography.titleMedium)
-        Text("Save a start date for a block. Monitoring stays off.")
+        Text(stringResource(Res.string.monitor_draft_heading), style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(Res.string.monitor_draft_help))
         RecordChoice(
-            label = "Block",
+            label = stringResource(Res.string.monitor_block_label),
             selected = selected,
             values = snapshot.blocks,
             enabled = !saving,
@@ -196,12 +197,12 @@ private fun BotrytisDraftEditor(
                 }?.monitoringStartDate?.toString().orEmpty()
             },
             allowUnknown = false,
-            nullLabel = "Choose a block"
+            nullLabel = stringResource(Res.string.monitor_choose_block)
         )
         OutlinedTextField(
             value = dateText,
             onValueChange = { userActivity(); dateText = it },
-            label = { Text("Start date (YYYY-MM-DD)") },
+            label = { Text(stringResource(Res.string.monitor_date_label)) },
             enabled = !saving && selected != null,
             singleLine = true,
             isError = dateText.isNotBlank() && date == null,
@@ -211,7 +212,7 @@ private fun BotrytisDraftEditor(
         Button(
             onClick = userAction { if (selected != null && date != null) onSave(selected.blockId, date) },
             enabled = !saving && selected != null && date != null
-        ) { Text(if (saving) "Saving…" else "Save draft") }
+        ) { Text(if (saving) stringResource(Res.string.monitor_saving) else stringResource(Res.string.monitor_save_draft)) }
         if (message != null) Text(message)
     }
 }
@@ -240,10 +241,11 @@ private fun cacheLabel(age: CacheAge) = when (age) {
     CacheAge.STALE -> stringResource(Res.string.weather_cache_stale)
     CacheAge.INVALID_CLOCK -> stringResource(Res.string.weather_cache_clock)
 }
+@Composable
 private fun modelLabel(type: DiseaseRiskModelType) = when (type) {
-    DiseaseRiskModelType.POWDERY_MILDEW_ASCOSPORE -> "Powdery mildew · ascospore model"
-    DiseaseRiskModelType.POWDERY_MILDEW_UC_DAVIS -> "Powdery mildew · UC Davis model"
-    DiseaseRiskModelType.DOWNY_MILDEW_PRIMARY -> "Downy mildew · primary model"
-    DiseaseRiskModelType.DOWNY_MILDEW_SECONDARY -> "Downy mildew · secondary model"
-    DiseaseRiskModelType.BOTRYTIS -> "Botrytis model"
+    DiseaseRiskModelType.POWDERY_MILDEW_ASCOSPORE -> stringResource(Res.string.monitor_model_powdery_ascospore)
+    DiseaseRiskModelType.POWDERY_MILDEW_UC_DAVIS -> stringResource(Res.string.monitor_model_powdery_ucd)
+    DiseaseRiskModelType.DOWNY_MILDEW_PRIMARY -> stringResource(Res.string.monitor_model_downy_primary)
+    DiseaseRiskModelType.DOWNY_MILDEW_SECONDARY -> stringResource(Res.string.monitor_model_downy_secondary)
+    DiseaseRiskModelType.BOTRYTIS -> stringResource(Res.string.monitor_model_botrytis)
 }
