@@ -15,5 +15,6 @@ internal fun localizedAppErrorMessage(error: AppError): String = when (error) {
     is DatabaseError -> localizedDatabaseError(error)
     is StorageError -> localizedStorageError(error)
     is NetworkError -> localizedNetworkError(error)
+    BlockError.NotFound -> stringResource(Res.string.block_error_not_found)
     else -> error.userMessage
 }

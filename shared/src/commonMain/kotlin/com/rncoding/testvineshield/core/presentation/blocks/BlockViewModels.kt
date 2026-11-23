@@ -14,7 +14,7 @@ import com.rncoding.testvineshield.core.domain.usecases.vineyard.GetVineyardUseC
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
-data class BlockListState(val loading: Boolean = true, val blocks: List<BlockDomainModel> = emptyList(), val error: String? = null)
+data class BlockListState(val loading: Boolean = true, val blocks: List<BlockDomainModel> = emptyList(), val error: AppError? = null)
 class BlockListViewModel(private val vineyardId: Long, private val observe: ObserveOwnedBlocksUseCase): ViewModel() {
     private val _state = MutableStateFlow(BlockListState())
     val state = _state.asStateFlow()
@@ -25,17 +25,17 @@ class BlockListViewModel(private val vineyardId: Long, private val observe: Obse
         _state.value = BlockListState()
         job = viewModelScope.launch {
             try { observe(vineyardId).collect { result -> _state.value = when (result) {
-                        is Result.Error -> BlockListState(loading = false, error = result.error.userMessage)
+                        is Result.Error -> BlockListState(loading = false, error = result.error)
                         is Result.Success -> BlockListState(loading = false, blocks = result.data)
                     } } } catch (e: CancellationException) { throw e }
-            catch (_: Exception) { _state.value = BlockListState(loading = false, error = UnexpectedError().userMessage) }
+            catch (_: Exception) { _state.value = BlockListState(loading = false, error = UnexpectedError()) }
         }
     }
 }
 data class BlockKey(val vineyardId: Long, val blockId: Long)
-data class BlockDetailsState(val loading: Boolean = false, val block: BlockDomainModel? = null, val deleting: Boolean = false, val confirmDelete: Boolean = false, val deleted: Boolean = false, val error: String? = null,
+data class BlockDetailsState(val loading: Boolean = false, val block: BlockDomainModel? = null, val deleting: Boolean = false, val confirmDelete: Boolean = false, val deleted: Boolean = false, val error: AppError? = null,
     val stageObservations: List<BlockStageObservation> = emptyList(),
-    val stageHistoryError: String? = null
+    val stageHistoryError: AppError? = null
 )
 class BlockDetailsViewModel(private val key: BlockKey, private val get: GetBlockDetailsUseCase, private val delete: DeleteBlockUseCase,
     private val getStageHistory: GetRecentBlockStageObservationsUseCase
@@ -48,17 +48,17 @@ class BlockDetailsViewModel(private val key: BlockKey, private val get: GetBlock
         _state.update { it.copy(loading = true, error = null, block = null, confirmDelete = false, stageObservations = emptyList(), stageHistoryError = null) }
         viewModelScope.launch {
             try { when (val result = get(key.vineyardId, key.blockId)) {
-                    is Result.Error -> _state.update { it.copy(error = result.error.userMessage) }
+                    is Result.Error -> _state.update { it.copy(error = result.error) }
                     is Result.Success -> when (val history = getStageHistory(key.vineyardId, key.blockId)) {
                         is Result.Success -> _state.update {
                             it.copy(block = result.data, stageObservations = history.data)
                         }
                         is Result.Error -> _state.update {
-                            it.copy(block = result.data, stageHistoryError = history.error.userMessage)
+                            it.copy(block = result.data, stageHistoryError = history.error)
                         }
                     }
                 } } catch (e: CancellationException) { throw e }
-            catch (_: Exception) { _state.update { it.copy(error = UnexpectedError().userMessage) } }
+            catch (_: Exception) { _state.update { it.copy(error = UnexpectedError()) } }
             finally { _state.update { it.copy(loading = false) } }
         }
     }
@@ -69,10 +69,10 @@ class BlockDetailsViewModel(private val key: BlockKey, private val get: GetBlock
         _state.update { it.copy(deleting = true, error = null) }
         viewModelScope.launch {
             try { when (val result = delete(key.vineyardId, key.blockId)) {
-                    is Result.Error -> _state.update { it.copy(error = result.error.userMessage, confirmDelete = false) }
+                    is Result.Error -> _state.update { it.copy(error = result.error, confirmDelete = false) }
                     is Result.Success -> _state.update { it.copy(deleted = true, confirmDelete = false, block = null, stageObservations = emptyList()) }
                 } } catch (e: CancellationException) { throw e }
-            catch (_: Exception) { _state.update { it.copy(error = UnexpectedError().userMessage, confirmDelete = false) } }
+            catch (_: Exception) { _state.update { it.copy(error = UnexpectedError(), confirmDelete = false) } }
             finally { _state.update { it.copy(deleting = false) } }
         }
     }

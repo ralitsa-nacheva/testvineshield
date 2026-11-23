@@ -659,4 +659,5 @@
     <string name="network_error_server">The server is temporarily unavailable.</string>
     <string name="network_error_invalid_response">The server returned invalid data.</string>
     <string name="network_error_unknown">An unexpected network error occurred.</string>
+    <string name="block_error_not_found">The requested block could not be found.</string>
 </resources>

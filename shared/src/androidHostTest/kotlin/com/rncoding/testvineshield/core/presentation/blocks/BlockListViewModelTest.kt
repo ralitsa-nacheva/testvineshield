@@ -33,7 +33,7 @@ class BlockListViewModelTest {
             updates.value = Result.Error(AuthError.NoActiveSession)
             runCurrent()
             assertTrue(vm.state.value.blocks.isEmpty())
-            assertNotNull(vm.state.value.error)
+            assertSame(AuthError.NoActiveSession, vm.state.value.error)
         } finally {
             try {store.clear()
                 runCurrent()
@@ -51,7 +51,7 @@ class BlockListViewModelTest {
             val vm = BlockListViewModel(10, observe)
             store.put("list", vm)
             runCurrent()
-            assertNotNull(vm.state.value.error)
+            assertSame(AuthError.NoActiveSession, vm.state.value.error)
             updates.value = Result.Success(emptyList())
             vm.reload()
             runCurrent()

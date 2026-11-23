@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import com.rncoding.testvineshield.resources.*
 import org.jetbrains.compose.resources.stringResource
+import com.rncoding.testvineshield.core.presentation.error.localizedAppErrorMessage
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
@@ -68,7 +69,7 @@ internal fun BlockSelectionPane(
         when {
             state.loading -> item { Text(stringResource(Res.string.loading_blocks)) }
             state.error != null -> item {
-                Text(state.error.orEmpty())
+                state.error?.let { Text(localizedAppErrorMessage(it)) }
                 TextButton(onClick = userAction(viewModel::reload), enabled = enabled) { Text(stringResource(Res.string.retry)) }
             }
             state.blocks.isEmpty() -> item { Text(stringResource(Res.string.empty_blocks)) }

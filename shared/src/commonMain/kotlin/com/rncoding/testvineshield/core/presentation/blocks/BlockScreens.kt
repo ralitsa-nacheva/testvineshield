@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.presentation.blocks
 
+import com.rncoding.testvineshield.core.presentation.error.localizedAppErrorMessage
 import androidx.compose.foundation.layout.*
 import com.rncoding.testvineshield.resources.*
 import org.jetbrains.compose.resources.stringResource
@@ -43,7 +44,7 @@ fun BlockListScreenRoot(vineyardId: Long, ownerId: Long, onBack: ()->Unit, onCre
     }) { padding ->
         LazyColumn(Modifier.padding(padding).fillMaxHeight().widthIn(max = 720.dp).fillMaxWidth(), contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 100.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (state.loading) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
-            state.error?.let { error -> item { ErrorNotice(error, vm::reload) } }
+            state.error?.let { error -> item { ErrorNotice(localizedAppErrorMessage(error), vm::reload) } }
             if (!state.loading && state.error==null && state.blocks.isEmpty()) item {
                 Text(stringResource(Res.string.blocks_empty))
             }
@@ -73,7 +74,7 @@ fun BlockDetailsScreenRoot(vineyardId: Long, blockId: Long, ownerId: Long, onBac
     Scaffold(topBar = { RecordTopBar(stringResource(Res.string.block_details), { if (!vm.state.value.deleting) onBack() }, !state.deleting) }) { padding ->
         LazyColumn(Modifier.padding(padding).fillMaxHeight().widthIn(max = 720.dp).fillMaxWidth(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (state.loading || state.deleting) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
-            state.error?.let { error -> item { ErrorNotice(error, vm::load) } }
+            state.error?.let { error -> item { ErrorNotice(localizedAppErrorMessage(error), vm::load) } }
             state.block?.let { block ->
                 item { Text(block.name, style = MaterialTheme.typography.headlineSmall) }
                 item { TextButton(onClick=userAction(onActivities),enabled=!state.deleting) { Text(stringResource(Res.string.block_activities)) } }
@@ -93,7 +94,7 @@ fun BlockDetailsScreenRoot(vineyardId: Long, blockId: Long, ownerId: Long, onBac
                 item { Text(stringResource(Res.string.recent_stage_observations), style = MaterialTheme.typography.titleMedium) }
                 val historyError = state.stageHistoryError
                 when {
-                    historyError != null -> item { ErrorNotice(historyError, vm::load) }
+                    historyError != null -> item { ErrorNotice(localizedAppErrorMessage(historyError), vm::load) }
                     state.stageObservations.isEmpty() -> item { Text(stringResource(Res.string.no_stage_observations)) }
                     else -> items(state.stageObservations, key = { it.observedOn.toString() }) {
                         Text("${it.observedOn}: ${localizedStage(it.stage)}")

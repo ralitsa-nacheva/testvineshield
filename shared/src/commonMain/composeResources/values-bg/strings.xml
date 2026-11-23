@@ -659,4 +659,5 @@
     <string name="network_error_server">Сървърът временно не е достъпен.</string>
     <string name="network_error_invalid_response">Сървърът върна невалидни данни.</string>
     <string name="network_error_unknown">Възникна неочаквана мрежова грешка.</string>
+    <string name="block_error_not_found">Заявеният парцел не е намерен.</string>
 </resources>
