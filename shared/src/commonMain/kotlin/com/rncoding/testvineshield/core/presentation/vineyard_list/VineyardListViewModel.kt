@@ -128,7 +128,7 @@ class VineyardListViewModel(
                 is Result.Error<*> -> {
                     _events.send(
                         VineyardListEvent.ShowSnackbar(
-                            result.error.userMessage
+                            result.error
                         )
                     )
                 }
@@ -156,7 +156,7 @@ class VineyardListViewModel(
         viewModelScope.launch {
             try {
                 when (val result = reorderVineyardsUseCase(vineyardIds = newOrder)) {
-                    is Result.Error -> _events.send(VineyardListEvent.ShowSnackbar(result.error.userMessage))
+                    is Result.Error -> _events.send(VineyardListEvent.ShowSnackbar(result.error))
                     is Result.Success -> _state.update { latest ->
                         if (latest.vineyards.map { it.vineyardId } == previousIds) {
                             val byId = latest.vineyards.associateBy { it.vineyardId }

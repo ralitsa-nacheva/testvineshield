@@ -111,7 +111,7 @@ class VineyardDetailsViewModel(
 
                     _events.send(
                         VineyardDetailsEvent.ShowSnackbar(
-                            result.error.userMessage
+                            result.error
                         )
                     )
                 }
@@ -126,7 +126,7 @@ class VineyardDetailsViewModel(
 
                     _events.send(
                         VineyardDetailsEvent.ShowSnackbar(
-                            "Unable to delete the vineyard."
+                            com.rncoding.testvineshield.core.domain.error.UnexpectedError()
                         )
                     )
                 }

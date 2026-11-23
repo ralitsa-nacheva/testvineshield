@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.presentation.vineyard_details
 
+import com.rncoding.testvineshield.core.presentation.error.ErrorSnackbarVisuals
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,7 +43,7 @@ fun VineyardDetailsScreenRoot(
             when (event) {
                 is VineyardDetailsEvent.ShowSnackbar ->
                     snackbarHostState.showSnackbar(
-                        event.message
+                        ErrorSnackbarVisuals(event.error)
                     )
 
                 VineyardDetailsEvent.VineyardDeleted ->

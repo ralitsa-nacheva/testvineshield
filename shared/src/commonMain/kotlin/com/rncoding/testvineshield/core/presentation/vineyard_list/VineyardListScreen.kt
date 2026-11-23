@@ -40,7 +40,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
+import com.rncoding.testvineshield.core.presentation.error.LocalizedErrorSnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -143,7 +143,7 @@ fun VineyardListScreen(
             )
         },
         snackbarHost = {
-            SnackbarHost(
+            LocalizedErrorSnackbarHost(
                 hostState = snackbarHostState
             )
         },

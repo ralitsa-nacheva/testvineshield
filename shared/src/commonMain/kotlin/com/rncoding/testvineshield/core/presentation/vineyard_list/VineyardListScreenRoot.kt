@@ -2,6 +2,7 @@ package com.rncoding.testvineshield.core.presentation.vineyard_list
 
 import com.rncoding.testvineshield.resources.*
 import org.jetbrains.compose.resources.stringResource
+import com.rncoding.testvineshield.core.presentation.error.ErrorSnackbarVisuals
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -39,7 +40,7 @@ fun VineyardListScreenRoot(
 
                 is VineyardListEvent.ShowSnackbar -> {
                     snackbarHostState.showSnackbar(
-                        event.message
+                        ErrorSnackbarVisuals(event.error)
                     )
                 }
 
