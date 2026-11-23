@@ -33,7 +33,7 @@ class UnlockFallbackTest {
     @Test fun passwordWorksWithNoBiometricsOrDevicePin() = runTest {
         val result = assertIs<Result.Success<AuthState>>(unlock(UnlockRequest.Password("correct")))
         assertEquals(AuthState.Authenticated(user), result.data)
-        coVerify(exactly = 0) { local.authenticate(any(), any()) }
+        coVerify(exactly = 0) { local.authenticateWithPrompt(any(), any()) }
     }
     @Test fun wrongPasswordDoesNotRefresh() = runTest {
         assertIs<Result.Error<AppError>>(unlock(UnlockRequest.Password("wrong")))
@@ -41,7 +41,7 @@ class UnlockFallbackTest {
     }
     @Test fun disabledBiometricsCannotBypassSetting() = runTest {
         assertIs<Result.Error<AppError>>(unlock(UnlockRequest.Platform(LocalUnlockMethod.Biometric)))
-        coVerify(exactly = 0) { local.authenticate(any(), any()) }
+        coVerify(exactly = 0) { local.authenticateWithPrompt(any(), any()) }
     }
     @Test fun unavailableEnabledDeviceMethodCanFallBackToPassword() = runTest {
         coEvery { settings.getSettings(1) } returns Result.Success(SecuritySettings(inactivityLockEnabled = true, deviceCredentialEnabled = true))
@@ -52,13 +52,15 @@ class UnlockFallbackTest {
     @Test fun enabledDeviceMethodAuthenticatesAndRefreshes() = runTest {
         coEvery { settings.getSettings(1) } returns Result.Success(SecuritySettings(inactivityLockEnabled = true, deviceCredentialEnabled = true))
         coEvery { local.isAvailable(LocalUnlockMethod.DeviceCredential) } returns Result.Success(true)
-        coEvery { local.authenticate(any(), LocalUnlockMethod.DeviceCredential) } returns Result.Success(Unit)
-        assertIs<Result.Success<AuthState>>(unlock(UnlockRequest.Platform(LocalUnlockMethod.DeviceCredential)))
+        coEvery { local.authenticateWithPrompt(any(), LocalUnlockMethod.DeviceCredential) } returns Result.Success(Unit)
+        val prompt = LocalAuthenticationPrompt("Отключете профила си", "Отключване", "Отказ")
+        assertIs<Result.Success<AuthState>>(unlock(UnlockRequest.Platform(LocalUnlockMethod.DeviceCredential, prompt)))
+        coVerify(exactly = 1) { local.authenticateWithPrompt(prompt, LocalUnlockMethod.DeviceCredential) }
     }
     @Test fun cancelledPromptLeavesSessionLocked() = runTest {
         coEvery { settings.getSettings(1) } returns Result.Success(SecuritySettings(true, false, true))
         coEvery { local.isAvailable(LocalUnlockMethod.Biometric) } returns Result.Success(true)
-        coEvery { local.authenticate(any(), any()) } returns Result.Error(SecurityError.AuthenticationCancelled)
+        coEvery { local.authenticateWithPrompt(any(), any()) } returns Result.Error(SecurityError.AuthenticationCancelled)
         assertIs<Result.Error<AppError>>(unlock(UnlockRequest.Platform(LocalUnlockMethod.Biometric)))
         coVerify(exactly = 0) { manager.refreshSession(any()) }
     }

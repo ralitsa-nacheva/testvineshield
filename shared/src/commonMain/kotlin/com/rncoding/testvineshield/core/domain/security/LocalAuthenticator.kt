@@ -6,6 +6,10 @@ import com.rncoding.testvineshield.core.domain.error.Result
 enum class LocalUnlockMethod { Biometric, DeviceCredential }
 
 interface LocalAuthenticator {
+    /** Compatibility bridge for implementations that only accept a reason string. */
+    suspend fun authenticateWithPrompt(prompt: LocalAuthenticationPrompt, method: LocalUnlockMethod): Result<Unit, AppError> =
+        authenticate(prompt.reason, method)
+
     suspend fun isAvailable(method: LocalUnlockMethod): Result<Boolean, AppError> =
         if (method == LocalUnlockMethod.Biometric) isAvailable() else Result.Success(false)
 

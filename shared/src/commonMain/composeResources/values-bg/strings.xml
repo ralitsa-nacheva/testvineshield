@@ -629,4 +629,8 @@
     <string name="local_error_session_write">Сесията ви не може да бъде запазена.</string>
     <string name="local_error_session_delete">Запазената ви сесия не може да бъде изчистена.</string>
     <string name="local_error_session_corrupted">Запазената ви сесия не може да бъде възстановена.</string>
+    <string name="local_auth_title">Отключване на лозето</string>
+    <string name="local_auth_cancel">Отказ</string>
+    <string name="local_auth_unlock_reason">Отключете профила си за лозето</string>
+    <string name="local_auth_setup_reason">Включете допълнителен метод за отключване</string>
 </resources>

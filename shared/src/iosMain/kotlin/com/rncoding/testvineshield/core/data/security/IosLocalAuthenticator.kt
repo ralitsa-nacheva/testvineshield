@@ -4,6 +4,7 @@ import com.rncoding.testvineshield.core.domain.error.AppError
 import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.error.SecurityError
 import com.rncoding.testvineshield.core.domain.security.LocalAuthenticator
+import com.rncoding.testvineshield.core.domain.security.LocalAuthenticationPrompt
 import com.rncoding.testvineshield.core.domain.security.LocalUnlockMethod
 import kotlinx.cinterop.*
 import kotlinx.coroutines.*
@@ -34,6 +35,10 @@ class IosLocalAuthenticator : LocalAuthenticator {
             }
         } finally { context.invalidate() }
     }
+
+    // iOS owns the title and controls; only the caller's reason is presented here.
+    override suspend fun authenticateWithPrompt(prompt: LocalAuthenticationPrompt, method: LocalUnlockMethod): Result<Unit, AppError> =
+        authenticate(prompt.reason, method)
 
     override suspend fun authenticate(reason: String): Result<Unit, AppError> =
         authenticate(reason, LocalUnlockMethod.Biometric)

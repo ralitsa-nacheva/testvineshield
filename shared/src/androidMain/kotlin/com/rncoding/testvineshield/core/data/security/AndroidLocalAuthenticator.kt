@@ -4,6 +4,7 @@ import android.os.Looper
 import android.os.Build
 import android.app.KeyguardManager
 import android.content.Context
+import com.rncoding.testvineshield.core.domain.security.LocalAuthenticationPrompt
 import com.rncoding.testvineshield.core.domain.security.LocalUnlockMethod
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
@@ -40,7 +41,7 @@ class AndroidLocalAuthenticator(
     }
 
     override suspend fun authenticate(reason: String, method: LocalUnlockMethod): Result<Unit, AppError> =
-        authenticateWithMethod(reason, method)
+        authenticateWithMethod(LocalAuthenticationPrompt(reason), method)
 
     override suspend fun isAvailable(): Result<Boolean, AppError> =
         withContext(Dispatchers.Main.immediate) {
@@ -67,9 +68,12 @@ class AndroidLocalAuthenticator(
         }
 
     override suspend fun authenticate(reason: String): Result<Unit, AppError> =
-        authenticateWithMethod(reason, LocalUnlockMethod.Biometric)
+        authenticateWithMethod(LocalAuthenticationPrompt(reason), LocalUnlockMethod.Biometric)
 
-    private suspend fun authenticateWithMethod(reason: String, method: LocalUnlockMethod): Result<Unit, AppError> =
+    override suspend fun authenticateWithPrompt(prompt: LocalAuthenticationPrompt, method: LocalUnlockMethod): Result<Unit, AppError> =
+        authenticateWithMethod(prompt, method)
+
+    private suspend fun authenticateWithMethod(promptText: LocalAuthenticationPrompt, method: LocalUnlockMethod): Result<Unit, AppError> =
         withContext(Dispatchers.Main.immediate) {
             // Reject a second request; do not queue a surprise prompt for later.
             if (!promptMutex.tryLock()) {
@@ -87,8 +91,8 @@ class AndroidLocalAuthenticator(
                         else SecurityError.DeviceCredentialNotAvailable)
                 }
                 if (method == LocalUnlockMethod.DeviceCredential && Build.VERSION.SDK_INT < 30)
-                    awaitLegacyCredential(activity, reason)
-                else awaitPrompt(activity, reason, method)
+                    awaitLegacyCredential(activity, promptText)
+                else awaitPrompt(activity, promptText, method)
             } catch (exception: CancellationException) {
                 throw exception
             } catch (exception: Exception) {
@@ -110,7 +114,7 @@ class AndroidLocalAuthenticator(
 
     private suspend fun awaitPrompt(
         activity: FragmentActivity,
-        reason: String,
+        promptText: LocalAuthenticationPrompt,
         method: LocalUnlockMethod
     ): Result<Unit, AppError> {
         val executor = ContextCompat.getMainExecutor(activity)
@@ -167,10 +171,10 @@ class AndroidLocalAuthenticator(
                 }
                 if (continuation.isActive) {
                     val builder = BiometricPrompt.PromptInfo.Builder()
-                        .setTitle("Unlock Vineyard").setSubtitle(reason)
+                        .setTitle(promptText.title).setSubtitle(promptText.reason)
                     if (method == LocalUnlockMethod.Biometric) {
                         builder.setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
-                            .setNegativeButtonText("Cancel")
+                            .setNegativeButtonText(promptText.cancelLabel)
                     } else {
                         // DEVICE_CREDENTIAL alone is supported only from API 30.
                         builder.setAllowedAuthenticators(BiometricManager.Authenticators.DEVICE_CREDENTIAL)
@@ -186,9 +190,9 @@ class AndroidLocalAuthenticator(
     }
 
     @Suppress("DEPRECATION") // API 24–29 compatible credential-only confirmation.
-    private suspend fun awaitLegacyCredential(activity: FragmentActivity, reason: String): Result<Unit, AppError> {
+    private suspend fun awaitLegacyCredential(activity: FragmentActivity, promptText: LocalAuthenticationPrompt): Result<Unit, AppError> {
         val keyguard = activity.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
-        val intent = keyguard.createConfirmDeviceCredentialIntent("Unlock Vineyard", reason)
+        val intent = keyguard.createConfirmDeviceCredentialIntent(promptText.title, promptText.reason)
             ?: return Result.Error(SecurityError.DeviceCredentialNotAvailable)
         var fragment: DeviceCredentialFragment? = null
         try {

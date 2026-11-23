@@ -24,6 +24,7 @@ import com.rncoding.testvineshield.core.domain.usecases.user.UnlockRequest
 fun LockScreen(viewModel: AuthViewModel, reason: AuthState.Locked.LockReason) {
     val state by viewModel.uiState.collectAsState()
     val options by viewModel.unlockOptions.collectAsState()
+    val prompt = localizedLocalAuthenticationPrompt(stringResource(Res.string.local_auth_unlock_reason))
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.refreshUnlockOptions() }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
         verticalArrangement = Arrangement.Center) {
@@ -39,9 +40,9 @@ fun LockScreen(viewModel: AuthViewModel, reason: AuthState.Locked.LockReason) {
             enabled = !state.isSubmitting && state.password.isNotEmpty(), modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(Res.string.auth_unlock_password))
         }
-        if (options.biometric) Button(onClick = { viewModel.unlock(UnlockRequest.Platform(LocalUnlockMethod.Biometric)) },
+        if (options.biometric) Button(onClick = { viewModel.unlock(UnlockRequest.Platform(LocalUnlockMethod.Biometric, prompt)) },
             enabled = !state.isSubmitting, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.auth_unlock_biometrics)) }
-        if (options.deviceCredential) Button(onClick = { viewModel.unlock(UnlockRequest.Platform(LocalUnlockMethod.DeviceCredential)) },
+        if (options.deviceCredential) Button(onClick = { viewModel.unlock(UnlockRequest.Platform(LocalUnlockMethod.DeviceCredential, prompt)) },
             enabled = !state.isSubmitting, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.auth_unlock_device)) }
         if (state.isSubmitting) LinearProgressIndicator(Modifier.fillMaxWidth())
         state.operationError?.let { Text(localizedAppErrorMessage(it), color = MaterialTheme.colorScheme.error) }

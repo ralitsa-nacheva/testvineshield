@@ -46,12 +46,12 @@ class SecuritySettingsViewModel(
         if (minutes !in SecuritySettings.timeoutMinutes) return
         change { it.copy(inactivityTimeoutMillis = minutes * 60_000L) }
     }
-    fun setBiometricEnabled(enabled: Boolean) = setMethod(LocalUnlockMethod.Biometric, enabled)
-    fun setDeviceCredentialEnabled(enabled: Boolean) = setMethod(LocalUnlockMethod.DeviceCredential, enabled)
+    fun setBiometricEnabled(enabled: Boolean, prompt: LocalAuthenticationPrompt = setupPrompt()) = setMethod(LocalUnlockMethod.Biometric, enabled, prompt)
+    fun setDeviceCredentialEnabled(enabled: Boolean, prompt: LocalAuthenticationPrompt = setupPrompt()) = setMethod(LocalUnlockMethod.DeviceCredential, enabled, prompt)
 
-    private fun setMethod(method: LocalUnlockMethod, enabled: Boolean) {
+    private fun setMethod(method: LocalUnlockMethod, enabled: Boolean, prompt: LocalAuthenticationPrompt) {
         if (!_state.value.canEdit || !_state.value.settings.inactivityLockEnabled) return
-        change(method.takeIf { enabled }) {
+        change(method.takeIf { enabled }, prompt) {
             when (method) {
                 LocalUnlockMethod.Biometric -> it.copy(biometricEnabled = enabled)
                 LocalUnlockMethod.DeviceCredential -> it.copy(deviceCredentialEnabled = enabled)
@@ -61,6 +61,7 @@ class SecuritySettingsViewModel(
 
     private fun change(
         prove: LocalUnlockMethod? = null,
+        prompt: LocalAuthenticationPrompt = setupPrompt(),
         transform: (SecuritySettings) -> SecuritySettings
     ) {
         if (!_state.value.canEdit) return
@@ -77,7 +78,7 @@ class SecuritySettingsViewModel(
                             return@launch
                         }
                     }
-                    when (val auth = localAuthenticator.authenticate("Enable optional vineyard unlock", prove)) {
+                    when (val auth = localAuthenticator.authenticateWithPrompt(prompt, prove)) {
                         is Result.Error -> { error(auth.error); return@launch }
                         is Result.Success -> Unit
                     }
@@ -93,6 +94,8 @@ class SecuritySettingsViewModel(
             finally { _state.update { it.copy(isUpdating = false) } }
         }
     }
+    private fun setupPrompt() = LocalAuthenticationPrompt("Enable optional vineyard unlock")
+
     private fun error(error: AppError) { _state.update { it.copy(operationIssue = SecuritySettingsIssue.Failure(error)) } }
     fun clearError() { _state.update { it.copy(operationIssue = null) } }
 }

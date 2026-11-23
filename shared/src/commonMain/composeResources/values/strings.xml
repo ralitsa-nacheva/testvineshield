@@ -629,4 +629,8 @@
     <string name="local_error_session_write">Unable to save your session.</string>
     <string name="local_error_session_delete">Unable to clear your saved session.</string>
     <string name="local_error_session_corrupted">Your saved session could not be restored.</string>
+    <string name="local_auth_title">Unlock Vineyard</string>
+    <string name="local_auth_cancel">Cancel</string>
+    <string name="local_auth_unlock_reason">Unlock your vineyard account</string>
+    <string name="local_auth_setup_reason">Enable optional vineyard unlock</string>
 </resources>

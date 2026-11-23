@@ -10,7 +10,10 @@ sealed interface UnlockRequest {
     data class Password(val value: String) : UnlockRequest {
         override fun toString(): String = "Password([redacted])"
     }
-    data class Platform(val method: LocalUnlockMethod) : UnlockRequest
+    data class Platform(
+        val method: LocalUnlockMethod,
+        val prompt: LocalAuthenticationPrompt = LocalAuthenticationPrompt("Unlock your vineyard account")
+    ) : UnlockRequest
 }
 
 /** Verify the existing account, then refresh activity; never create a new session here. */
@@ -61,7 +64,7 @@ class UnlockSessionUseCase(
                     is Result.Error -> return Result.Error(available.error)
                     is Result.Success -> if (!available.data) return Result.Error(SecurityError.UserFallback)
                 }
-                localAuthenticator.authenticate("Unlock your vineyard account", request.method)
+                localAuthenticator.authenticateWithPrompt(request.prompt, request.method)
             }
         }
         if (authentication is Result.Error) return Result.Error(authentication.error)

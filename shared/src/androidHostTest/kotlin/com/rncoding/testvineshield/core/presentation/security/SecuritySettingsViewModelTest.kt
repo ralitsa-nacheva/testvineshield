@@ -23,7 +23,7 @@ class SecuritySettingsViewModelTest {
         coEvery { repo.getSettings(1) } answers { Result.Success(saved) }
         coEvery { repo.saveSettings(1, any()) } answers { saved = secondArg(); Result.Success(Unit) }
         coEvery { local.isAvailable(any()) } returns Result.Success(true)
-        coEvery { local.authenticate(any(), any()) } returns Result.Success(Unit)
+        coEvery { local.authenticateWithPrompt(any(), any()) } returns Result.Success(Unit)
     }
     @After fun after() { store.clear(); Dispatchers.resetMain() }
     private fun vm() = SecuritySettingsViewModel(1, repo, local).also { store.put("settings", it) }
@@ -44,7 +44,7 @@ class SecuritySettingsViewModelTest {
     }
     @Test fun optionalMethodsCannotEnableWhileLockOff() = runTest {
         val v = vm(); v.load(); advanceUntilIdle(); v.setBiometricEnabled(true); v.setDeviceCredentialEnabled(true); advanceUntilIdle()
-        coVerify(exactly = 0) { local.authenticate(any(), any()) }
+        coVerify(exactly = 0) { local.authenticateWithPrompt(any(), any()) }
         coVerify(exactly = 0) { repo.saveSettings(any(), any()) }
     }
     @Test fun unavailableMethodNeverAuthenticatesOrSaves() = runTest {
@@ -56,7 +56,7 @@ class SecuritySettingsViewModelTest {
     @Test fun enablingWaitsForSuccessfulPromptAndSave() = runTest {
         saved = SecuritySettings(inactivityLockEnabled = true)
         val prompt = CompletableDeferred<Unit>()
-        coEvery { local.authenticate(any(), any()) } coAnswers { prompt.await(); Result.Success(Unit) }
+        coEvery { local.authenticateWithPrompt(any(), any()) } coAnswers { prompt.await(); Result.Success(Unit) }
         val v = vm(); v.load(); advanceUntilIdle(); v.setDeviceCredentialEnabled(true); v.setDeviceCredentialEnabled(true); runCurrent()
         assertTrue(v.state.value.isUpdating); assertFalse(v.state.value.settings.deviceCredentialEnabled)
         prompt.complete(Unit); advanceUntilIdle(); assertTrue(v.state.value.settings.deviceCredentialEnabled)
@@ -64,7 +64,7 @@ class SecuritySettingsViewModelTest {
     }
     @Test fun cancelledPromptDoesNotSave() = runTest {
         saved = SecuritySettings(inactivityLockEnabled = true)
-        coEvery { local.authenticate(any(), any()) } returns Result.Error(SecurityError.AuthenticationCancelled)
+        coEvery { local.authenticateWithPrompt(any(), any()) } returns Result.Error(SecurityError.AuthenticationCancelled)
         val v = vm(); v.load(); advanceUntilIdle(); v.setBiometricEnabled(true); advanceUntilIdle()
         assertFalse(v.state.value.settings.biometricEnabled); coVerify(exactly = 0) { repo.saveSettings(any(), any()) }
     }
@@ -80,7 +80,7 @@ class SecuritySettingsViewModelTest {
     }
     @Test fun clearingVmCancelsPendingSetupWithoutSaving() = runTest {
         saved = SecuritySettings(inactivityLockEnabled = true)
-        coEvery { local.authenticate(any(), any()) } coAnswers { awaitCancellation() }
+        coEvery { local.authenticateWithPrompt(any(), any()) } coAnswers { awaitCancellation() }
         val v = vm(); v.load(); advanceUntilIdle(); v.setBiometricEnabled(true); runCurrent(); store.clear(); advanceUntilIdle()
         coVerify(exactly = 0) { repo.saveSettings(any(), any()) }; assertFalse(v.state.value.isUpdating)
     }
@@ -94,7 +94,7 @@ class SecuritySettingsViewModelTest {
         saved = SecuritySettings(true, false, true)
         coEvery { local.isAvailable(any()) } returns Result.Success(false)
         val v = vm(); v.load(); advanceUntilIdle(); v.setBiometricEnabled(false); advanceUntilIdle()
-        assertFalse(saved.biometricEnabled); coVerify(exactly = 0) { local.authenticate(any(), any()) }
+        assertFalse(saved.biometricEnabled); coVerify(exactly = 0) { local.authenticateWithPrompt(any(), any()) }
     }
     @Test fun typedLoadFailureIsPreservedClearedAndRetryable() = runTest {
         val failure = StorageError.ReadError(IllegalStateException("private diagnostic"))
@@ -110,11 +110,21 @@ class SecuritySettingsViewModelTest {
 
     @Test fun promptFailureRetainsItsTypeWithoutSaving() = runTest {
         saved = SecuritySettings(inactivityLockEnabled = true)
-        coEvery { local.authenticate(any(), any()) } returns Result.Error(SecurityError.AuthenticationCancelled)
+        coEvery { local.authenticateWithPrompt(any(), any()) } returns Result.Error(SecurityError.AuthenticationCancelled)
         val v = vm(); v.load(); advanceUntilIdle(); v.setBiometricEnabled(true); advanceUntilIdle()
         assertEquals(SecuritySettingsIssue.Failure(SecurityError.AuthenticationCancelled), v.state.value.operationIssue)
         assertFalse(v.state.value.isUpdating); assertFalse(v.state.value.settings.biometricEnabled)
         coVerify(exactly = 0) { repo.saveSettings(any(), any()) }
+    }
+
+    @Test fun setupForwardsCallerPromptWithoutChangingMethodOrPolicy() = runTest {
+        saved = SecuritySettings(inactivityLockEnabled = true)
+        val prompt = LocalAuthenticationPrompt("Включете метод за отключване", "Отключване", "Отказ")
+        val v = vm(); v.load(); advanceUntilIdle()
+        v.setDeviceCredentialEnabled(true, prompt); advanceUntilIdle()
+        coVerify(exactly = 1) { local.authenticateWithPrompt(prompt, LocalUnlockMethod.DeviceCredential) }
+        assertTrue(v.state.value.settings.deviceCredentialEnabled)
+        assertFalse(v.state.value.settings.biometricEnabled)
     }
 
 }
