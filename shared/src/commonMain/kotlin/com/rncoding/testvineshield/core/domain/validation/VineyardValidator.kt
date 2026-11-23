@@ -2,6 +2,7 @@ package com.rncoding.testvineshield.core.domain.validation
 
 import com.rncoding.testvineshield.core.domain.datamodels.VineyardInput
 import com.rncoding.testvineshield.core.domain.error.VineyardField
+import com.rncoding.testvineshield.core.domain.error.VineyardValidationReason
 import com.rncoding.testvineshield.core.domain.error.VineyardValidationError
 
 class VineyardValidator {
@@ -18,6 +19,7 @@ class VineyardValidator {
         if (name.isEmpty()) {
             return VineyardValidationError(
                 field = VineyardField.NAME,
+                reason = VineyardValidationReason.NameRequired,
                 userMessage = "Vineyard name is required."
             )
         }
@@ -25,6 +27,7 @@ class VineyardValidator {
         if (name.length > 100) {
             return VineyardValidationError(
                 field = VineyardField.NAME,
+                reason = VineyardValidationReason.NameTooLong,
                 userMessage = "Vineyard name must be 100 characters or fewer."
             )
         }
@@ -32,6 +35,7 @@ class VineyardValidator {
         if (input.size <= 0.0) {
             return VineyardValidationError(
                 field = VineyardField.SIZE,
+                reason = VineyardValidationReason.SizePositive,
                 userMessage = "Vineyard size must be greater than zero."
             )
         }
@@ -39,6 +43,7 @@ class VineyardValidator {
         if (!input.size.isFinite()) {
             return VineyardValidationError(
                 field = VineyardField.SIZE,
+                reason = VineyardValidationReason.SizeNumber,
                 userMessage = "Enter a valid vineyard size."
             )
         }
@@ -46,6 +51,7 @@ class VineyardValidator {
         if (country.isEmpty()) {
             return VineyardValidationError(
                 field = VineyardField.COUNTRY,
+                reason = VineyardValidationReason.CountryRequired,
                 userMessage = "Country is required."
             )
         }
@@ -53,6 +59,7 @@ class VineyardValidator {
         if (city.isEmpty()) {
             return VineyardValidationError(
                 field = VineyardField.CITY,
+                reason = VineyardValidationReason.CityRequired,
                 userMessage = "City is required."
             )
         }
@@ -62,6 +69,7 @@ class VineyardValidator {
         ) {
             return VineyardValidationError(
                 field = VineyardField.LATITUDE,
+                reason = VineyardValidationReason.LatitudeRange,
                 userMessage = "Latitude must be between -90 and 90."
             )
         }
@@ -71,6 +79,7 @@ class VineyardValidator {
         ) {
             return VineyardValidationError(
                 field = VineyardField.LONGITUDE,
+                reason = VineyardValidationReason.LongitudeRange,
                 userMessage = "Longitude must be between -180 and 180."
             )
         }
@@ -78,6 +87,7 @@ class VineyardValidator {
         if (timeZone.isEmpty()) {
             return VineyardValidationError(
                 field = VineyardField.TIME_ZONE,
+                reason = VineyardValidationReason.TimeZoneRequired,
                 userMessage = "Time zone is required."
             )
         }
@@ -86,6 +96,7 @@ class VineyardValidator {
         if (elevation != null && (!elevation.isFinite() || elevation !in -500.0..9000.0)) {
             return VineyardValidationError(
                 field = VineyardField.ELEVATION,
+                reason = VineyardValidationReason.ElevationRange,
                 userMessage = "Enter an elevation between -500 and 9000 metres, or leave it unknown."
             )
         }

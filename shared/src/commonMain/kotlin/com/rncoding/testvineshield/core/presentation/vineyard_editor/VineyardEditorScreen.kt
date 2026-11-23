@@ -18,7 +18,9 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
+import com.rncoding.testvineshield.core.presentation.error.LocalizedErrorSnackbarHost
+import com.rncoding.testvineshield.core.presentation.error.localizedAppErrorMessage
+import com.rncoding.testvineshield.core.domain.error.VineyardValidationError
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -72,7 +74,7 @@ fun VineyardEditorScreen(
             )
         },
         snackbarHost = {
-            SnackbarHost(
+            LocalizedErrorSnackbarHost(
                 hostState = snackbarHostState
             )
         }
@@ -91,7 +93,7 @@ fun VineyardEditorScreen(
                 }
             }
 
-            state.loadErrorMessage != null -> {
+            state.loadError != null -> {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -108,7 +110,7 @@ fun VineyardEditorScreen(
                     ) {
                         Text(
                             text =
-                                state.loadErrorMessage
+                                localizedAppErrorMessage(state.loadError)
                         )
 
                         Button(
@@ -279,7 +281,7 @@ private fun VineyardEditorForm(
         item {
             VineyardTimeZonePicker(
                 selectedId = state.timeZone,
-                errorMessage = state.timeZoneError,
+                errorMessage = state.timeZoneError?.let { localizedVineyardValidationError(it) },
                 enabled = state.canEdit,
                 onSelect = onTimeZoneChange
             )
@@ -336,7 +338,7 @@ private fun VineyardTextField(
     value: String,
     onValueChange: (String) -> Unit,
     label: String,
-    error: String?,
+    error: VineyardValidationError?,
     keyboardType: KeyboardType =
         KeyboardType.Text,
     supportingText: String? = null,
@@ -363,7 +365,7 @@ private fun VineyardTextField(
         supportingText = {
             when {
                 error != null ->
-                    Text(error)
+                    Text(localizedVineyardValidationError(error))
 
                 supportingText != null ->
                     Text(supportingText)

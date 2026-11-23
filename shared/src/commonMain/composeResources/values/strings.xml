@@ -635,4 +635,18 @@
     <string name="local_auth_setup_reason">Enable optional vineyard unlock</string>
     <string name="vineyard_load_failed">Unable to load vineyard data.</string>
     <string name="vineyard_load_not_found">Vineyard could not be found.</string>
+    <string name="vineyard_validation_namerequired">Vineyard name is required.</string>
+    <string name="vineyard_validation_nametoolong">Vineyard name must be 100 characters or fewer.</string>
+    <string name="vineyard_validation_sizepositive">Vineyard size must be greater than zero.</string>
+    <string name="vineyard_validation_sizenumber">Enter a valid vineyard size.</string>
+    <string name="vineyard_validation_countryrequired">Country is required.</string>
+    <string name="vineyard_validation_cityrequired">City is required.</string>
+    <string name="vineyard_validation_latituderange">Latitude must be between -90 and 90.</string>
+    <string name="vineyard_validation_longituderange">Longitude must be between -180 and 180.</string>
+    <string name="vineyard_validation_timezonerequired">Time zone is required.</string>
+    <string name="vineyard_validation_elevationrange">Enter an elevation between -500 and 9000 metres, or leave it unknown.</string>
+    <string name="vineyard_validation_latitudenumber">Enter a valid latitude.</string>
+    <string name="vineyard_validation_longitudenumber">Enter a valid longitude.</string>
+    <string name="vineyard_validation_elevationnumber">Enter decimal metres using a dot or comma, without grouping separators, or leave blank.</string>
+    <string name="vineyard_validation_timezoneinvalid">Enter a valid time zone.</string>
 </resources>

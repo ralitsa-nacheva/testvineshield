@@ -1,6 +1,8 @@
 package com.rncoding.testvineshield.core.presentation.vineyard_editor
 
 import com.rncoding.testvineshield.core.domain.datamodels.units.AreaUnit
+import com.rncoding.testvineshield.core.domain.error.AppError
+import com.rncoding.testvineshield.core.domain.error.VineyardValidationError
 data class VineyardEditorUiState(
     val mode: VineyardEditorMode,
 
@@ -14,21 +16,21 @@ data class VineyardEditorUiState(
     val timeZone: String = "",
     val elevation: String = "",
 
-    val nameError: String? = null,
-    val sizeError: String? = null,
-    val countryError: String? = null,
-    val cityError: String? = null,
-    val latitudeError: String? = null,
-    val longitudeError: String? = null,
-    val timeZoneError: String? = null,
-    val elevationError: String? = null,
+    val nameError: VineyardValidationError? = null,
+    val sizeError: VineyardValidationError? = null,
+    val countryError: VineyardValidationError? = null,
+    val cityError: VineyardValidationError? = null,
+    val latitudeError: VineyardValidationError? = null,
+    val longitudeError: VineyardValidationError? = null,
+    val timeZoneError: VineyardValidationError? = null,
+    val elevationError: VineyardValidationError? = null,
 
     val isLoading: Boolean =
         mode is VineyardEditorMode.Edit,
 
     val isSaving: Boolean = false,
 
-    val loadErrorMessage: String? = null
+    val loadError: AppError? = null
 ) {
     val title: String
         get() = when (mode) {
@@ -42,5 +44,5 @@ data class VineyardEditorUiState(
     val canEdit: Boolean
         get() = !isLoading &&
                 !isSaving &&
-                loadErrorMessage == null
+                loadError == null
 }

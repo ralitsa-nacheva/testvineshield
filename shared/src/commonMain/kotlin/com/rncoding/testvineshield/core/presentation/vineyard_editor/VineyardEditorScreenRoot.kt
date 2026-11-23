@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.presentation.vineyard_editor
 
+import com.rncoding.testvineshield.core.presentation.error.ErrorSnackbarVisuals
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.*
 import com.rncoding.testvineshield.core.domain.datamodels.VineyardMapPoint
@@ -39,7 +40,7 @@ fun VineyardEditorScreenRoot(
             when (event) {
                 is VineyardEditorEvent.ShowSnackbar ->
                     snackbarHostState.showSnackbar(
-                        event.message
+                        ErrorSnackbarVisuals(event.error)
                     )
 
                 is VineyardEditorEvent.Saved ->

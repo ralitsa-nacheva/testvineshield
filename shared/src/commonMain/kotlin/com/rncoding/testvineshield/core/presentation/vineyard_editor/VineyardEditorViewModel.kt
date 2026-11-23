@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.rncoding.testvineshield.core.domain.datamodels.VineyardDomainModel
 import com.rncoding.testvineshield.core.domain.datamodels.VineyardInput
 import com.rncoding.testvineshield.core.domain.error.Result
+import com.rncoding.testvineshield.core.domain.error.VineyardValidationReason
 import com.rncoding.testvineshield.core.domain.error.VineyardField
 import com.rncoding.testvineshield.core.domain.error.VineyardValidationError
 import com.rncoding.testvineshield.core.domain.usecases.vineyard.CreateVineyardUseCase
@@ -140,7 +141,7 @@ class VineyardEditorViewModel(
 
         if (current.isLoading ||
             current.isSaving ||
-            current.loadErrorMessage != null
+            current.loadError != null
         ) {
             return
         }
@@ -188,8 +189,8 @@ class VineyardEditorViewModel(
                         _state.update {
                             it.copy(
                                 isLoading = false,
-                                loadErrorMessage =
-                                    "Vineyard could not be found."
+                                loadError =
+                                    com.rncoding.testvineshield.core.domain.error.DatabaseError.NotFound("Vineyard")
                             )
                         }
 
@@ -203,8 +204,8 @@ class VineyardEditorViewModel(
                     _state.update {
                         it.copy(
                             isLoading = false,
-                            loadErrorMessage =
-                                result.error.userMessage
+                            loadError =
+                                result.error
                         )
                     }
                 }
@@ -213,8 +214,8 @@ class VineyardEditorViewModel(
                     _state.update {
                         it.copy(
                             isLoading = false,
-                            loadErrorMessage =
-                                "Unable to load the vineyard."
+                            loadError =
+                                com.rncoding.testvineshield.core.domain.error.UnexpectedError()
                         )
                     }
                 }
@@ -245,7 +246,7 @@ class VineyardEditorViewModel(
                 elevation =
                     vineyard.elevation?.let(::formatPlainDecimal).orEmpty(),
                 isLoading = false,
-                loadErrorMessage = null
+                loadError = null
             )
         }
     }
@@ -261,7 +262,7 @@ class VineyardEditorViewModel(
             setFieldError(
                 field = VineyardField.SIZE,
                 message =
-                    "Enter a valid vineyard size."
+                    VineyardValidationError(VineyardField.SIZE, "Enter a valid vineyard size.", reason = VineyardValidationReason.SizeNumber)
             )
         }
 
@@ -272,7 +273,7 @@ class VineyardEditorViewModel(
             setFieldError(
                 field = VineyardField.LATITUDE,
                 message =
-                    "Enter a valid latitude."
+                    VineyardValidationError(VineyardField.LATITUDE, "Enter a valid latitude.", reason = VineyardValidationReason.LatitudeNumber)
             )
         }
 
@@ -283,7 +284,7 @@ class VineyardEditorViewModel(
             setFieldError(
                 field = VineyardField.LONGITUDE,
                 message =
-                    "Enter a valid longitude."
+                    VineyardValidationError(VineyardField.LONGITUDE, "Enter a valid longitude.", reason = VineyardValidationReason.LongitudeNumber)
             )
         }
 
@@ -292,7 +293,7 @@ class VineyardEditorViewModel(
             ElevationParseResult.Invalid -> {
                 setFieldError(
                     field = VineyardField.ELEVATION,
-                    message = "Enter decimal metres using a dot or comma, without grouping separators, or leave blank."
+                    message = VineyardValidationError(VineyardField.ELEVATION, "Enter decimal metres using a dot or comma, without grouping separators, or leave blank.", reason = VineyardValidationReason.ElevationNumber)
                 )
                 return null
             }
@@ -403,12 +404,12 @@ class VineyardEditorViewModel(
         if (error is VineyardValidationError) {
             setFieldError(
                 field = error.field,
-                message = error.userMessage
+                message = error
             )
         } else {
             _events.send(
                 VineyardEditorEvent.ShowSnackbar(
-                    message = error.userMessage
+                    error = error
                 )
             )
         }
@@ -423,8 +424,7 @@ class VineyardEditorViewModel(
 
         _events.send(
             VineyardEditorEvent.ShowSnackbar(
-                message =
-                    "Unable to save the vineyard."
+                error = com.rncoding.testvineshield.core.domain.error.UnexpectedError()
             )
         )
     }
@@ -446,7 +446,7 @@ class VineyardEditorViewModel(
 
     private fun setFieldError(
         field: VineyardField,
-        message: String
+        message: VineyardValidationError
     ) {
         _state.update { current ->
             when (field) {

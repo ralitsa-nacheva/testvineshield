@@ -6,6 +6,7 @@ import com.rncoding.testvineshield.core.domain.error.AppError
 import com.rncoding.testvineshield.core.domain.error.AuthError
 import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.error.VineyardField
+import com.rncoding.testvineshield.core.domain.error.VineyardValidationReason
 import com.rncoding.testvineshield.core.domain.error.VineyardValidationError
 import com.rncoding.testvineshield.core.domain.repository.VineyardRepository
 import com.rncoding.testvineshield.core.domain.time.AppClock
@@ -53,6 +54,7 @@ class UpdateVineyardUseCase(
             return Result.Error(
                 VineyardValidationError(
                     field = VineyardField.TIME_ZONE,
+                    reason = VineyardValidationReason.TimeZoneInvalid,
                     userMessage = "Enter a valid time zone.",
                     cause = e
                 )

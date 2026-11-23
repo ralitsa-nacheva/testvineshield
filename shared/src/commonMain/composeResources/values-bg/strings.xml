@@ -635,4 +635,18 @@
     <string name="local_auth_setup_reason">Включете допълнителен метод за отключване</string>
     <string name="vineyard_load_failed">Данните за лозето не могат да бъдат заредени.</string>
     <string name="vineyard_load_not_found">Лозето не е намерено.</string>
+    <string name="vineyard_validation_namerequired">Името на лозето е задължително.</string>
+    <string name="vineyard_validation_nametoolong">Името на лозето трябва да е до 100 знака.</string>
+    <string name="vineyard_validation_sizepositive">Площта на лозето трябва да е по-голяма от нула.</string>
+    <string name="vineyard_validation_sizenumber">Въведете валидна площ на лозето.</string>
+    <string name="vineyard_validation_countryrequired">Държавата е задължителна.</string>
+    <string name="vineyard_validation_cityrequired">Населеното място е задължително.</string>
+    <string name="vineyard_validation_latituderange">Географската ширина трябва да е между -90 и 90.</string>
+    <string name="vineyard_validation_longituderange">Географската дължина трябва да е между -180 и 180.</string>
+    <string name="vineyard_validation_timezonerequired">Часовата зона е задължителна.</string>
+    <string name="vineyard_validation_elevationrange">Въведете надморска височина между -500 и 9000 метра или я оставете неизвестна.</string>
+    <string name="vineyard_validation_latitudenumber">Въведете валидна географска ширина.</string>
+    <string name="vineyard_validation_longitudenumber">Въведете валидна географска дължина.</string>
+    <string name="vineyard_validation_elevationnumber">Въведете метри с десетична точка или запетая, без разделители за групиране, или оставете празно.</string>
+    <string name="vineyard_validation_timezoneinvalid">Въведете валидна часова зона.</string>
 </resources>
