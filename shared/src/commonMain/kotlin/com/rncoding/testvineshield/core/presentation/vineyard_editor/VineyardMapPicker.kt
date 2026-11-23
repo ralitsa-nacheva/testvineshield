@@ -1,5 +1,7 @@
 package com.rncoding.testvineshield.core.presentation.vineyard_editor
 
+import com.rncoding.testvineshield.core.domain.error.AppError
+import com.rncoding.testvineshield.core.presentation.error.localizedAppErrorMessage
 import com.rncoding.testvineshield.resources.*
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.foundation.Canvas
@@ -43,9 +45,9 @@ fun VineyardMapPicker(initial: VineyardMapPoint?,onDismiss: ()->Unit,onUse: (Vin
     var zone by remember { mutableStateOf<String?>(null) }
     var useZone by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
-    var message by remember { mutableStateOf<String?>(null) }
+    var lookupError by remember { mutableStateOf<AppError?>(null) }
     var job by remember { mutableStateOf<Job?>(null) }
-    LaunchedEffect(point) { revision++; job?.cancel(); zonePoint=null; zone=null; useZone=false; busy=false; message=null }
+    LaunchedEffect(point) { revision++; job?.cancel(); zonePoint=null; zone=null; useZone=false; busy=false; lookupError=null }
     Dialog(onDismissRequest=onDismiss,properties=DialogProperties(usePlatformDefaultWidth=false)) {
         Surface(Modifier.fillMaxSize().userActivity(activity)) {
             Column(Modifier.fillMaxSize().padding(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
@@ -68,12 +70,12 @@ fun VineyardMapPicker(initial: VineyardMapPoint?,onDismiss: ()->Unit,onUse: (Vin
                         val selected=point
                         if(selected!=null && !busy) {
                             val token=++revision
-                            job?.cancel(); busy=true; message=null; zone=null; useZone=false
+                            job?.cancel(); busy=true; lookupError=null; zone=null; useZone=false
                             job=scope.launch {
                                 try {
                                     when(val result=metadata.suggestTimeZone(selected)) {
                                         is Result.Success -> if(currentPoint==selected && revision==token) { zone=result.data; zonePoint=selected }
-                                        is Result.Error -> if(currentPoint==selected && revision==token) message=result.error.userMessage
+                                        is Result.Error -> if(currentPoint==selected && revision==token) lookupError=result.error
                                     }
                                 } catch(e: CancellationException) { throw e }
                                 finally { if(currentPoint==selected && revision==token) busy=false }
@@ -81,7 +83,7 @@ fun VineyardMapPicker(initial: VineyardMapPoint?,onDismiss: ()->Unit,onUse: (Vin
                         }
                     },enabled=point!=null && !busy) { Text(if(busy) stringResource(Res.string.map_zone_loading) else stringResource(Res.string.map_suggest_zone)) }
                     Text(stringResource(Res.string.map_zone_privacy))
-                    message?.let { Text(it) }
+                    lookupError?.let { Text(localizedAppErrorMessage(it)) }
                     zone?.let { suggested ->
                         Text(stringResource(Res.string.map_zone_suggestion, suggested))
                         Row(verticalAlignment=androidx.compose.ui.Alignment.CenterVertically) {

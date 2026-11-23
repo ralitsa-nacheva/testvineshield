@@ -14,5 +14,6 @@ internal fun localizedAppErrorMessage(error: AppError): String = when (error) {
     is UnexpectedError -> stringResource(Res.string.error_unexpected)
     is DatabaseError -> localizedDatabaseError(error)
     is StorageError -> localizedStorageError(error)
+    is NetworkError -> localizedNetworkError(error)
     else -> error.userMessage
 }

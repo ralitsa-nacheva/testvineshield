@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.presentation.weather
 
+import com.rncoding.testvineshield.core.presentation.error.localizedNetworkError
 import androidx.compose.runtime.Composable
 import com.rncoding.testvineshield.core.domain.disease_risk.MonitoringDraftSaveOutcome
 import com.rncoding.testvineshield.core.domain.error.*
@@ -9,20 +10,8 @@ import org.jetbrains.compose.resources.stringResource
 /** Map error identity, never English text or debug details. Unknown types keep their safe message. */
 @Composable
 internal fun localizedWeatherError(error: AppError): String {
+    if (error is NetworkError) return localizedNetworkError(error)
     val resource = when (error) {
-        NetworkError.NoInternet -> Res.string.weather_error_network
-        NetworkError.Timeout -> Res.string.weather_error_timeout
-        is NetworkError.HttpError -> when (error.code) {
-            400 -> Res.string.weather_error_request
-            401 -> Res.string.weather_error_auth_required
-            403 -> Res.string.weather_error_forbidden
-            404 -> Res.string.weather_error_resource
-            429 -> Res.string.weather_error_rate
-            in 500..599 -> Res.string.weather_error_server
-            else -> Res.string.weather_error_network_other
-        }
-        is NetworkError.SerializationError -> Res.string.weather_error_response
-        is NetworkError.Unknown -> Res.string.weather_error_network_other
         is WeatherHistoryError.InvalidInput -> Res.string.weather_error_location
         is WeatherHistoryError.TimeZoneMismatch -> Res.string.weather_error_zone
         is WeatherHistoryError.EvaluationFailed -> Res.string.weather_error_evaluation

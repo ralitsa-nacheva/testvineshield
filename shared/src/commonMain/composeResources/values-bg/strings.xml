@@ -649,4 +649,14 @@
     <string name="vineyard_validation_longitudenumber">Въведете валидна географска дължина.</string>
     <string name="vineyard_validation_elevationnumber">Въведете метри с десетична точка или запетая, без разделители за групиране, или оставете празно.</string>
     <string name="vineyard_validation_timezoneinvalid">Въведете валидна часова зона.</string>
+    <string name="network_error_unreachable">Няма връзка с услугата. Опитайте отново.</string>
+    <string name="network_error_timeout">Времето за заявката изтече. Опитайте отново.</string>
+    <string name="network_error_request">Заявката е невалидна.</string>
+    <string name="network_error_auth">Изисква се удостоверяване.</string>
+    <string name="network_error_forbidden">Нямате разрешение за това действие.</string>
+    <string name="network_error_missing">Заявеният ресурс не е намерен.</string>
+    <string name="network_error_rate">Твърде много заявки. Опитайте по-късно.</string>
+    <string name="network_error_server">Сървърът временно не е достъпен.</string>
+    <string name="network_error_invalid_response">Сървърът върна невалидни данни.</string>
+    <string name="network_error_unknown">Възникна неочаквана мрежова грешка.</string>
 </resources>

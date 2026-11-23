@@ -649,4 +649,14 @@
     <string name="vineyard_validation_longitudenumber">Enter a valid longitude.</string>
     <string name="vineyard_validation_elevationnumber">Enter decimal metres using a dot or comma, without grouping separators, or leave blank.</string>
     <string name="vineyard_validation_timezoneinvalid">Enter a valid time zone.</string>
+    <string name="network_error_unreachable">The service could not be reached. Please try again.</string>
+    <string name="network_error_timeout">The request timed out. Please try again.</string>
+    <string name="network_error_request">The request was invalid.</string>
+    <string name="network_error_auth">Authentication is required.</string>
+    <string name="network_error_forbidden">You are not authorized.</string>
+    <string name="network_error_missing">The requested resource was not found.</string>
+    <string name="network_error_rate">Too many requests. Please try again later.</string>
+    <string name="network_error_server">The server is temporarily unavailable.</string>
+    <string name="network_error_invalid_response">The server returned invalid data.</string>
+    <string name="network_error_unknown">An unexpected network error occurred.</string>
 </resources>
