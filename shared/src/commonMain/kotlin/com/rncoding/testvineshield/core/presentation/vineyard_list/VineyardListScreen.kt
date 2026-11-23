@@ -1,5 +1,8 @@
 package com.rncoding.testvineshield.core.presentation.vineyard_list
 
+import com.rncoding.testvineshield.core.presentation.vineyards.VineyardLoadIssue
+import com.rncoding.testvineshield.core.presentation.vineyards.localizedVineyardLoadIssue
+
 import com.rncoding.testvineshield.resources.*
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.foundation.clickable
@@ -162,10 +165,10 @@ fun VineyardListScreen(
                 )
             }
 
-            state.errorMessage != null &&
+            state.loadIssue != null &&
                     state.vineyards.isEmpty() -> {
                 VineyardListError(
-                    message = state.errorMessage,
+                    message = localizedVineyardLoadIssue(state.loadIssue),
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(innerPadding)

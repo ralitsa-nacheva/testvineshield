@@ -633,4 +633,6 @@
     <string name="local_auth_cancel">Отказ</string>
     <string name="local_auth_unlock_reason">Отключете профила си за лозето</string>
     <string name="local_auth_setup_reason">Включете допълнителен метод за отключване</string>
+    <string name="vineyard_load_failed">Данните за лозето не могат да бъдат заредени.</string>
+    <string name="vineyard_load_not_found">Лозето не е намерено.</string>
 </resources>

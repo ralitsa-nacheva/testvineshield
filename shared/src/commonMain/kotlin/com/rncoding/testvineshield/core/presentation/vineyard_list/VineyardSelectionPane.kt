@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.presentation.vineyard_list
 
+import com.rncoding.testvineshield.core.presentation.vineyards.localizedVineyardLoadIssue
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -62,7 +63,12 @@ internal fun VineyardSelectionPane(
         }
         when {
             state.isLoading -> item { Text(stringResource(Res.string.loading_vineyards)) }
-            state.vineyards.isEmpty() -> item { Text(state.errorMessage ?: stringResource(Res.string.empty_vineyards)) }
+            state.vineyards.isEmpty() -> item {
+                Text(
+                    state.loadIssue?.let { localizedVineyardLoadIssue(it) }
+                        ?: stringResource(Res.string.empty_vineyards)
+                )
+            }
             visibleRecords.isEmpty() -> item { Text(stringResource(Res.string.no_matches)) }
             else -> items(visibleRecords, key = { it.vineyardId }) { vineyard ->
                 val isSelected = vineyard.vineyardId == selectedVineyardId

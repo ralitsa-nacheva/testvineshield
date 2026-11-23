@@ -1,5 +1,7 @@
 package com.rncoding.testvineshield.core.presentation.vineyard_list
 
+import com.rncoding.testvineshield.core.presentation.vineyards.VineyardLoadIssue
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rncoding.testvineshield.core.domain.error.Result
@@ -51,12 +53,12 @@ class VineyardListViewModel(
         viewModelScope.launch {
             observeVineyardSummariesUseCase()
                 .catch { throwable ->
+                    if (throwable is kotlinx.coroutines.CancellationException) throw throwable
                     _state.update { current ->
                         current.copy(
                             isLoading = false,
-                            errorMessage =
-                                throwable.message
-                                    ?: "Unable to load vineyards."
+                            loadIssue =
+                                VineyardLoadIssue.Failed
                         )
                     }
                 }
@@ -68,7 +70,7 @@ class VineyardListViewModel(
                                     mapper::toUiModel
                                 ),
                             isLoading = false,
-                            errorMessage = null
+                            loadIssue = null
                         )
                     }
                 }

@@ -1,5 +1,8 @@
 package com.rncoding.testvineshield.core.presentation.vineyard_details
 
+import com.rncoding.testvineshield.core.presentation.vineyards.VineyardLoadIssue
+import com.rncoding.testvineshield.core.presentation.vineyards.localizedVineyardLoadIssue
+
 import com.rncoding.testvineshield.core.presentation.formatting.formatPlainDecimal
 import com.rncoding.testvineshield.resources.*
 import org.jetbrains.compose.resources.stringResource
@@ -97,7 +100,7 @@ fun VineyardDetailsScreen(
                 }
             }
 
-            state.errorMessage != null -> {
+            state.loadIssue != null -> {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -105,7 +108,7 @@ fun VineyardDetailsScreen(
                         .padding(24.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(state.errorMessage)
+                    Text(localizedVineyardLoadIssue(state.loadIssue))
                 }
             }
 

@@ -1,5 +1,7 @@
 package com.rncoding.testvineshield.core.presentation.vineyard_details
 
+import com.rncoding.testvineshield.core.presentation.vineyards.VineyardLoadIssue
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rncoding.testvineshield.core.domain.error.Result
@@ -136,12 +138,12 @@ class VineyardDetailsViewModel(
         viewModelScope.launch {
             observeVineyardDetailsUseCase(vineyardId)
                 .catch { throwable ->
+                    if (throwable is kotlinx.coroutines.CancellationException) throw throwable
                     _state.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage =
-                                throwable.message
-                                    ?: "Unable to load the vineyard."
+                            loadIssue =
+                                VineyardLoadIssue.Failed
                         )
                     }
                 }
@@ -153,9 +155,9 @@ class VineyardDetailsViewModel(
                                 summary?.let(
                                     vineyardDetailsUiMapper::toUi
                                 ),
-                            errorMessage =
+                            loadIssue =
                                 if (summary == null) {
-                                    "Vineyard could not be found."
+                                    VineyardLoadIssue.NotFound
                                 } else {
                                     null
                                 }
