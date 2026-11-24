@@ -3,6 +3,7 @@ package com.rncoding.testvineshield.core.domain.usecases.activity
 
 import com.rncoding.testvineshield.core.domain.auth.AuthenticatedUserProvider
 import com.rncoding.testvineshield.core.domain.datamodels.ActivityDomainModel
+import com.rncoding.testvineshield.core.domain.error.ActivityValidationReason
 import com.rncoding.testvineshield.core.domain.error.ActivityError
 import com.rncoding.testvineshield.core.domain.error.AppError
 import com.rncoding.testvineshield.core.domain.error.AuthError
@@ -37,17 +38,13 @@ class CreateActivityUseCase(
 
         if (activity.activityId != 0L) {
             return Result.Error(
-                ActivityError.InvalidInput(
-                    "A new activity must not have an existing ID."
-                )
+                ActivityError.InvalidInput("A new activity must not have an existing ID.", reason = ActivityValidationReason.NewIdentity)
             )
         }
 
         if (activity.vineyardId <= 0L) {
             return Result.Error(
-                ActivityError.InvalidInput(
-                    "Select a valid vineyard."
-                )
+                ActivityError.InvalidInput("Select a valid vineyard.", reason = ActivityValidationReason.Vineyard)
             )
         }
 

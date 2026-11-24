@@ -92,4 +92,24 @@ class ActivityEditorViewModelTest {
         val v=vm();advanceUntilIdle();v.save();runCurrent();store.clear();advanceUntilIdle()
         assertFalse(v.state.value.saved);assertFalse(v.state.value.saving)
     }
+    @Test fun invalidDraftIssuesStayTypedAndEditingClearsOnlyThatField() = runTest {
+        val v = vm(); advanceUntilIdle()
+        v.text(ActivityField.Type, ""); v.text(ActivityField.Season, ""); v.save(); advanceUntilIdle()
+        assertEquals(ActivityEditorIssue.ReviewFields, v.state.value.error)
+        assertEquals(ActivityDraftIssue.TypeRequired, v.state.value.errors[ActivityField.Type])
+        coVerify(exactly = 0) { create(any()) }
+        v.text(ActivityField.Type, "Pruning")
+        assertFalse(ActivityField.Type in v.state.value.errors)
+        assertTrue(ActivityField.Season in v.state.value.errors); assertNull(v.state.value.error)
+    }
+    @Test fun typedSaveFailurePreservesDraftAndSuccessfulRetryClearsIssue() = runTest {
+        val failure = DatabaseError.Unknown(DatabaseError.Operation.INSERT, IllegalStateException("private diagnostic"))
+        coEvery { create(any()) } returns Result.Error(failure)
+        val v = vm(); advanceUntilIdle(); v.save(); advanceUntilIdle()
+        assertSame(failure, assertIs<ActivityEditorIssue.Failure>(v.state.value.error).error)
+        assertEquals(draft, v.state.value.draft); assertTrue(v.state.value.canEdit)
+        coEvery { create(any()) } returns Result.Success(Unit)
+        v.save(); advanceUntilIdle(); assertTrue(v.state.value.saved); assertNull(v.state.value.error)
+    }
+
 }

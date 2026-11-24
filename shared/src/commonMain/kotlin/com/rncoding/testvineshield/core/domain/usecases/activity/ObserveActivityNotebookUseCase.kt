@@ -27,7 +27,7 @@ class ObserveActivityNotebookUseCase(
     @OptIn(ExperimentalCoroutinesApi::class)
     operator fun invoke(scope: ActivityScope): Flow<Result<ActivityNotebookSnapshot, AppError>> {
         if (scope.vineyardId < 0 || scope.blockId < 0 || (scope.vineyardId == 0L && scope.blockId != 0L))
-            return flowOf(Result.Error(ActivityError.InvalidInput("Invalid activity scope.")))
+            return flowOf(Result.Error(ActivityError.InvalidInput("Invalid activity scope.", reason = ActivityValidationReason.InvalidScope)))
         return users.observeUser().flatMapLatest { user ->
             if (user == null) flowOf<Result<ActivityNotebookSnapshot, AppError>>(Result.Error(AuthError.NoActiveSession))
             else if (scope.vineyardId == 0L) vineyards.observeVineyards(user.userId)

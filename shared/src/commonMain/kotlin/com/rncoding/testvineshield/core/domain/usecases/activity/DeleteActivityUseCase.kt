@@ -3,6 +3,7 @@ package com.rncoding.testvineshield.core.domain.usecases.activity
 
 import com.rncoding.testvineshield.core.domain.auth.AuthenticatedUserProvider
 import com.rncoding.testvineshield.core.domain.datamodels.ActivityDeletionOutcome
+import com.rncoding.testvineshield.core.domain.error.ActivityValidationReason
 import com.rncoding.testvineshield.core.domain.error.ActivityError
 import com.rncoding.testvineshield.core.domain.error.AppError
 import com.rncoding.testvineshield.core.domain.error.AuthError
@@ -28,9 +29,7 @@ class DeleteActivityUseCase(
 
         if (vineyardId <= 0L || activityId <= 0L) {
             return Result.Error(
-                ActivityError.InvalidInput(
-                    "Invalid vineyard or activity ID."
-                )
+                ActivityError.InvalidInput("Invalid vineyard or activity ID.", reason = ActivityValidationReason.InvalidIdentity)
             )
         }
 

@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.*
 data class ActivityListState(
     val loading: Boolean = true,
     val snapshot: ActivityNotebookSnapshot = ActivityNotebookSnapshot(),
-    val error: String? = null
+    val error: AppError? = null
 )
 class ActivityListViewModel(private val scope: ActivityScope, private val observe: ObserveActivityNotebookUseCase): ViewModel() {
     private val _state = MutableStateFlow(ActivityListState())
@@ -30,12 +30,12 @@ class ActivityListViewModel(private val scope: ActivityScope, private val observ
             try {
                 observe(scope).collect { result ->
                     _state.value = when(result) {
-                        is Result.Error -> ActivityListState(loading=false,error=result.error.userMessage)
+                        is Result.Error -> ActivityListState(loading=false,error=result.error)
                         is Result.Success -> ActivityListState(loading=false,snapshot=result.data)
                     }
                 }
             } catch(e: CancellationException) { throw e }
-            catch(_: Exception) { _state.value=ActivityListState(loading=false,error=UnexpectedError().userMessage) }
+            catch(_: Exception) { _state.value=ActivityListState(loading=false,error=UnexpectedError()) }
         }
     }
 }
@@ -49,7 +49,7 @@ data class ActivityDetailsState(
     val deleting: Boolean = false,
     val confirmDelete: Boolean = false,
     val deleted: Boolean = false,
-    val error: String? = null
+    val error: AppError? = null
 )
 class ActivityDetailsViewModel(
     private val key: ActivityKey,
@@ -66,7 +66,7 @@ class ActivityDetailsViewModel(
         viewModelScope.launch {
             try {
                 when(val result=get(key.vineyardId,key.activityId)) {
-                    is Result.Error -> _state.update { it.copy(error=result.error.userMessage) }
+                    is Result.Error -> _state.update { it.copy(error=result.error) }
                     is Result.Success -> {
                         val record=result.data
                         val blockId=record.blockId
@@ -79,7 +79,7 @@ class ActivityDetailsViewModel(
                     }
                 }
             } catch(e: CancellationException) { throw e }
-            catch(_: Exception) { _state.update { it.copy(error=UnexpectedError().userMessage) } }
+            catch(_: Exception) { _state.update { it.copy(error=UnexpectedError()) } }
             finally { _state.update { it.copy(loading=false) } }
         }
     }
@@ -94,11 +94,11 @@ class ActivityDetailsViewModel(
         viewModelScope.launch {
             try {
                 when(val result=delete(key.vineyardId,key.activityId)) {
-                    is Result.Error -> _state.update { it.copy(error=result.error.userMessage,confirmDelete=false) }
+                    is Result.Error -> _state.update { it.copy(error=result.error,confirmDelete=false) }
                     is Result.Success -> _state.update { it.copy(deleted=true,record=null,confirmDelete=false) }
                 }
             } catch(e: CancellationException) { throw e }
-            catch(_: Exception) { _state.update { it.copy(error=UnexpectedError().userMessage,confirmDelete=false) } }
+            catch(_: Exception) { _state.update { it.copy(error=UnexpectedError(),confirmDelete=false) } }
             finally { _state.update { it.copy(deleting=false) } }
         }
     }
@@ -118,8 +118,8 @@ data class ActivityEditorState(
     val saving: Boolean = false,
     val ready: Boolean = false,
     val saved: Boolean = false,
-    val errors: Map<ActivityField,String> = emptyMap(),
-    val error: String? = null
+    val errors: Map<ActivityField,ActivityDraftIssue> = emptyMap(),
+    val error: ActivityEditorIssue? = null
 ) { val canEdit get() = ready && !loading && !saving && !saved }
 class ActivityEditorViewModel(
     private val request: ActivityEditorRequest,
@@ -136,35 +136,35 @@ class ActivityEditorViewModel(
     fun load() {
         if(_state.value.loading || _state.value.ready || _state.value.saving) return
         if(request.scope.vineyardId<=0 || request.scope.blockId<0 || request.activityId<0) {
-            _state.update { it.copy(error="Invalid activity scope.") }
+            _state.update { it.copy(error=ActivityEditorIssue.InvalidScope) }
             return
         }
         _state.update { it.copy(loading=true,error=null) }
         viewModelScope.launch {
             try {
                 if(request.activityId>0) when(val result=get(request.scope.vineyardId,request.activityId)) {
-                    is Result.Error -> _state.update { it.copy(error=result.error.userMessage) }
+                    is Result.Error -> _state.update { it.copy(error=ActivityEditorIssue.Failure(result.error)) }
                     is Result.Success -> {
                         original=result.data
                         val loaded=ActivityDraft.from(result.data)
                         val blockId=result.data.blockId
                         val scopeLabel=if(blockId==null) "Whole vineyard" else when(val block=getBlock(request.scope.vineyardId,blockId)) {
-                            is Result.Error -> { _state.update { it.copy(error=block.error.userMessage) };return@launch }
+                            is Result.Error -> { _state.update { it.copy(error=ActivityEditorIssue.Failure(block.error)) };return@launch }
                             is Result.Success -> block.data.name
                         }
                         _state.update { it.copy(ready=true,scopeLabel=scopeLabel,scopeIsWholeVineyard=blockId==null,draft=request.restoredDraft ?: if(request.complete) loaded.copy(status=ActivityStatus.COMPLETED) else loaded) }
                     }
                 } else when(val parent=getVineyard(request.scope.vineyardId)) {
-                    is Result.Error -> _state.update { it.copy(error=parent.error.userMessage) }
+                    is Result.Error -> _state.update { it.copy(error=ActivityEditorIssue.Failure(parent.error)) }
                     is Result.Success -> {
                         if(request.scope.blockId>0) when(val block=getBlock(request.scope.vineyardId,request.scope.blockId)) {
-                            is Result.Error -> _state.update { it.copy(error=block.error.userMessage) }
+                            is Result.Error -> _state.update { it.copy(error=ActivityEditorIssue.Failure(block.error)) }
                             is Result.Success -> readyNew(block.data.name, false)
                         } else readyNew("Whole vineyard", true)
                     }
                 }
             } catch(e: CancellationException) { throw e }
-            catch(_: Exception) { _state.update { it.copy(error=UnexpectedError().userMessage) } }
+            catch(_: Exception) { _state.update { it.copy(error=ActivityEditorIssue.Failure(UnexpectedError())) } }
             finally { _state.update { it.copy(loading=false) } }
         }
     }
@@ -180,17 +180,17 @@ class ActivityEditorViewModel(
         if(!_state.value.canEdit) return
         val parsed=_state.value.draft.parsed(request.scope.vineyardId,request.scope.blockId.takeIf {it>0},original)
         val record=parsed.record
-        if(record==null) { _state.update { it.copy(errors=parsed.errors,error="Review the highlighted fields.") };return }
+        if(record==null) { _state.update { it.copy(errors=parsed.errors,error=ActivityEditorIssue.ReviewFields) };return }
         _state.update { it.copy(saving=true,error=null,errors=emptyMap()) }
         viewModelScope.launch {
             try {
                 val result: Result<Unit,AppError> = if(request.activityId==0L) create(record) else update(record)
                 when(result) {
-                    is Result.Error -> _state.update { it.copy(error=result.error.userMessage) }
+                    is Result.Error -> _state.update { it.copy(error=ActivityEditorIssue.Failure(result.error)) }
                     is Result.Success -> _state.update { it.copy(saved=true) }
                 }
             } catch(e: CancellationException) { throw e }
-            catch(_: Exception) { _state.update { it.copy(error=UnexpectedError().userMessage) } }
+            catch(_: Exception) { _state.update { it.copy(error=ActivityEditorIssue.Failure(UnexpectedError())) } }
             finally { _state.update { it.copy(saving=false) } }
         }
     }

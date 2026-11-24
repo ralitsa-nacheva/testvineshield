@@ -3,6 +3,7 @@ package com.rncoding.testvineshield.core.domain.usecases.activity
 
 import com.rncoding.testvineshield.core.domain.auth.AuthenticatedUserProvider
 import com.rncoding.testvineshield.core.domain.datamodels.ActivityDomainModel
+import com.rncoding.testvineshield.core.domain.error.ActivityValidationReason
 import com.rncoding.testvineshield.core.domain.error.ActivityError
 import com.rncoding.testvineshield.core.domain.error.AppError
 import com.rncoding.testvineshield.core.domain.error.AuthError
@@ -37,9 +38,7 @@ class UpdateActivityUseCase(
 
         if (activity.activityId <= 0L || activity.vineyardId <= 0L) {
             return Result.Error(
-                ActivityError.InvalidInput(
-                    "Invalid activity or vineyard ID."
-                )
+                ActivityError.InvalidInput("Invalid activity or vineyard ID.", reason = ActivityValidationReason.InvalidIdentity)
             )
         }
 

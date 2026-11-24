@@ -2,6 +2,7 @@ package com.rncoding.testvineshield.core.presentation.activities
 
 import com.rncoding.testvineshield.core.domain.datamodels.ActivityDomainModel
 import com.rncoding.testvineshield.core.domain.datamodels.enums.*
+import com.rncoding.testvineshield.core.domain.error.ActivityValidationReason
 import com.rncoding.testvineshield.core.domain.validation.ActivityValidator
 import kotlinx.datetime.LocalDate
 import kotlin.test.*
@@ -19,7 +20,7 @@ class ActivityDraftTest {
     }
     @Test fun requiredTextAndDateHaveFieldErrors() {
         val result=ActivityDraft().parsed(10,null,null)
-        assertTrue(ActivityField.Type in result.errors);assertTrue(ActivityField.Season in result.errors);assertTrue(ActivityField.Planned in result.errors)
+        assertEquals(ActivityDraftIssue.TypeRequired,result.errors[ActivityField.Type]);assertEquals(ActivityDraftIssue.SeasonRequired,result.errors[ActivityField.Season]);assertEquals(ActivityDraftIssue.DateRequired,result.errors[ActivityField.Planned])
     }
     @Test fun impossibleDateIsNotReplacedWithToday() {
         val result=draft().copy(planned="2026-02-30").parsed(10,null,null)
@@ -70,4 +71,24 @@ class ActivityDraftTest {
         assertNull(ActivityDraft.restore(emptyList()))
         assertNull(ActivityDraft.restore(original.savedValues().also {it[7]="not-a-priority"}))
     }
+    @Test fun domainValidationRetainsStableReasonsForExistingRules() {
+        val record = assertNotNull(draft().parsed(10, null, null).record)
+        val cases = listOf(
+            record.copy(vineyardId = 0) to ActivityValidationReason.Vineyard,
+            record.copy(blockId = 0) to ActivityValidationReason.Block,
+            record.copy(activityType = "") to ActivityValidationReason.Type,
+            record.copy(season = "") to ActivityValidationReason.Season,
+            record.copy(status = "invalid") to ActivityValidationReason.Status,
+            record.copy(priority = "invalid") to ActivityValidationReason.Priority,
+            record.copy(phenologicalStage = "invalid") to ActivityValidationReason.Stage,
+            record.copy(status = ActivityStatus.COMPLETED.dbValue) to ActivityValidationReason.CompletionRequired,
+            record.copy(completedAt = LocalDate(2026, 11, 9)) to ActivityValidationReason.CompletionForbidden,
+            record.copy(treatmentProductQuantity = Double.NaN) to ActivityValidationReason.TreatmentQuantity,
+            record.copy(waterQuantity = -1.0) to ActivityValidationReason.WaterQuantity,
+            record.copy(treatmentProductRate = Double.POSITIVE_INFINITY) to ActivityValidationReason.TreatmentRate
+        )
+        for ((input, reason) in cases) assertEquals(reason, assertNotNull(ActivityValidator().validate(input)).reason)
+        assertNull(ActivityValidator().validate(record))
+    }
+
 }

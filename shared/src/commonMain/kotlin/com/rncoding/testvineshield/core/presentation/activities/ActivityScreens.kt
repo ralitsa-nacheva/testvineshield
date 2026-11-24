@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.presentation.activities
 
+import com.rncoding.testvineshield.core.presentation.error.localizedAppErrorMessage
 import androidx.compose.foundation.layout.*
 import com.rncoding.testvineshield.resources.*
 import org.jetbrains.compose.resources.stringResource
@@ -41,7 +42,7 @@ fun ActivityListScreenRoot(ownerId: Long,scope: ActivityScope=ActivityScope(),on
         LazyColumn(Modifier.padding(padding).fillMaxHeight().widthIn(max=720.dp).fillMaxWidth(),
             contentPadding=PaddingValues(16.dp,16.dp,16.dp,100.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
             if(state.loading) item {LinearProgressIndicator(Modifier.fillMaxWidth())}
-            state.error?.let {message -> item {ActivityErrorNotice(message,vm::reload)} }
+            state.error?.let {message -> item {ActivityErrorNotice(localizedAppErrorMessage(message),vm::reload)} }
             if(home && !state.loading && state.error==null) {
                 item {Text(stringResource(Res.string.activity_choose_vineyard))}
                 if(state.snapshot.vineyards.isEmpty()) item {Text(stringResource(Res.string.activity_create_vineyard))}
@@ -80,7 +81,7 @@ fun ActivityDetailsScreenRoot(ownerId: Long,vineyardId: Long,activityId: Long,on
     Scaffold(topBar={RecordTopBar(stringResource(Res.string.activity_details),{if(!vm.state.value.deleting) onBack()},!state.deleting)}) {padding ->
         LazyColumn(Modifier.padding(padding).fillMaxHeight().widthIn(max=720.dp).fillMaxWidth(),contentPadding=PaddingValues(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
             if(state.loading || state.deleting) item {LinearProgressIndicator(Modifier.fillMaxWidth())}
-            state.error?.let {message -> item {ActivityErrorNotice(message,vm::load)} }
+            state.error?.let {message -> item {ActivityErrorNotice(localizedAppErrorMessage(message),vm::load)} }
             state.record?.let {record ->
                 item {Text(record.activityType,style=MaterialTheme.typography.headlineSmall)}
                 item {Text(stringResource(Res.string.activity_scope, when {
@@ -135,7 +136,7 @@ fun ActivityEditorScreenRoot(ownerId: Long,scope: ActivityScope,activityId: Long
     Scaffold(topBar={RecordTopBar(if(activityId==0L) stringResource(Res.string.new_activity) else stringResource(Res.string.edit_activity),{if(!vm.state.value.saving) onBack()},!state.saving)}) {padding ->
         LazyColumn(Modifier.padding(padding).imePadding().fillMaxHeight().widthIn(max=720.dp).fillMaxWidth(),contentPadding=PaddingValues(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
             if(state.loading || state.saving) item {LinearProgressIndicator(Modifier.fillMaxWidth())}
-            state.error?.let {message -> item {ActivityErrorNotice(message,if(!state.ready) vm::load else null)} }
+            state.error?.let {message -> item {ActivityErrorNotice(localizedActivityEditorIssue(message),if(!state.ready) vm::load else null)} }
             if(state.ready) item {Text(stringResource(Res.string.activity_scope, when {
                     state.scopeIsWholeVineyard -> stringResource(Res.string.whole_vineyard)
                     state.scopeUnavailable -> stringResource(Res.string.block_unavailable)
@@ -155,7 +156,7 @@ fun ActivityEditorScreenRoot(ownerId: Long,scope: ActivityScope,activityId: Long
                 OutlinedTextField(value=state.draft.text(field),onValueChange={activity();vm.text(field,it)},label={Text(title)},
                     singleLine=field!=ActivityField.Description && field!=ActivityField.Notes,enabled=state.canEdit,modifier=Modifier.fillMaxWidth(),
                     keyboardOptions=KeyboardOptions(keyboardType=if(field==ActivityField.Planned || field==ActivityField.Completed) KeyboardType.Ascii else KeyboardType.Text),
-                    isError=field in state.errors,supportingText={Text(state.errors[field] ?: if(field==ActivityField.Completed) stringResource(Res.string.completion_date_help) else "")})
+                    isError=field in state.errors,supportingText={Text(state.errors[field]?.let { localizedActivityDraftIssue(it) } ?: if(field==ActivityField.Completed) stringResource(Res.string.completion_date_help) else "")})
             }
             item {RecordChoice(stringResource(Res.string.status_label),state.draft.status,ActivityStatus.entries,state.canEdit,{statuses.getValue(it)},{it?.let(vm::status)},allowUnknown=false)}
             item {RecordChoice(stringResource(Res.string.priority_label),state.draft.priority,ActivityPriority.entries,state.canEdit,{priorities.getValue(it)},{it?.let(vm::priority)},allowUnknown=false)}

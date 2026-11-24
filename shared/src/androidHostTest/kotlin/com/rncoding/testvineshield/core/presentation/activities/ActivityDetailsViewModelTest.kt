@@ -36,7 +36,7 @@ class ActivityDetailsViewModelTest {
         coEvery {delete(10,30)} returns Result.Error(ActivityError.LinkedToDisease)
         val v=vm();advanceUntilIdle();v.requestDelete();v.confirmDelete();advanceUntilIdle()
         assertFalse(v.state.value.deleted);assertNotNull(v.state.value.record)
-        assertEquals(ActivityError.LinkedToDisease.userMessage,v.state.value.error)
+        assertSame(ActivityError.LinkedToDisease,v.state.value.error)
     }
     @Test fun duplicateDeleteSubmitsOnce()=runTest {
         val gate=CompletableDeferred<Unit>();coEvery {delete(10,30)} coAnswers {gate.await();Result.Success(Unit)}

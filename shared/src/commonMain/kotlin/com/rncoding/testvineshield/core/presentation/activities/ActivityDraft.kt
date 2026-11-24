@@ -48,25 +48,25 @@ data class ActivityDraft(
         }
     }
 }
-internal data class ActivityDraftResult(val record: ActivityDomainModel?, val errors: Map<ActivityField,String>)
+internal data class ActivityDraftResult(val record: ActivityDomainModel?, val errors: Map<ActivityField,ActivityDraftIssue>)
 internal fun ActivityDraft.parsed(vineyardId: Long, blockId: Long?, original: ActivityDomainModel?): ActivityDraftResult {
-    val errors = mutableMapOf<ActivityField,String>()
-    if(type.isBlank()) errors[ActivityField.Type] = "Activity type is required."
-    if(season.isBlank()) errors[ActivityField.Season] = "Enter a season, e.g. 2026 or 2026/2027."
+    val errors = mutableMapOf<ActivityField,ActivityDraftIssue>()
+    if(type.isBlank()) errors[ActivityField.Type] = ActivityDraftIssue.TypeRequired
+    if(season.isBlank()) errors[ActivityField.Season] = ActivityDraftIssue.SeasonRequired
     fun date(field: ActivityField, required: Boolean): LocalDate? {
         val value=text(field).trim()
         if(value.isEmpty()) {
-            if(required) errors[field]="An explicit date is required."
+            if(required) errors[field]=ActivityDraftIssue.DateRequired
             return null
         }
         return try {LocalDate.parse(value)} catch(_: IllegalArgumentException) {
-            errors[field]="Use a valid ISO date, e.g. 2026-11-09."
+            errors[field]=ActivityDraftIssue.DateFormat
             null
         }
     }
     val plannedDate=date(ActivityField.Planned,true)
     val completedDate=date(ActivityField.Completed,status==ActivityStatus.COMPLETED)
-    if(status!=ActivityStatus.COMPLETED && completed.isNotBlank()) errors[ActivityField.Completed]="Clear the completion date for a non-completed record."
+    if(status!=ActivityStatus.COMPLETED && completed.isNotBlank()) errors[ActivityField.Completed]=ActivityDraftIssue.ClearCompletion
     if(errors.isNotEmpty() || plannedDate==null) return ActivityDraftResult(null,errors)
     // Copy hidden treatment values and immutable identity from the loaded record; never blank them on a basic edit.
     val template=original ?: ActivityDomainModel(0,vineyardId,blockId,"","","",null,"medium","planned",plannedDate,null,null,null,0,0,null,null,null,null,null)

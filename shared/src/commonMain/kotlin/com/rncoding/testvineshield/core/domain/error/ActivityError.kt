@@ -1,10 +1,29 @@
 
 package com.rncoding.testvineshield.core.domain.error
 
+enum class ActivityValidationReason {
+    Vineyard,
+    Block,
+    Type,
+    Season,
+    Status,
+    Priority,
+    Stage,
+    CompletionRequired,
+    CompletionForbidden,
+    TreatmentQuantity,
+    WaterQuantity,
+    TreatmentRate,
+    NewIdentity,
+    InvalidIdentity,
+    InvalidScope
+}
+
 sealed interface ActivityError : AppError {
 
     data class InvalidInput(
-        override val userMessage: String
+        override val userMessage: String,
+        val reason: ActivityValidationReason? = null
     ) : ActivityError {
         override val debugMessage: String? = userMessage
         override val cause: Throwable? = null
