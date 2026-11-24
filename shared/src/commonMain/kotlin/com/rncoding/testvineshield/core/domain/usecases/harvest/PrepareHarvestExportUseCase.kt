@@ -22,7 +22,7 @@ class PrepareHarvestExportUseCase(
     suspend operator fun invoke(scope: HarvestScope, season: String?, format: HarvestExportFormat): Result<PreparedHarvestExport, AppError> {
         val owner = users.currentUserOrNull() ?: return Result.Error(AuthError.NoActiveSession)
         if (scope.vineyardId <= 0 || scope.blockId <= 0 || (season != null && season.isBlank()))
-            return Result.Error(HarvestError.InvalidInput("Select a valid block and season scope."))
+            return Result.Error(HarvestError.InvalidInput("Select a valid block and season scope.", reason = com.rncoding.testvineshield.core.domain.error.HarvestValidationReason.ExportScope))
         return try {
             val vineyard = when (val result = vineyards.getVineyard(owner.userId, scope.vineyardId)) {
                 is Result.Error -> return Result.Error(result.error)
@@ -34,16 +34,16 @@ class PrepareHarvestExportUseCase(
             }
             val records = harvests.observeHarvestsForBlock(scope.blockId).first()
                 .filter { season == null || it.season == season }
-            if (records.isEmpty()) return Result.Error(HarvestError.InvalidInput("No harvest records to export in this scope."))
+            if (records.isEmpty()) return Result.Error(HarvestError.InvalidInput("No harvest records to export in this scope.", reason = com.rncoding.testvineshield.core.domain.error.HarvestValidationReason.ExportEmpty))
             // Never silently include a repository row outside the requested block.
-            if (records.any { it.blockId != scope.blockId }) return Result.Error(HarvestError.InvalidInput("Harvest scope changed. Reload and try again."))
+            if (records.any { it.blockId != scope.blockId }) return Result.Error(HarvestError.InvalidInput("Harvest scope changed. Reload and try again.", reason = com.rncoding.testvineshield.core.domain.error.HarvestValidationReason.ExportReload))
             val document = encoder.encode(HarvestExportSnapshot(scope, vineyard.name, block.name, season, clock.nowMillis(), records), format)
             if (users.currentUserOrNull()?.userId != owner.userId) return Result.Error(AuthError.NoActiveSession)
             Result.Success(document)
         } catch (e: CancellationException) {
             throw e
         } catch (_: HarvestExportLimitException) {
-            Result.Error(HarvestError.InvalidInput("Export is too large. Select a single season and try again."))
+            Result.Error(HarvestError.InvalidInput("Export is too large. Select a single season and try again.", reason = com.rncoding.testvineshield.core.domain.error.HarvestValidationReason.ExportTooLarge))
         } catch (e: Exception) {
             Result.Error(UnexpectedError(e))
         }

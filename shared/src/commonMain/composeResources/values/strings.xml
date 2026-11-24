@@ -732,4 +732,29 @@
     <string name="spray_issue_review">Review the highlighted fields.</string>
     <string name="spray_issue_draft_conflict">Saved data changed since this draft. Copy any needed text, then reload the saved record before saving.</string>
     <string name="spray_issue_document_failed">Unable to save the export. Check the destination and available space, then try again.</string>
+
+    <string name="harvest_error_block">Select a valid block.</string>
+    <string name="harvest_error_season">Harvest season is required.</string>
+    <string name="harvest_error_units">Harvest units are required.</string>
+    <string name="harvest_error_quantity">Harvest quantity must be a finite value greater than zero.</string>
+    <string name="harvest_error_brix">Brix sugar content must be a finite value between 0 and 100.</string>
+    <string name="harvest_error_scope">Select a valid vineyard and block.</string>
+    <string name="harvest_error_identity">Valid vineyard, block, and harvest IDs are required.</string>
+    <string name="harvest_error_newidentity">A new harvest must not have an existing ID.</string>
+    <string name="harvest_error_harvest">Select a valid harvest.</string>
+    <string name="harvest_error_exportscope">Select a valid block and season scope.</string>
+    <string name="harvest_error_exportempty">No harvest records to export in this scope.</string>
+    <string name="harvest_error_exportreload">Harvest scope changed. Reload and try again.</string>
+    <string name="harvest_error_exporttoolarge">Export is too large. Select a single season and try again.</string>
+    <string name="harvest_draft_season">Enter a season, e.g. 2026 or 2026/2027.</string>
+    <string name="harvest_draft_date">Enter a valid ISO date, e.g. 2026-11-09.</string>
+    <string name="harvest_draft_decimal">Use one dot or comma decimal separator; no thousands grouping.</string>
+    <string name="harvest_draft_required">An explicit quantity is required.</string>
+    <string name="harvest_draft_positive">Quantity must be greater than zero.</string>
+    <string name="harvest_draft_brix">Brix must be between 0 and 100.</string>
+    <string name="harvest_draft_unit">Choose the unit used for this quantity.</string>
+    <string name="harvest_issue_reviewfields">Review the highlighted fields.</string>
+    <string name="harvest_issue_invalidscope">Invalid harvest scope.</string>
+    <string name="harvest_issue_documentsavefailed">Unable to save the export. Check the destination and available space, then try again.</string>
+    <string name="harvest_error_not_found">The requested harvest could not be found.</string>
 </resources>

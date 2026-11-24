@@ -35,9 +35,7 @@ class DeleteHarvestUseCase(
             harvestId <= 0L
         ) {
             return Result.Error(
-                HarvestError.InvalidInput(
-                    "Valid vineyard, block, and harvest IDs are required."
-                )
+                HarvestError.InvalidInput("Valid vineyard, block, and harvest IDs are required.", reason = com.rncoding.testvineshield.core.domain.error.HarvestValidationReason.Identity)
             )
         }
 

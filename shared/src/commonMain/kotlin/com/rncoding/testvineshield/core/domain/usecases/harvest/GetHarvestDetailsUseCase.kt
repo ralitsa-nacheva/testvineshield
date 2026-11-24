@@ -12,7 +12,7 @@ class GetHarvestDetailsUseCase(
     private val harvests: HarvestRepository
 ) {
     suspend operator fun invoke(scope: HarvestScope, harvestId: Long): Result<HarvestDomainModel, AppError> {
-        if (harvestId <= 0) return Result.Error(HarvestError.InvalidInput("Select a valid harvest."))
+        if (harvestId <= 0) return Result.Error(HarvestError.InvalidInput("Select a valid harvest.", reason = com.rncoding.testvineshield.core.domain.error.HarvestValidationReason.Harvest))
         return try {
             when (val block = getBlock(scope.vineyardId, scope.blockId)) {
                 is Result.Error -> Result.Error(block.error)

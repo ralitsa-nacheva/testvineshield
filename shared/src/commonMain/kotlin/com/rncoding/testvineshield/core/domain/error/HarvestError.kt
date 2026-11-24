@@ -4,7 +4,8 @@ package com.rncoding.testvineshield.core.domain.error
 sealed interface HarvestError : AppError {
 
     data class InvalidInput(
-        override val userMessage: String
+        override val userMessage: String,
+        val reason: HarvestValidationReason? = null
     ) : HarvestError {
         override val debugMessage: String? = userMessage
         override val cause: Throwable? = null

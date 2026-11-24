@@ -84,4 +84,21 @@ class HarvestEditorViewModelTest {
         val v = vm(); advanceUntilIdle(); v.save(); runCurrent(); store.clear(); advanceUntilIdle()
         assertFalse(v.state.value.saved); assertFalse(v.state.value.saving)
     }
+    @Test fun invalidDateStaysTypedAndFailurePreservesDraftWithoutWriting() = runTest {
+        val v = vm(); advanceUntilIdle()
+        v.text(HarvestField.Date, "2026-99-99"); v.save()
+        assertEquals(HarvestDraftIssue.Date, v.state.value.errors[HarvestField.Date])
+        assertEquals(HarvestIssue.ReviewFields, v.state.value.error)
+        assertEquals("2026-99-99", v.state.value.draft.date)
+        verify { create wasNot Called; update wasNot Called }
+        v.text(HarvestField.Date, draft.date)
+        assertNull(v.state.value.error)
+        assertFalse(HarvestField.Date in v.state.value.errors)
+        val failure = HarvestError.InvalidInput("diagnostic fallback", HarvestValidationReason.Quantity)
+        coEvery { create(any(), 10) } returns Result.Error(failure)
+        v.save(); advanceUntilIdle()
+        assertSame(failure, assertIs<HarvestIssue.Failure>(v.state.value.error).error)
+        assertEquals(draft, v.state.value.draft)
+        assertTrue(v.state.value.canEdit); assertFalse(v.state.value.saved)
+    }
 }

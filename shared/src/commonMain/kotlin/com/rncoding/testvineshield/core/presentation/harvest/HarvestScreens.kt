@@ -34,14 +34,14 @@ fun HarvestListScreenRoot(ownerId: Long, scope: HarvestScope, onBack: () -> Unit
         if (!state.loading && state.snapshot != null) ExtendedFloatingActionButton(onClick = userAction(onCreate)) { Text(stringResource(Res.string.harvest_add)) }
     }) { padding ->
         LazyColumn(Modifier.padding(padding).fillMaxHeight().widthIn(max = 720.dp).fillMaxWidth(), contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 100.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            if (state.loading) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
-            state.error?.let { item { HarvestErrorNotice(it, vm::reload) } }
+            if (state.loading) item(key = "harvest-HarvestScreens-1", contentType = "harvest-HarvestScreens-1") { LinearProgressIndicator(Modifier.fillMaxWidth()) }
+            state.error?.let { item(key = "harvest-HarvestScreens-2", contentType = "harvest-HarvestScreens-2") { HarvestErrorNotice(it, vm::reload) } }
             state.snapshot?.let { snapshot ->
-                item { Text(snapshot.blockName, style = MaterialTheme.typography.headlineSmall) }
-                item { OutlinedButton(onClick = userAction { onExport(season) }, enabled = snapshot.records.any { season == null || it.season == season }) { Text(stringResource(Res.string.harvest_export_records)) } }
-                item { RecordChoice(stringResource(Res.string.season_filter_label), season, snapshot.records.map { it.season }.distinct().sortedDescending(), true, { it }, { season = it }, nullLabel = stringResource(Res.string.all_seasons)) }
+                item(key = "harvest-HarvestScreens-3", contentType = "harvest-HarvestScreens-3") { Text(snapshot.blockName, style = MaterialTheme.typography.headlineSmall) }
+                item(key = "harvest-HarvestScreens-4", contentType = "harvest-HarvestScreens-4") { OutlinedButton(onClick = userAction { onExport(season) }, enabled = snapshot.records.any { season == null || it.season == season }) { Text(stringResource(Res.string.harvest_export_records)) } }
+                item(key = "harvest-HarvestScreens-5", contentType = "harvest-HarvestScreens-5") { RecordChoice(stringResource(Res.string.season_filter_label), season, snapshot.records.map { it.season }.distinct().sortedDescending(), true, { it }, { season = it }, nullLabel = stringResource(Res.string.all_seasons)) }
                 val visible = snapshot.records.filter { season == null || it.season == season }
-                if (visible.isEmpty()) item { Text(if (snapshot.records.isEmpty()) stringResource(Res.string.harvest_empty) else stringResource(Res.string.harvest_season_empty)) }
+                if (visible.isEmpty()) item(key = "harvest-HarvestScreens-6", contentType = "harvest-HarvestScreens-6") { Text(if (snapshot.records.isEmpty()) stringResource(Res.string.harvest_empty) else stringResource(Res.string.harvest_season_empty)) }
                 items(visible, key = { it.harvestId }) { record ->
                     OutlinedCard(Modifier.fillMaxWidth()) {
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -53,7 +53,7 @@ fun HarvestListScreenRoot(ownerId: Long, scope: HarvestScope, onBack: () -> Unit
                         }
                     }
                 }
-                item { Text(stringResource(Res.string.harvest_units_help)) }
+                item(key = "harvest-HarvestScreens-7", contentType = "harvest-HarvestScreens-7") { Text(stringResource(Res.string.harvest_units_help)) }
             }
         }
     }
@@ -71,15 +71,15 @@ fun HarvestDetailsScreenRoot(ownerId: Long, key: HarvestKey, onBack: () -> Unit,
     }
     Scaffold(topBar = { RecordTopBar(stringResource(Res.string.harvest_details), { if (!vm.state.value.deleting) onBack() }, !state.deleting) }) { padding ->
         LazyColumn(Modifier.padding(padding).fillMaxHeight().widthIn(max = 720.dp).fillMaxWidth(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            if (state.loading || state.deleting) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
-            state.error?.let { item { HarvestErrorNotice(it, if (state.deleting) null else vm::load) } }
+            if (state.loading || state.deleting) item(key = "harvest-HarvestScreens-8", contentType = "harvest-HarvestScreens-8") { LinearProgressIndicator(Modifier.fillMaxWidth()) }
+            state.error?.let { item(key = "harvest-HarvestScreens-9", contentType = "harvest-HarvestScreens-9") { HarvestErrorNotice(it, if (state.deleting) null else vm::load) } }
             state.record?.let { record ->
-                item { Text(record.harvestDate.toString(), style = MaterialTheme.typography.headlineSmall) }
-                item { Text(stringResource(Res.string.activity_season, record.season)) }
-                item { Text(stringResource(Res.string.harvest_quantity_value, harvestNumberText(record.quantity), record.units.ifBlank { stringResource(Res.string.unknown_unit) })) }
-                item { Text(stringResource(Res.string.harvest_brix_value, record.brixSugarContent?.let(::harvestNumberText) ?: stringResource(Res.string.harvest_not_measured))) }
-                item { Button(onClick = userAction(onEdit), enabled = !state.deleting, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.harvest_edit)) } }
-                item { OutlinedButton(onClick = userAction(vm::requestDelete), enabled = !state.deleting, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.harvest_delete)) } }
+                item(key = "harvest-HarvestScreens-10", contentType = "harvest-HarvestScreens-10") { Text(record.harvestDate.toString(), style = MaterialTheme.typography.headlineSmall) }
+                item(key = "harvest-HarvestScreens-11", contentType = "harvest-HarvestScreens-11") { Text(stringResource(Res.string.activity_season, record.season)) }
+                item(key = "harvest-HarvestScreens-12", contentType = "harvest-HarvestScreens-12") { Text(stringResource(Res.string.harvest_quantity_value, harvestNumberText(record.quantity), record.units.ifBlank { stringResource(Res.string.unknown_unit) })) }
+                item(key = "harvest-HarvestScreens-13", contentType = "harvest-HarvestScreens-13") { Text(stringResource(Res.string.harvest_brix_value, record.brixSugarContent?.let(::harvestNumberText) ?: stringResource(Res.string.harvest_not_measured))) }
+                item(key = "harvest-HarvestScreens-14", contentType = "harvest-HarvestScreens-14") { Button(onClick = userAction(onEdit), enabled = !state.deleting, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.harvest_edit)) } }
+                item(key = "harvest-HarvestScreens-15", contentType = "harvest-HarvestScreens-15") { OutlinedButton(onClick = userAction(vm::requestDelete), enabled = !state.deleting, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.harvest_delete)) } }
             }
         }
     }
@@ -111,36 +111,36 @@ fun HarvestEditorScreenRoot(ownerId: Long, key: HarvestKey, onBack: () -> Unit, 
     val poundLabel = stringResource(Res.string.unit_pound)
     Scaffold(topBar = { RecordTopBar(if (key.harvestId == 0L) stringResource(Res.string.harvest_new) else stringResource(Res.string.harvest_edit), { if (!vm.state.value.saving) onBack() }, !state.saving) }) { padding ->
         LazyColumn(Modifier.padding(padding).imePadding().fillMaxHeight().widthIn(max = 720.dp).fillMaxWidth(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            if (state.loading || state.saving) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
-            state.error?.let { item { HarvestErrorNotice(it, if (state.ready) null else vm::load) } }
-            item { Text(state.blockName, style = MaterialTheme.typography.titleMedium) }
-            item { Text(stringResource(Res.string.harvest_save_help)) }
-            items(HarvestField.entries, key = { it.name }) { field ->
+            if (state.loading || state.saving) item(key = "harvest-HarvestScreens-16", contentType = "harvest-HarvestScreens-16") { LinearProgressIndicator(Modifier.fillMaxWidth()) }
+            state.error?.let { item(key = "harvest-HarvestScreens-17", contentType = "harvest-HarvestScreens-17") { HarvestErrorNotice(it, if (state.ready) null else vm::load) } }
+            item(key = "harvest-HarvestScreens-18", contentType = "harvest-HarvestScreens-18") { Text(state.blockName, style = MaterialTheme.typography.titleMedium) }
+            item(key = "harvest-HarvestScreens-19", contentType = "harvest-HarvestScreens-19") { Text(stringResource(Res.string.harvest_save_help)) }
+            items(HarvestField.entries, key = { "harvest-field-${it.name}" }, contentType = { "harvest-field-${it.name}" }) { field ->
                 val (label, help, keyboard) = when (field) {
                     HarvestField.Season -> Triple(stringResource(Res.string.harvest_season_required), stringResource(Res.string.harvest_season_help), KeyboardType.Text)
                     HarvestField.Date -> Triple(stringResource(Res.string.harvest_date_required), stringResource(Res.string.harvest_date_help), KeyboardType.Ascii)
                     HarvestField.Quantity -> Triple(stringResource(Res.string.harvest_quantity_required), stringResource(Res.string.harvest_quantity_help), KeyboardType.Decimal)
                     HarvestField.Brix -> Triple(stringResource(Res.string.harvest_brix_label), stringResource(Res.string.harvest_brix_help), KeyboardType.Decimal)
                 }
-                OutlinedTextField(value = state.draft.text(field), onValueChange = { activity(); vm.text(field, it) }, enabled = state.canEdit, modifier = Modifier.fillMaxWidth(), label = { Text(label) }, singleLine = true, isError = field in state.errors, supportingText = { Text(state.errors[field] ?: help) }, keyboardOptions = KeyboardOptions(keyboardType = keyboard))
+                OutlinedTextField(value = state.draft.text(field), onValueChange = { activity(); vm.text(field, it) }, enabled = state.canEdit, modifier = Modifier.fillMaxWidth(), label = { Text(label) }, singleLine = true, isError = field in state.errors, supportingText = { Text(state.errors[field]?.let { localizedHarvestDraftIssue(it) } ?: help) }, keyboardOptions = KeyboardOptions(keyboardType = keyboard))
                 if (field == HarvestField.Quantity) {
                     // Keep arbitrary legacy unit labels visible and selectable without interpreting them.
                     val units = (HarvestDraft.commonUnits + listOfNotNull(state.legacyUnit, state.draft.units)).distinct()
                     RecordChoice(stringResource(Res.string.harvest_unit_required), state.draft.units, units, state.canEdit,
                         { when (it) { "t" -> tonneLabel; "lb" -> poundLabel; else -> it } }, vm::units, nullLabel = stringResource(Res.string.select_unit))
-                    state.unitError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                    state.unitError?.let { Text(localizedHarvestDraftIssue(it), color = MaterialTheme.colorScheme.error) }
                 }
             }
-            item { Text(stringResource(Res.string.harvest_unit_change_help)) }
-            item { Button(onClick = userAction { vm.save(); onBusyChanged(vm.state.value.saving) }, enabled = state.canEdit, modifier = Modifier.fillMaxWidth()) { Text(if (state.saving) stringResource(Res.string.saving_action) else stringResource(Res.string.harvest_save)) } }
+            item(key = "harvest-HarvestScreens-20", contentType = "harvest-HarvestScreens-20") { Text(stringResource(Res.string.harvest_unit_change_help)) }
+            item(key = "harvest-HarvestScreens-21", contentType = "harvest-HarvestScreens-21") { Button(onClick = userAction { vm.save(); onBusyChanged(vm.state.value.saving) }, enabled = state.canEdit, modifier = Modifier.fillMaxWidth()) { Text(if (state.saving) stringResource(Res.string.saving_action) else stringResource(Res.string.harvest_save)) } }
         }
     }
 }
 
 @Composable
-private fun HarvestErrorNotice(message: String, retry: (() -> Unit)?) {
+private fun HarvestErrorNotice(message: HarvestIssue, retry: (() -> Unit)?) {
     Column {
-        Text(message, color = MaterialTheme.colorScheme.error)
+        Text(localizedHarvestIssue(message), color = MaterialTheme.colorScheme.error)
         retry?.let { TextButton(onClick = userAction(it)) { Text(stringResource(Res.string.retry)) } }
     }
 }

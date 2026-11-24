@@ -2,6 +2,7 @@ package com.rncoding.testvineshield.core.presentation.harvest
 
 import com.rncoding.testvineshield.core.domain.usecases.harvest.HarvestScope
 import com.rncoding.testvineshield.core.domain.validation.HarvestValidator
+import com.rncoding.testvineshield.core.domain.error.HarvestValidationReason
 import kotlinx.datetime.LocalDate
 import kotlin.test.*
 
@@ -70,5 +71,18 @@ class HarvestDraftTest {
         assertEquals("Infinity", raw.brix)
         assertNull(raw.parsed(scope, old).record)
         assertNotNull(raw.copy(brix = "22.5").parsed(scope, old).record)
+    }
+    @Test fun fieldFailuresAndDomainReasonsStayStructured() {
+        val missing = HarvestDraft().parsed(scope, null)
+        assertEquals(HarvestDraftIssue.Season, missing.errors[HarvestField.Season])
+        assertEquals(HarvestDraftIssue.Date, missing.errors[HarvestField.Date])
+        assertEquals(HarvestDraftIssue.Required, missing.errors[HarvestField.Quantity])
+        assertEquals(HarvestDraftIssue.Unit, missing.unitError)
+        assertEquals(HarvestDraftIssue.Decimal, draft().copy(quantity = "1,2.3").parsed(scope, null).errors[HarvestField.Quantity])
+        assertEquals(HarvestDraftIssue.Positive, draft().copy(quantity = "0").parsed(scope, null).errors[HarvestField.Quantity])
+        assertEquals(HarvestDraftIssue.Brix, draft().copy(brix = "101").parsed(scope, null).errors[HarvestField.Brix])
+        val valid = assertNotNull(draft().parsed(scope, null).record)
+        assertEquals(HarvestValidationReason.Quantity, assertNotNull(HarvestValidator().validate(valid.copy(quantity = 0.0))).reason)
+        assertEquals(HarvestValidationReason.Brix, assertNotNull(HarvestValidator().validate(valid.copy(brixSugarContent = 101.0))).reason)
     }
 }

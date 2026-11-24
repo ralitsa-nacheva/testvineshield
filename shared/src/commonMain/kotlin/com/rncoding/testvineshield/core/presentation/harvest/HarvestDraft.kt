@@ -44,33 +44,33 @@ internal fun harvestNumberText(value: Double): String =
 
 internal data class HarvestDraftResult(
     val record: HarvestDomainModel?,
-    val errors: Map<HarvestField, String>,
-    val unitError: String? = null
+    val errors: Map<HarvestField, HarvestDraftIssue>,
+    val unitError: HarvestDraftIssue? = null
 )
 
 internal fun HarvestDraft.parsed(scope: HarvestScope, original: HarvestDomainModel?): HarvestDraftResult {
-    val errors = mutableMapOf<HarvestField, String>()
-    if (season.isBlank()) errors[HarvestField.Season] = "Enter a season, e.g. 2026 or 2026/2027."
+    val errors = mutableMapOf<HarvestField, HarvestDraftIssue>()
+    if (season.isBlank()) errors[HarvestField.Season] = HarvestDraftIssue.Season
     val actualDate = try { LocalDate.parse(date.trim()) } catch (_: IllegalArgumentException) {
-        errors[HarvestField.Date] = "Enter a valid ISO date, e.g. 2026-11-09."
+        errors[HarvestField.Date] = HarvestDraftIssue.Date
         null
     }
     fun decimal(field: HarvestField, required: Boolean): Double? {
         val parsed = OptionalDecimalInput.parse(text(field))
         if (parsed is DecimalInputResult.Invalid) {
-            errors[field] = "Use one dot or comma decimal separator; no thousands grouping."
+            errors[field] = HarvestDraftIssue.Decimal
             return null
         }
         val value = (parsed as DecimalInputResult.Valid).value
-        if (value == null && required) errors[field] = "An explicit quantity is required."
+        if (value == null && required) errors[field] = HarvestDraftIssue.Required
         return value
     }
     val amount = decimal(HarvestField.Quantity, true)
-    if (amount != null && amount <= 0.0) errors[HarvestField.Quantity] = "Quantity must be greater than zero."
+    if (amount != null && amount <= 0.0) errors[HarvestField.Quantity] = HarvestDraftIssue.Positive
     val measuredBrix = decimal(HarvestField.Brix, false)
-    if (measuredBrix != null && measuredBrix !in 0.0..100.0) errors[HarvestField.Brix] = "Brix must be between 0 and 100."
+    if (measuredBrix != null && measuredBrix !in 0.0..100.0) errors[HarvestField.Brix] = HarvestDraftIssue.Brix
     val selectedUnit = units?.trim()
-    val unitError = if (selectedUnit.isNullOrBlank()) "Choose the unit used for this quantity." else null
+    val unitError = if (selectedUnit.isNullOrBlank()) HarvestDraftIssue.Unit else null
     if (errors.isNotEmpty() || unitError != null || actualDate == null || amount == null || selectedUnit.isNullOrBlank()) {
         return HarvestDraftResult(null, errors, unitError)
     }

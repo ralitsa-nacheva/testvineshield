@@ -21,7 +21,7 @@ class ObserveOwnedHarvestsUseCase(
     @OptIn(ExperimentalCoroutinesApi::class)
     operator fun invoke(scope: HarvestScope): Flow<Result<HarvestNotebookSnapshot, AppError>> {
         if (scope.vineyardId <= 0 || scope.blockId <= 0) {
-            return flowOf(Result.Error(HarvestError.InvalidInput("Select a valid vineyard and block.")))
+            return flowOf(Result.Error(HarvestError.InvalidInput("Select a valid vineyard and block.", reason = com.rncoding.testvineshield.core.domain.error.HarvestValidationReason.Scope)))
         }
         return users.observeUser().flatMapLatest { user ->
             if (user == null) flowOf<Result<HarvestNotebookSnapshot, AppError>>(Result.Error(AuthError.NoActiveSession))

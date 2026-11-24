@@ -732,4 +732,29 @@
     <string name="spray_issue_review">Проверете отбелязаните полета.</string>
     <string name="spray_issue_draft_conflict">Запазените данни са променени след тази чернова. Копирайте необходимия текст, след това заредете записа отново преди запазване.</string>
     <string name="spray_issue_document_failed">Експортът не може да бъде запазен. Проверете местоположението и свободното място, след това опитайте отново.</string>
+
+    <string name="harvest_error_block">Изберете валиден блок.</string>
+    <string name="harvest_error_season">Сезонът на реколтата е задължителен.</string>
+    <string name="harvest_error_units">Мерната единица за реколтата е задължителна.</string>
+    <string name="harvest_error_quantity">Количеството на реколтата трябва да е крайно число, по-голямо от нула.</string>
+    <string name="harvest_error_brix">Захарността по Брикс трябва да е крайно число между 0 и 100.</string>
+    <string name="harvest_error_scope">Изберете валидни лозе и блок.</string>
+    <string name="harvest_error_identity">Необходими са валидни идентификатори на лозе, блок и реколта.</string>
+    <string name="harvest_error_newidentity">Новата реколта не трябва да има съществуващ идентификатор.</string>
+    <string name="harvest_error_harvest">Изберете валиден запис за реколта.</string>
+    <string name="harvest_error_exportscope">Изберете валидни блок и сезон за експорта.</string>
+    <string name="harvest_error_exportempty">Няма записи за реколта за експортиране в избрания обхват.</string>
+    <string name="harvest_error_exportreload">Обхватът на реколтата е променен. Заредете отново и опитайте пак.</string>
+    <string name="harvest_error_exporttoolarge">Експортът е твърде голям. Изберете един сезон и опитайте отново.</string>
+    <string name="harvest_draft_season">Въведете сезон, например 2026 или 2026/2027.</string>
+    <string name="harvest_draft_date">Въведете валидна дата във формат ГГГГ-ММ-ДД, например 2026-11-09.</string>
+    <string name="harvest_draft_decimal">Използвайте точка или запетая за десетичен разделител, без разделители за хилядите.</string>
+    <string name="harvest_draft_required">Въведете количество.</string>
+    <string name="harvest_draft_positive">Количеството трябва да е по-голямо от нула.</string>
+    <string name="harvest_draft_brix">Стойността по Брикс трябва да е между 0 и 100.</string>
+    <string name="harvest_draft_unit">Изберете мерната единица за това количество.</string>
+    <string name="harvest_issue_reviewfields">Проверете отбелязаните полета.</string>
+    <string name="harvest_issue_invalidscope">Невалиден обхват за реколтата.</string>
+    <string name="harvest_issue_documentsavefailed">Експортът не може да бъде запазен. Проверете местоположението и свободното място, след това опитайте отново.</string>
+    <string name="harvest_error_not_found">Търсеният запис за реколта не е намерен.</string>
 </resources>

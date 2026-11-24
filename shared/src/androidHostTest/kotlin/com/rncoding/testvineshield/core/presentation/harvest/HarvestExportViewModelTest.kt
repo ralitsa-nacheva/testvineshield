@@ -1,6 +1,7 @@
 package com.rncoding.testvineshield.core.presentation.harvest
 
 import androidx.lifecycle.ViewModelStore
+import com.rncoding.testvineshield.core.domain.error.HarvestValidationReason
 import com.rncoding.testvineshield.core.domain.error.HarvestError
 import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.export.*
@@ -54,13 +55,13 @@ class HarvestExportViewModelTest {
     @Test fun preparationFailureNeverOpensNativeSaver() = runTest {
         coEvery { prepare(scope, "2026", HarvestExportFormat.JSON) } returns Result.Error(HarvestError.InvalidInput("No records"))
         val v = vm(); v.export(scope, "2026", HarvestExportFormat.JSON, saver); advanceUntilIdle()
-        assertEquals("No records", v.state.value.error)
+        assertEquals(HarvestIssue.Failure(HarvestError.InvalidInput("No records")), v.state.value.error)
         verify { saver wasNot Called }
     }
     @Test fun providerFailureAllowsRetryWithoutReportingSaved() = runTest {
         coEvery { saver.save(document) } returns DocumentSaveResult.Failed("Disk full")
         val v = vm(); v.export(scope, "2026", HarvestExportFormat.JSON, saver); advanceUntilIdle()
-        assertEquals("Disk full", v.state.value.error); assertNull(v.state.value.notice)
+        assertEquals(HarvestIssue.DocumentSaveFailed, v.state.value.error); assertNull(v.state.value.notice)
         coEvery { saver.save(document) } returns DocumentSaveResult.Saved
         v.export(scope, "2026", HarvestExportFormat.JSON, saver); advanceUntilIdle()
         assertEquals(HarvestExportNotice.Saved(2), v.state.value.notice)
@@ -88,4 +89,12 @@ class HarvestExportViewModelTest {
         assertFalse(v.state.value.busy)
     }
 
+    @Test fun typedPreparationReasonReachesUiAndNeverOpensSaver() = runTest {
+        val failure = HarvestError.InvalidInput("diagnostic fallback", HarvestValidationReason.ExportTooLarge)
+        coEvery { prepare(scope, "2026", HarvestExportFormat.JSON) } returns Result.Error(failure)
+        val v = vm(); v.export(scope, "2026", HarvestExportFormat.JSON, saver); advanceUntilIdle()
+        assertSame(failure, assertIs<HarvestIssue.Failure>(v.state.value.error).error)
+        assertNull(v.state.value.notice); assertFalse(v.state.value.busy)
+        verify { saver wasNot Called }
+    }
 }

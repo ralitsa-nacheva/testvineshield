@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
 data class HarvestListState(
     val loading: Boolean = true,
     val snapshot: HarvestNotebookSnapshot? = null,
-    val error: String? = null
+    val error: HarvestIssue? = null
 )
 
 class HarvestListViewModel(private val scope: HarvestScope, private val observe: ObserveOwnedHarvestsUseCase) : ViewModel() {
@@ -32,12 +32,12 @@ class HarvestListViewModel(private val scope: HarvestScope, private val observe:
             try {
                 observe(scope).collect { result ->
                     _state.value = when (result) {
-                        is Result.Error -> HarvestListState(loading = false, error = result.error.userMessage)
+                        is Result.Error -> HarvestListState(loading = false, error = HarvestIssue.Failure(result.error))
                         is Result.Success -> HarvestListState(loading = false, snapshot = result.data)
                     }
                 }
             } catch (e: CancellationException) { throw e }
-            catch (_: Exception) { _state.value = HarvestListState(loading = false, error = UnexpectedError().userMessage) }
+            catch (_: Exception) { _state.value = HarvestListState(loading = false, error = HarvestIssue.Failure(UnexpectedError())) }
         }
     }
 }
@@ -49,7 +49,7 @@ data class HarvestDetailsState(
     val deleting: Boolean = false,
     val confirmDelete: Boolean = false,
     val deleted: Boolean = false,
-    val error: String? = null
+    val error: HarvestIssue? = null
 )
 
 class HarvestDetailsViewModel(
@@ -66,11 +66,11 @@ class HarvestDetailsViewModel(
         viewModelScope.launch {
             try {
                 when (val result = get(key.scope, key.harvestId)) {
-                    is Result.Error -> _state.update { it.copy(error = result.error.userMessage) }
+                    is Result.Error -> _state.update { it.copy(error = HarvestIssue.Failure(result.error)) }
                     is Result.Success -> _state.update { it.copy(record = result.data) }
                 }
             } catch (e: CancellationException) { throw e }
-            catch (_: Exception) { _state.update { it.copy(error = UnexpectedError().userMessage) } }
+            catch (_: Exception) { _state.update { it.copy(error = HarvestIssue.Failure(UnexpectedError())) } }
             finally { _state.update { it.copy(loading = false) } }
         }
     }
@@ -87,11 +87,11 @@ class HarvestDetailsViewModel(
         viewModelScope.launch {
             try {
                 when (val result = delete(key.scope.vineyardId, key.scope.blockId, key.harvestId)) {
-                    is Result.Error -> _state.update { it.copy(error = result.error.userMessage, confirmDelete = false) }
+                    is Result.Error -> _state.update { it.copy(error = HarvestIssue.Failure(result.error), confirmDelete = false) }
                     is Result.Success -> _state.update { it.copy(deleted = true, record = null, confirmDelete = false) }
                 }
             } catch (e: CancellationException) { throw e }
-            catch (_: Exception) { _state.update { it.copy(error = UnexpectedError().userMessage, confirmDelete = false) } }
+            catch (_: Exception) { _state.update { it.copy(error = HarvestIssue.Failure(UnexpectedError()), confirmDelete = false) } }
             finally { _state.update { it.copy(deleting = false) } }
         }
     }
@@ -106,9 +106,9 @@ data class HarvestEditorState(
     val saving: Boolean = false,
     val ready: Boolean = false,
     val saved: Boolean = false,
-    val errors: Map<HarvestField, String> = emptyMap(),
-    val unitError: String? = null,
-    val error: String? = null
+    val errors: Map<HarvestField, HarvestDraftIssue> = emptyMap(),
+    val unitError: HarvestDraftIssue? = null,
+    val error: HarvestIssue? = null
 ) {
     val canEdit get() = ready && !loading && !saving && !saved
 }
@@ -128,17 +128,17 @@ class HarvestEditorViewModel(
         if (_state.value.loading || _state.value.ready || _state.value.saving || _state.value.saved) return
         val key = request.key
         if (key.scope.vineyardId <= 0 || key.scope.blockId <= 0 || key.harvestId < 0) {
-            _state.update { it.copy(error = "Invalid harvest scope.") }
+            _state.update { it.copy(error = HarvestIssue.InvalidScope) }
             return
         }
         _state.update { it.copy(loading = true, error = null) }
         viewModelScope.launch {
             try {
                 when (val block = getBlock(key.scope.vineyardId, key.scope.blockId)) {
-                    is Result.Error -> _state.update { it.copy(error = block.error.userMessage) }
+                    is Result.Error -> _state.update { it.copy(error = HarvestIssue.Failure(block.error)) }
                     is Result.Success -> {
                         val loaded = if (key.harvestId == 0L) null else when (val result = get(key.scope, key.harvestId)) {
-                            is Result.Error -> { _state.update { it.copy(error = result.error.userMessage) }; return@launch }
+                            is Result.Error -> { _state.update { it.copy(error = HarvestIssue.Failure(result.error)) }; return@launch }
                             is Result.Success -> result.data
                         }
                         original = loaded
@@ -147,7 +147,7 @@ class HarvestEditorViewModel(
                     }
                 }
             } catch (e: CancellationException) { throw e }
-            catch (_: Exception) { _state.update { it.copy(error = UnexpectedError().userMessage) } }
+            catch (_: Exception) { _state.update { it.copy(error = HarvestIssue.Failure(UnexpectedError())) } }
             finally { _state.update { it.copy(loading = false) } }
         }
     }
@@ -162,7 +162,7 @@ class HarvestEditorViewModel(
         val parsed = _state.value.draft.parsed(request.key.scope, original)
         val record = parsed.record
         if (record == null) {
-            _state.update { it.copy(errors = parsed.errors, unitError = parsed.unitError, error = "Review the highlighted fields.") }
+            _state.update { it.copy(errors = parsed.errors, unitError = parsed.unitError, error = HarvestIssue.ReviewFields) }
             return
         }
         _state.update { it.copy(saving = true, errors = emptyMap(), unitError = null, error = null) }
@@ -170,17 +170,17 @@ class HarvestEditorViewModel(
             try {
                 if (request.key.harvestId == 0L) {
                     when (val result = create(record, request.key.scope.vineyardId)) {
-                        is Result.Error -> _state.update { it.copy(error = result.error.userMessage) }
+                        is Result.Error -> _state.update { it.copy(error = HarvestIssue.Failure(result.error)) }
                         is Result.Success -> _state.update { it.copy(saved = true) }
                     }
                 } else {
                     when (val result = update(record, request.key.scope.vineyardId)) {
-                        is Result.Error -> _state.update { it.copy(error = result.error.userMessage) }
+                        is Result.Error -> _state.update { it.copy(error = HarvestIssue.Failure(result.error)) }
                         is Result.Success -> _state.update { it.copy(saved = true) }
                     }
                 }
             } catch (e: CancellationException) { throw e }
-            catch (_: Exception) { _state.update { it.copy(error = UnexpectedError().userMessage) } }
+            catch (_: Exception) { _state.update { it.copy(error = HarvestIssue.Failure(UnexpectedError())) } }
             finally { _state.update { it.copy(saving = false) } }
         }
     }

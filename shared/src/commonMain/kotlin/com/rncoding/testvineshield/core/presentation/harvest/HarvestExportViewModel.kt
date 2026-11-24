@@ -19,7 +19,7 @@ sealed interface HarvestExportNotice {
     data object Interrupted : HarvestExportNotice
 }
 
-data class HarvestExportState(val busy: Boolean = false, val notice: HarvestExportNotice? = null, val error: String? = null)
+data class HarvestExportState(val busy: Boolean = false, val notice: HarvestExportNotice? = null, val error: HarvestIssue? = null)
 
 class HarvestExportViewModel(private val prepare: PrepareHarvestExportUseCase) : ViewModel() {
     private val _state = MutableStateFlow(HarvestExportState())
@@ -32,18 +32,18 @@ class HarvestExportViewModel(private val prepare: PrepareHarvestExportUseCase) :
         job = viewModelScope.launch {
             try {
                 when (val result = prepare(scope, season, format)) {
-                    is Result.Error -> _state.value = HarvestExportState(error = result.error.userMessage)
-                    is Result.Success -> when (val saved = saver.save(result.data)) {
+                    is Result.Error -> _state.value = HarvestExportState(error = HarvestIssue.Failure(result.error))
+                    is Result.Success -> when (saver.save(result.data)) {
                         DocumentSaveResult.Saved -> _state.value = HarvestExportState(notice = HarvestExportNotice.Saved(result.data.recordCount))
                         DocumentSaveResult.Cancelled -> _state.value = HarvestExportState(notice = HarvestExportNotice.Cancelled)
-                        is DocumentSaveResult.Failed -> _state.value = HarvestExportState(error = saved.message)
+                        is DocumentSaveResult.Failed -> _state.value = HarvestExportState(error = HarvestIssue.DocumentSaveFailed)
                     }
                 }
             } catch (e: CancellationException) {
                 _state.value = HarvestExportState(notice = HarvestExportNotice.Interrupted)
                 throw e
             } catch (_: Exception) {
-                _state.value = HarvestExportState(error = UnexpectedError().userMessage)
+                _state.value = HarvestExportState(error = HarvestIssue.Failure(UnexpectedError()))
             } finally {
                 _state.value = _state.value.copy(busy = false)
             }

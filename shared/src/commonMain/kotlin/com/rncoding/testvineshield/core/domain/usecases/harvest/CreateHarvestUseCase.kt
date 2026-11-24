@@ -33,15 +33,13 @@ class CreateHarvestUseCase(
 
         if (vineyardId <= 0L || harvest.blockId <= 0L) {
             return Result.Error(
-                HarvestError.InvalidInput("Invalid vineyard or block ID.")
+                HarvestError.InvalidInput("Invalid vineyard or block ID.", reason = com.rncoding.testvineshield.core.domain.error.HarvestValidationReason.Scope)
             )
         }
 
         if (harvest.harvestId != 0L) {
             return Result.Error(
-                HarvestError.InvalidInput(
-                    "A new harvest must not have an existing ID."
-                )
+                HarvestError.InvalidInput("A new harvest must not have an existing ID.", reason = com.rncoding.testvineshield.core.domain.error.HarvestValidationReason.NewIdentity)
             )
         }
 
