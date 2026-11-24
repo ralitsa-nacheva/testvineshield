@@ -57,8 +57,8 @@ class BlockDraftTest {
     }
     @Test fun nameAndVarietyRequiredButOtherTextCanBeUnknown() {
         val result = BlockDraft().parsed(10, 0)
-        assertTrue(BlockField.Name in result.errors)
-        assertTrue(BlockField.Variety in result.errors)
+        assertEquals(BlockDraftIssue.NameRequired, result.errors[BlockField.Name])
+        assertEquals(BlockDraftIssue.VarietyRequired, result.errors[BlockField.Variety])
         assertNotNull(draft().parsed(10, 0).block)
     }
 

@@ -68,32 +68,32 @@ data class BlockDraft(
         }
     }
 }
-internal data class BlockDraftResult(val block: BlockDomainModel?, val errors: Map<BlockField, String>)
+internal data class BlockDraftResult(val block: BlockDomainModel?, val errors: Map<BlockField, BlockDraftIssue>)
 internal fun BlockDraft.parsed(vineyardId: Long, blockId: Long): BlockDraftResult {
-    val errors = mutableMapOf<BlockField, String>()
-    if (name.isBlank()) errors[BlockField.Name] = "Block name is required."
-    if (variety.isBlank()) errors[BlockField.Variety] = "Vine variety is required."
+    val errors = mutableMapOf<BlockField, BlockDraftIssue>()
+    if (name.isBlank()) errors[BlockField.Name] = BlockDraftIssue.NameRequired
+    if (variety.isBlank()) errors[BlockField.Variety] = BlockDraftIssue.VarietyRequired
     fun measure(field: BlockField): Double? = when (val parsed = OptionalDecimalInput.parse(text(field))) {
-        DecimalInputResult.Invalid -> { errors[field] = "Use a finite decimal with one dot or comma, or leave blank."
+        DecimalInputResult.Invalid -> { errors[field] = BlockDraftIssue.Decimal
             null }
-        is DecimalInputResult.Valid -> parsed.value.also { if (it != null && it <= 0.0) errors[field] = "Known value must be greater than zero." }
+        is DecimalInputResult.Valid -> parsed.value.also { if (it != null && it <= 0.0) errors[field] = BlockDraftIssue.Positive }
     }
     val areaValue = measure(BlockField.Area)
     val spacingValue = measure(BlockField.Spacing)
     val count = if (rows.isBlank()) null else rows.trim().takeIf { it.isNotEmpty() && it.all { character -> character in '0'..'9' } }?.toIntOrNull().also {
-        if (it == null || it <= 0) errors[BlockField.Rows] = "Use a positive whole number, or leave blank."
+        if (it == null || it <= 0) errors[BlockField.Rows] = BlockDraftIssue.Rows
     }
     val date = if (planted.isBlank()) null else try { LocalDate.parse(planted.trim()) }
-    catch (_: IllegalArgumentException) { errors[BlockField.Planted] = "Use a valid ISO date, e.g. 2020-04-15, or leave blank."
+    catch (_: IllegalArgumentException) { errors[BlockField.Planted] = BlockDraftIssue.PlantedDate
         null }
     val observedOn = if (stageObservedOn.isBlank()) null else if (stage == null) {
-        errors[BlockField.StageObservedOn] = "Choose an observed stage first."
+        errors[BlockField.StageObservedOn] = BlockDraftIssue.StageFirst
         null
     } else {
         try {
             LocalDate.parse(stageObservedOn.trim())
         } catch (_: IllegalArgumentException) {
-            errors[BlockField.StageObservedOn] = "Enter a valid observation date in YYYY-MM-DD format."
+            errors[BlockField.StageObservedOn] = BlockDraftIssue.ObservationDate
             null
         }
     }

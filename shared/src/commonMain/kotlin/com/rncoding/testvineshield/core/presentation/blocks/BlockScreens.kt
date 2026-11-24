@@ -157,7 +157,7 @@ fun BlockEditorScreen(state: BlockEditorState, editing: Boolean, onBack: ()->Uni
     Scaffold(topBar = { RecordTopBar(if (editing) stringResource(Res.string.edit_block) else stringResource(Res.string.new_block), onBack, !state.saving) }) { padding ->
         LazyColumn(Modifier.padding(padding).imePadding().fillMaxHeight().widthIn(max = 720.dp).fillMaxWidth(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (state.loading || state.saving) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
-            state.error?.let { error -> item { ErrorNotice(error, if (!state.ready) onRetry else null) } }
+            state.error?.let { error -> item { ErrorNotice(localizedBlockEditorIssue(error), if (!state.ready) onRetry else null) } }
             item { Text(stringResource(Res.string.block_save_help)) }
             items(BlockField.entries.filter { it != BlockField.StageObservedOn }, key = { it.name }) { field ->
                 val (label, help, keyboard) = when (field) {
@@ -172,7 +172,7 @@ fun BlockEditorScreen(state: BlockEditorState, editing: Boolean, onBack: ()->Uni
                     BlockField.Planted -> Triple(stringResource(Res.string.planting_date), stringResource(Res.string.optional_iso_date), KeyboardType.Ascii)
                 }
                 OutlinedTextField(value = state.draft.text(field), onValueChange = { activity()
-                    onText(field, it) }, enabled = state.canEdit, modifier = Modifier.fillMaxWidth(), label = {Text(label)}, singleLine = true, isError = field in state.errors, supportingText = {Text(state.errors[field]?: help)}, keyboardOptions = KeyboardOptions(keyboardType = keyboard))
+                    onText(field, it) }, enabled = state.canEdit, modifier = Modifier.fillMaxWidth(), label = {Text(label)}, singleLine = true, isError = field in state.errors, supportingText = {Text(state.errors[field]?.let { localizedBlockDraftIssue(it) } ?: help)}, keyboardOptions = KeyboardOptions(keyboardType = keyboard))
                 if (field==BlockField.Area) RecordChoice(stringResource(Res.string.area_unit), state.draft.areaUnit, AreaUnit.entries, state.canEdit, {it.symbol}, onAreaUnit, nullLabel = stringResource(Res.string.unit_unspecified))
                 if (field==BlockField.Spacing) RecordChoice(stringResource(Res.string.spacing_unit), state.draft.spacingUnit, LengthUnit.entries, state.canEdit, {it.symbol}, onSpacingUnit, nullLabel = stringResource(Res.string.unit_unspecified))
             }
@@ -187,7 +187,7 @@ fun BlockEditorScreen(state: BlockEditorState, editing: Boolean, onBack: ()->Uni
                         },
                         label = { Text(stringResource(Res.string.stage_observation_date)) },
                         supportingText = {
-                            Text(state.errors[BlockField.StageObservedOn] ?: stringResource(Res.string.stage_date_help))
+                            Text(state.errors[BlockField.StageObservedOn]?.let { localizedBlockDraftIssue(it) } ?: stringResource(Res.string.stage_date_help))
                         },
                         isError = BlockField.StageObservedOn in state.errors,
                         enabled = state.canEdit,

@@ -142,4 +142,26 @@ class BlockEditorViewModelTest {
         assertNull(v.state.value.savedId)
         assertFalse(v.state.value.saving)
     }
+    @Test fun localIssuesHaveStableIdentityAndEditingClearsFieldIssue() = runTest {
+        val v = vm(); advanceUntilIdle(); v.save(); advanceUntilIdle()
+        assertEquals(BlockEditorIssue.ReviewFields, v.state.value.error)
+        assertEquals(BlockDraftIssue.NameRequired, v.state.value.errors[BlockField.Name])
+        assertEquals(BlockDraftIssue.VarietyRequired, v.state.value.errors[BlockField.Variety])
+        coVerify(exactly = 0) { create(any()) }
+        v.text(BlockField.Name, "North")
+        assertFalse(BlockField.Name in v.state.value.errors); assertNull(v.state.value.error)
+        assertTrue(BlockField.Variety in v.state.value.errors)
+    }
+    @Test fun domainSaveFailureRetainsIdentityDraftAndRetryCapability() = runTest {
+        val failure = DatabaseError.Unknown(DatabaseError.Operation.INSERT, IllegalStateException("private diagnostic"))
+        coEvery { create(any()) } returns Result.Error(failure)
+        val v = vm(); advanceUntilIdle(); fill(v); v.save(); advanceUntilIdle()
+        assertSame(failure, assertIs<BlockEditorIssue.Failure>(v.state.value.error).error)
+        assertEquals("North", v.state.value.draft.name); assertFalse(v.state.value.saving)
+        assertTrue(v.state.value.canEdit)
+        coEvery { create(any()) } returns Result.Success(21L)
+        v.save(); advanceUntilIdle(); assertEquals(21L, v.state.value.savedId)
+        assertNull(v.state.value.error)
+    }
+
 }

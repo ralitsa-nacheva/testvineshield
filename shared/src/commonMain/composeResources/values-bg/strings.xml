@@ -660,4 +660,14 @@
     <string name="network_error_invalid_response">Сървърът върна невалидни данни.</string>
     <string name="network_error_unknown">Възникна неочаквана мрежова грешка.</string>
     <string name="block_error_not_found">Заявеният парцел не е намерен.</string>
+    <string name="block_validation_namerequired">Името на парцела е задължително.</string>
+    <string name="block_validation_varietyrequired">Сортът на лозата е задължителен.</string>
+    <string name="block_validation_decimal">Въведете крайно десетично число с една точка или запетая или оставете празно.</string>
+    <string name="block_validation_positive">Известната стойност трябва да е по-голяма от нула.</string>
+    <string name="block_validation_rows">Въведете положително цяло число или оставете празно.</string>
+    <string name="block_validation_planteddate">Въведете валидна ISO дата, например 2020-04-15, или оставете празно.</string>
+    <string name="block_validation_stagefirst">Първо изберете наблюдавана фаза.</string>
+    <string name="block_validation_observationdate">Въведете валидна дата на наблюдение във формат YYYY-MM-DD.</string>
+    <string name="block_editor_invalid_request">Невалиден идентификатор на лозе или парцел.</string>
+    <string name="block_editor_review_fields">Проверете отбелязаните полета.</string>
 </resources>

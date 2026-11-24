@@ -78,7 +78,7 @@ class BlockDetailsViewModel(private val key: BlockKey, private val get: GetBlock
     }
 }
 data class BlockEditorRequest(val vineyardId: Long, val blockId: Long = 0, val restoredDraft: BlockDraft? = null)
-data class BlockEditorState(val draft: BlockDraft = BlockDraft(), val loading: Boolean = false, val saving: Boolean = false, val ready: Boolean = false, val savedId: Long? = null, val errors: Map<BlockField, String> = emptyMap(), val error: String? = null) {
+data class BlockEditorState(val draft: BlockDraft = BlockDraft(), val loading: Boolean = false, val saving: Boolean = false, val ready: Boolean = false, val savedId: Long? = null, val errors: Map<BlockField, BlockDraftIssue> = emptyMap(), val error: BlockEditorIssue? = null) {
     val canEdit get() = ready && !loading && !saving && savedId==null
 }
 class BlockEditorViewModel(
@@ -89,20 +89,20 @@ private val request: BlockEditorRequest, private val create: CreateBlockUseCase,
     init { load() }
     fun load() {
         if (_state.value.loading || _state.value.saving || _state.value.ready) return
-        if (request.vineyardId<=0 || request.blockId<0) { _state.update { it.copy(error = "Invalid vineyard or block ID.") }
+        if (request.vineyardId<=0 || request.blockId<0) { _state.update { it.copy(error = BlockEditorIssue.InvalidRequest) }
             return }
         _state.update { it.copy(loading = true, error = null) }
         viewModelScope.launch {
             try {
                 if (request.blockId==0L) when (val result = getVineyard(request.vineyardId)) {
-                    is Result.Error -> _state.update { it.copy(error = result.error.userMessage) }
+                    is Result.Error -> _state.update { it.copy(error = BlockEditorIssue.Failure(result.error)) }
                     is Result.Success -> _state.update { it.copy(ready = true, draft = request.restoredDraft?: BlockDraft()) }
                 } else when (val result = get(request.vineyardId, request.blockId)) {
-                    is Result.Error -> _state.update { it.copy(error = result.error.userMessage) }
+                    is Result.Error -> _state.update { it.copy(error = BlockEditorIssue.Failure(result.error)) }
                     is Result.Success -> _state.update { it.copy(ready = true, draft = request.restoredDraft?: BlockDraft.from(result.data)) }
                 }
             } catch (e: CancellationException) { throw e }
-            catch (_: Exception) { _state.update { it.copy(error = UnexpectedError().userMessage) } }
+            catch (_: Exception) { _state.update { it.copy(error = BlockEditorIssue.Failure(UnexpectedError())) } }
             finally { _state.update { it.copy(loading = false) } }
         }
     }
@@ -125,7 +125,7 @@ private val request: BlockEditorRequest, private val create: CreateBlockUseCase,
         if (!_state.value.canEdit) return
         val parsed = _state.value.draft.parsed(request.vineyardId, request.blockId)
         val model = parsed.block
-        if (model==null) { _state.update { it.copy(errors = parsed.errors, error = "Review the highlighted fields.") }
+        if (model==null) { _state.update { it.copy(errors = parsed.errors, error = BlockEditorIssue.ReviewFields) }
             return }
         _state.update { it.copy(saving = true, error = null, errors = emptyMap()) }
         viewModelScope.launch {
@@ -135,11 +135,11 @@ private val request: BlockEditorRequest, private val create: CreateBlockUseCase,
                     is Result.Success -> Result.Success(request.blockId)
                 }
                 when (result) {
-                    is Result.Error -> _state.update { it.copy(error = result.error.userMessage) }
+                    is Result.Error -> _state.update { it.copy(error = BlockEditorIssue.Failure(result.error)) }
                     is Result.Success -> _state.update { it.copy(savedId = result.data) }
                 }
             } catch (e: CancellationException) { throw e }
-            catch (_: Exception) { _state.update { it.copy(error = UnexpectedError().userMessage) } }
+            catch (_: Exception) { _state.update { it.copy(error = BlockEditorIssue.Failure(UnexpectedError())) } }
             finally { _state.update { it.copy(saving = false) } }
         }
     }

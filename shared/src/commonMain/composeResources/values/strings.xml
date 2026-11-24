@@ -660,4 +660,14 @@
     <string name="network_error_invalid_response">The server returned invalid data.</string>
     <string name="network_error_unknown">An unexpected network error occurred.</string>
     <string name="block_error_not_found">The requested block could not be found.</string>
+    <string name="block_validation_namerequired">Block name is required.</string>
+    <string name="block_validation_varietyrequired">Vine variety is required.</string>
+    <string name="block_validation_decimal">Use a finite decimal with one dot or comma, or leave blank.</string>
+    <string name="block_validation_positive">Known value must be greater than zero.</string>
+    <string name="block_validation_rows">Use a positive whole number, or leave blank.</string>
+    <string name="block_validation_planteddate">Use a valid ISO date, e.g. 2020-04-15, or leave blank.</string>
+    <string name="block_validation_stagefirst">Choose an observed stage first.</string>
+    <string name="block_validation_observationdate">Enter a valid observation date in YYYY-MM-DD format.</string>
+    <string name="block_editor_invalid_request">Invalid vineyard or block ID.</string>
+    <string name="block_editor_review_fields">Review the highlighted fields.</string>
 </resources>
