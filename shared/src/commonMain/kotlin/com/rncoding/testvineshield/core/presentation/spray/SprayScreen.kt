@@ -43,25 +43,25 @@ fun SprayScreenRoot(ownerId: Long, key: SprayKey, onBack: () -> Unit, onFinished
     val activity = LocalUserActivity.current
     Scaffold(topBar = { RecordTopBar(stringResource(Res.string.spray_title), { if (!vm.state.value.busy) onBack() }, !state.busy) }) { padding ->
         LazyColumn(Modifier.padding(padding).imePadding().fillMaxHeight().widthIn(max = 720.dp).fillMaxWidth(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            if (state.busy) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
-            state.error?.let { error -> item {
-                Text(error, color = MaterialTheme.colorScheme.error)
+            if (state.busy) item(key = "spray-progress", contentType = "spray-progress") { LinearProgressIndicator(Modifier.fillMaxWidth()) }
+            state.error?.let { error -> item(key = "spray-error", contentType = "spray-error") {
+                Text(localizedSprayIssue(error), color = MaterialTheme.colorScheme.error)
                 TextButton(onClick = userAction { vm.load(discardDraft = true) }, enabled = !state.busy) { Text(if (state.editing) stringResource(Res.string.spray_reload) else stringResource(Res.string.retry)) }
             } }
             state.snapshot?.let { snapshot ->
-                item { Text(snapshot.activity.activityType, style = MaterialTheme.typography.headlineSmall); Text(stringResource(Res.string.spray_season, snapshot.activity.season)) }
-                item { Text(stringResource(Res.string.spray_purpose)) }
+                item(key = "spray-heading", contentType = "spray-heading") { Text(snapshot.activity.activityType, style = MaterialTheme.typography.headlineSmall); Text(stringResource(Res.string.spray_season, snapshot.activity.season)) }
+                item(key = "spray-purpose", contentType = "spray-purpose") { Text(stringResource(Res.string.spray_purpose)) }
                 val old = snapshot.activity
-                if (old.treatmentProduct != null || old.treatmentProductQuantity != null || old.waterQuantity != null || old.treatmentProductRate != null) item {
+                if (old.treatmentProduct != null || old.treatmentProductQuantity != null || old.waterQuantity != null || old.treatmentProductRate != null) item(key = "spray-legacy", contentType = "spray-legacy") {
                     Text(stringResource(Res.string.spray_legacy_help))
                 }
                 if (!state.editing) {
                     val record = snapshot.record
                     if (record != null) {
-                        item { Text(stringResource(Res.string.spray_applied, record.applicationDate.toString(), record.localTime ?: stringResource(Res.string.spray_time_unknown), record.timeZone)) }
-                        item { Text(stringResource(Res.string.spray_area, amount(record.treatedArea, record.areaUnit?.symbol))) }
-                        item { Text(stringResource(Res.string.spray_water, amount(record.waterQuantity, record.waterUnit?.label))) }
-                        record.products.forEachIndexed { index, line -> item {
+                        item(key = "spray-view-date", contentType = "spray-view-date") { Text(stringResource(Res.string.spray_applied, record.applicationDate.toString(), record.localTime ?: stringResource(Res.string.spray_time_unknown), record.timeZone)) }
+                        item(key = "spray-view-area", contentType = "spray-view-area") { Text(stringResource(Res.string.spray_area, amount(record.treatedArea, record.areaUnit?.symbol))) }
+                        item(key = "spray-view-water", contentType = "spray-view-water") { Text(stringResource(Res.string.spray_water, amount(record.waterQuantity, record.waterUnit?.label))) }
+                        record.products.forEachIndexed { index, line -> item(key = "spray-view-product-${line.lineId}-$index", contentType = "spray-view-product") {
                             OutlinedCard(Modifier.fillMaxWidth()) { Column(Modifier.padding(16.dp)) {
                                 Text("${index + 1}. ${line.productName}", style = MaterialTheme.typography.titleMedium)
                                 Text(stringResource(Res.string.spray_quantity, amount(line.quantity, line.unit?.label)))
@@ -69,35 +69,37 @@ fun SprayScreenRoot(ownerId: Long, key: SprayKey, onBack: () -> Unit, onFinished
                                 Text(stringResource(Res.string.spray_recorded_rate, line.rate?.let { rate -> stringResource(Res.string.spray_rate_value, amount(rate.quantity, rate.productUnit.label), amount(rate.basisQuantity, rateBasisText(rate.basis))) } ?: stringResource(Res.string.unknown_value)))
                             } }
                         } }
-                        item { Text(stringResource(Res.string.spray_notes_value, record.notes ?: stringResource(Res.string.not_recorded))) }
-                        item { OutlinedButton(onClick = userAction(onExport), enabled = !state.busy, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.spray_export_saved)) } }
-                        item { Button(onClick = userAction(vm::edit), enabled = !state.busy, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.spray_edit)) } }
-                        item { OutlinedButton(onClick = userAction(vm::requestDelete), enabled = !state.busy, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.spray_delete)) } }
+                        item(key = "spray-view-notes", contentType = "spray-view-notes") { Text(stringResource(Res.string.spray_notes_value, record.notes ?: stringResource(Res.string.not_recorded))) }
+                        item(key = "spray-export", contentType = "spray-export") { OutlinedButton(onClick = userAction(onExport), enabled = !state.busy, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.spray_export_saved)) } }
+                        item(key = "spray-edit", contentType = "spray-edit") { Button(onClick = userAction(vm::edit), enabled = !state.busy, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.spray_edit)) } }
+                        item(key = "spray-delete", contentType = "spray-delete") { OutlinedButton(onClick = userAction(vm::requestDelete), enabled = !state.busy, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.spray_delete)) } }
                     }
                 } else {
-                    item { Text(stringResource(Res.string.spray_save_help)) }
-                    SprayField.entries.forEach { field -> item {
+                    item(key = "spray-edit-help", contentType = "spray-edit-help") { Text(stringResource(Res.string.spray_save_help)) }
+                    // Keep each field identity and reuse type stable when banners change list positions.
+                    // Notes is multiline; its remembered scroller must never be reused by a single-line field.
+                    SprayField.entries.forEach { field -> item(key = "spray-field-${field.name}", contentType = "spray-field-${field.name}") {
                         val label = when (field) { SprayField.Date -> stringResource(Res.string.spray_actual_date); SprayField.Time -> stringResource(Res.string.spray_local_time); SprayField.Area -> stringResource(Res.string.spray_area_optional); SprayField.Water -> stringResource(Res.string.spray_water_optional); SprayField.Notes -> stringResource(Res.string.spray_notes) }
                         val error = state.errors[field.name.lowercase()]
                         OutlinedTextField(value = state.draft.text(field), onValueChange = { activity(); vm.text(field, it) }, enabled = state.canEdit,
                             modifier = Modifier.fillMaxWidth(), label = { Text(label) }, singleLine = field != SprayField.Notes, isError = error != null,
-                            supportingText = { error?.let { Text(it) } }, keyboardOptions = KeyboardOptions(keyboardType = when (field) { SprayField.Date, SprayField.Time -> KeyboardType.Ascii; SprayField.Area, SprayField.Water -> KeyboardType.Decimal; else -> KeyboardType.Text }))
+                            supportingText = { error?.let { Text(localizedSprayDraftIssue(it)) } }, keyboardOptions = KeyboardOptions(keyboardType = when (field) { SprayField.Date, SprayField.Time -> KeyboardType.Ascii; SprayField.Area, SprayField.Water -> KeyboardType.Decimal; else -> KeyboardType.Text }))
                         if (field == SprayField.Area) {
                             RecordChoice(stringResource(Res.string.spray_area_unit), state.draft.areaUnit, AreaUnit.entries, state.canEdit, { it.symbol }, vm::areaUnit, nullLabel = stringResource(Res.string.unit_unspecified))
-                            state.errors["areaUnit"]?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                            state.errors["areaUnit"]?.let { Text(localizedSprayDraftIssue(it), color = MaterialTheme.colorScheme.error) }
                         }
                         if (field == SprayField.Water) {
                             RecordChoice(stringResource(Res.string.spray_water_unit), state.draft.waterUnit, SprayQuantityUnit.entries.filter { it.volume }, state.canEdit, { it.label }, vm::waterUnit, nullLabel = stringResource(Res.string.unit_unspecified))
-                            state.errors["waterUnit"]?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                            state.errors["waterUnit"]?.let { Text(localizedSprayDraftIssue(it), color = MaterialTheme.colorScheme.error) }
                         }
                     } }
-                    item { TimeZonePicker(state.draft.zone, null, state.canEdit, vm::zone); Text(stringResource(Res.string.spray_zone_help)) }
-                    state.draft.lines.forEachIndexed { index, line -> item {
+                    item(key = "spray-zone", contentType = "spray-zone") { TimeZonePicker(state.draft.zone, null, state.canEdit, vm::zone); Text(stringResource(Res.string.spray_zone_help)) }
+                    state.draft.lines.forEachIndexed { index, line -> item(key = "spray-edit-product-${line.id}-$index", contentType = "spray-edit-product") {
                         SprayLineInputs(line, index, state, vm)
                     } }
-                    item { OutlinedButton(onClick = userAction(vm::addLine), enabled = state.canEdit && state.draft.lines.size < 20) { Text(stringResource(Res.string.spray_add_product)) } }
-                    item { Text(stringResource(Res.string.spray_unit_help)) }
-                    item { Button(onClick = userAction { vm.save(); onBusyChanged(vm.state.value.saving) }, enabled = state.canEdit, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.spray_save)) } }
+                    item(key = "spray-add-product", contentType = "spray-add-product") { OutlinedButton(onClick = userAction(vm::addLine), enabled = state.canEdit && state.draft.lines.size < 20) { Text(stringResource(Res.string.spray_add_product)) } }
+                    item(key = "spray-unit-help", contentType = "spray-unit-help") { Text(stringResource(Res.string.spray_unit_help)) }
+                    item(key = "spray-save", contentType = "spray-save") { Button(onClick = userAction { vm.save(); onBusyChanged(vm.state.value.saving) }, enabled = state.canEdit, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.spray_save)) } }
                 }
             }
         }

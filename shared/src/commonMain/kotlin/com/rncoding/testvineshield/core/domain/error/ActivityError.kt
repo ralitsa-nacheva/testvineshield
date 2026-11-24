@@ -23,7 +23,9 @@ sealed interface ActivityError : AppError {
 
     data class InvalidInput(
         override val userMessage: String,
-        val reason: ActivityValidationReason? = null
+        val reason: ActivityValidationReason? = null,
+        val sprayReason: SprayValidationReason? = null,
+        val productNumber: Int? = null
     ) : ActivityError {
         override val debugMessage: String? = userMessage
         override val cause: Throwable? = null

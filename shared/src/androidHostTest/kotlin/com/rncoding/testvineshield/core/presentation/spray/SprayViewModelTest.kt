@@ -44,7 +44,7 @@ class SprayViewModelTest {
     @Test fun noDateIsFabricatedAndInitialZoneComesFromOwnedVineyard() = runTest {
         val v = vm(null); advanceUntilIdle()
         assertEquals("UTC", v.state.value.draft.zone); assertEquals("", v.state.value.draft.date)
-        v.save(); advanceUntilIdle(); assertTrue("date" in v.state.value.errors)
+        v.save(); advanceUntilIdle(); assertEquals(SprayDraftIssue.Date, v.state.value.errors["date"])
         verify { save wasNot Called }
     }
     @Test fun loadingSavingAndDuplicateOperationsAreGuarded() = runTest {
@@ -59,7 +59,7 @@ class SprayViewModelTest {
     @Test fun staleRestoredDraftKeepsItsBaseVersionUntilExplicitReload() = runTest {
         coEvery { get(key) } returns Result.Success(SpraySnapshot(mockk<ActivityDomainModel>(), "UTC", record))
         val v = vm(draft.copy(baseRevision = 1, baseGeneration = "b".repeat(32))); advanceUntilIdle()
-        assertNotNull(v.state.value.error); assertEquals("b".repeat(32), v.state.value.draft.baseGeneration)
+        assertEquals(SprayIssue.DraftConflict, v.state.value.error); assertEquals("b".repeat(32), v.state.value.draft.baseGeneration)
         v.load(discardDraft = true); advanceUntilIdle()
         assertFalse(v.state.value.editing); assertEquals(record.generation, v.state.value.draft.baseGeneration)
     }
@@ -70,9 +70,11 @@ class SprayViewModelTest {
         coVerify(exactly = 1) { delete(key, 1, "a".repeat(32)) }; assertTrue(v.state.value.removed)
     }
     @Test fun failedOrCancelledSaveDoesNotReportSuccessAndKeepsDraft() = runTest {
-        coEvery { save(key, any()) } returns Result.Error(ActivityError.InvalidInput("Conflict"))
+        val failure = ActivityError.InvalidInput("Conflict", sprayReason = SprayValidationReason.Conflict)
+        coEvery { save(key, any()) } returns Result.Error(failure)
         val v = vm(); advanceUntilIdle(); v.save(); advanceUntilIdle()
         assertFalse(v.state.value.saved); assertEquals(draft, v.state.value.draft); assertTrue(v.state.value.canEdit)
+        assertSame(failure, assertIs<SprayIssue.Failure>(v.state.value.error).error)
         coEvery { save(key, any()) } coAnswers { awaitCancellation() }
         v.save(); runCurrent(); store.clear(); advanceUntilIdle()
         assertFalse(v.state.value.saved); assertFalse(v.state.value.saving)

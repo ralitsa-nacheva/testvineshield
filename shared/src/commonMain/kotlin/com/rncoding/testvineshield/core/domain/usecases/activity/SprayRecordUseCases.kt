@@ -35,8 +35,8 @@ class GetSprayRecordUseCase(
 private fun sprayResult(outcome: SprayWriteOutcome): Result<Unit, AppError> = when (outcome) {
     SprayWriteOutcome.SAVED -> Result.Success(Unit)
     SprayWriteOutcome.ACTIVITY_NOT_FOUND -> Result.Error(ActivityError.NotFound)
-    SprayWriteOutcome.CONFLICT -> Result.Error(ActivityError.InvalidInput("This spray record changed or was removed. Reload before editing again; your draft has been kept."))
-    SprayWriteOutcome.INVALID_LINE_ID -> Result.Error(ActivityError.InvalidInput("Product-line identities do not match this record. Reload before editing again."))
+    SprayWriteOutcome.CONFLICT -> Result.Error(ActivityError.InvalidInput("This spray record changed or was removed. Reload before editing again; your draft has been kept.", sprayReason = SprayValidationReason.Conflict))
+    SprayWriteOutcome.INVALID_LINE_ID -> Result.Error(ActivityError.InvalidInput("Product-line identities do not match this record. Reload before editing again.", sprayReason = SprayValidationReason.LineIdentity))
 }
 
 class SaveSprayRecordUseCase(
@@ -45,7 +45,7 @@ class SaveSprayRecordUseCase(
     private val validator: SprayValidator
 ) {
     suspend operator fun invoke(key: SprayKey, record: SprayRecord): Result<Unit, AppError> {
-        if (record.activityId != key.activityId) return Result.Error(ActivityError.InvalidInput("Spray activity identity cannot be changed."))
+        if (record.activityId != key.activityId) return Result.Error(ActivityError.InvalidInput("Spray activity identity cannot be changed.", sprayReason = SprayValidationReason.ActivityIdentity))
         validator.validate(record)?.let { return Result.Error(it) }
         return try {
             when (val parent = activity(key.vineyardId, key.activityId)) {
@@ -60,7 +60,7 @@ class SaveSprayRecordUseCase(
 
 class DeleteSprayRecordUseCase(private val activity: GetActivityDetailsUseCase, private val repository: SprayRepository) {
     suspend operator fun invoke(key: SprayKey, expectedRevision: Long, generation: String): Result<Unit, AppError> {
-        if (expectedRevision <= 0) return Result.Error(ActivityError.InvalidInput("Reload the saved spray record before deleting it."))
+        if (expectedRevision <= 0) return Result.Error(ActivityError.InvalidInput("Reload the saved spray record before deleting it.", sprayReason = SprayValidationReason.DeleteReload))
         return try {
             when (val parent = activity(key.vineyardId, key.activityId)) {
                 is Result.Error -> Result.Error(parent.error)

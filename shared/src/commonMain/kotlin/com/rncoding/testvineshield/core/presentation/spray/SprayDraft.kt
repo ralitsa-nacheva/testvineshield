@@ -53,30 +53,30 @@ data class SprayDraft(
     }
 }
 
-internal data class SprayDraftResult(val record: SprayRecord?, val errors: Map<String, String>)
+internal data class SprayDraftResult(val record: SprayRecord?, val errors: Map<String, SprayDraftIssue>)
 internal fun SprayDraft.parsed(activityId: Long): SprayDraftResult {
-    val errors = mutableMapOf<String, String>()
-    val actualDate = try { LocalDate.parse(date.trim()) } catch (_: IllegalArgumentException) { errors["date"] = "Enter the actual application date as YYYY-MM-DD."; null }
+    val errors = mutableMapOf<String, SprayDraftIssue>()
+    val actualDate = try { LocalDate.parse(date.trim()) } catch (_: IllegalArgumentException) { errors["date"] = SprayDraftIssue.Date; null }
     val localTime = time.trim().takeIf { it.isNotEmpty() }
-    if (localTime != null && !Regex("(?:[01][0-9]|2[0-3]):[0-5][0-9]").matches(localTime)) errors["time"] = "Use HH:mm or leave blank when unknown."
+    if (localTime != null && !Regex("(?:[01][0-9]|2[0-3]):[0-5][0-9]").matches(localTime)) errors["time"] = SprayDraftIssue.Time
     fun decimal(text: String, field: String): Double? = when (val value = OptionalDecimalInput.parse(text)) {
-        DecimalInputResult.Invalid -> { errors[field] = "Use a finite positive decimal, without thousands grouping."; null }
-        is DecimalInputResult.Valid -> value.value.also { if (it != null && it <= 0.0) errors[field] = "A known amount must be greater than zero." }
+        DecimalInputResult.Invalid -> { errors[field] = SprayDraftIssue.Decimal; null }
+        is DecimalInputResult.Valid -> value.value.also { if (it != null && it <= 0.0) errors[field] = SprayDraftIssue.Positive }
     }
     val treated = decimal(area, "area"); val carrier = decimal(water, "water")
-    if (treated != null && areaUnit == null) errors["areaUnit"] = "Choose the treated-area unit."
-    if (carrier != null && waterUnit == null) errors["waterUnit"] = "Choose the carrier-water unit."
+    if (treated != null && areaUnit == null) errors["areaUnit"] = SprayDraftIssue.AreaUnit
+    if (carrier != null && waterUnit == null) errors["waterUnit"] = SprayDraftIssue.WaterUnit
     val products = lines.mapIndexed { index, line ->
         val amount = decimal(line.quantity, "line-$index-quantity")
-        if (line.name.isBlank()) errors["line-$index-name"] = "Product name is required."
-        if (amount != null && line.unit == null) errors["line-$index-unit"] = "Choose this product's quantity unit."
+        if (line.name.isBlank()) errors["line-$index-name"] = SprayDraftIssue.Name
+        if (amount != null && line.unit == null) errors["line-$index-unit"] = SprayDraftIssue.QuantityUnit
         val hasRate = line.rateQuantity.isNotBlank() || line.rateUnit != null || line.rateBasisQuantity.isNotBlank() || line.rateBasis != null
         val rateAmount = if (hasRate) decimal(line.rateQuantity, "line-$index-ratequantity") else null
         val basisAmount = if (hasRate) decimal(line.rateBasisQuantity, "line-$index-ratebasisquantity") else null
-        if (hasRate && rateAmount == null) errors["line-$index-ratequantity"] = "Enter the recorded product amount, or clear the whole rate."
-        if (hasRate && basisAmount == null) errors["line-$index-ratebasisquantity"] = "Enter an explicit basis amount; it is not assumed to be one."
-        if (hasRate && line.rateUnit == null) errors["line-$index-rateunit"] = "Choose the rate product unit."
-        if (hasRate && line.rateBasis == null) errors["line-$index-ratebasis"] = "Choose treated area or carrier-water basis."
+        if (hasRate && rateAmount == null) errors["line-$index-ratequantity"] = SprayDraftIssue.RateAmount
+        if (hasRate && basisAmount == null) errors["line-$index-ratebasisquantity"] = SprayDraftIssue.BasisAmount
+        if (hasRate && line.rateUnit == null) errors["line-$index-rateunit"] = SprayDraftIssue.RateUnit
+        if (hasRate && line.rateBasis == null) errors["line-$index-ratebasis"] = SprayDraftIssue.RateBasis
         val rate = if (hasRate && rateAmount != null && basisAmount != null && line.rateUnit != null && line.rateBasis != null)
             SprayRate(rateAmount, line.rateUnit, basisAmount, line.rateBasis) else null
         SprayProductLine(line.id, line.name.trim(), amount, line.unit, line.reference.trim().takeIf { it.isNotEmpty() }, rate)

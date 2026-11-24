@@ -1,6 +1,7 @@
 package com.rncoding.testvineshield.core.presentation.spray
 
 import com.rncoding.testvineshield.core.domain.datamodels.*
+import com.rncoding.testvineshield.core.domain.error.SprayValidationReason
 import com.rncoding.testvineshield.core.domain.datamodels.units.AreaUnit
 import com.rncoding.testvineshield.core.domain.time.VineyardTimeZoneCatalog
 import com.rncoding.testvineshield.core.domain.validation.SprayValidator
@@ -60,4 +61,17 @@ class SprayDraftTest {
         assertEquals(10.0, changed.waterQuantity)
         assertNotEquals(SprayQuantityUnit.US_GALLON.code, SprayQuantityUnit.IMPERIAL_GALLON.code)
     }
+    @Test fun fieldIssuesAndDomainProductNumbersStayStructured() {
+        val parsed = draft().copy(lines = listOf(SprayLineDraft(name = "", quantity = "2"))).parsed(30)
+        assertNull(parsed.record)
+        assertEquals(SprayDraftIssue.Name, parsed.errors["line-0-name"])
+        assertEquals(SprayDraftIssue.QuantityUnit, parsed.errors["line-0-unit"])
+        val record = assertNotNull(draft().parsed(30).record)
+        val bad = record.copy(products = record.products + SprayProductLine(productName = ""))
+        val error = assertNotNull(validator.validate(bad))
+        assertEquals(SprayValidationReason.ProductName, error.sprayReason)
+        assertEquals(2, error.productNumber)
+        assertEquals(SprayValidationReason.Zone, assertNotNull(validator.validate(record.copy(timeZone = "Invalid/Zone"))).sprayReason)
+    }
+
 }

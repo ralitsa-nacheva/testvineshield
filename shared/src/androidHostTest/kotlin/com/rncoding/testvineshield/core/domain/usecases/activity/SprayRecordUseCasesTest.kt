@@ -59,7 +59,7 @@ class SprayRecordUseCasesTest {
     @Test fun staleWriteIsAnActionableErrorAndDeleteUsesVersionAndGeneration() = runTest {
         owned()
         coEvery { repository.save(10, any()) } returns SprayWriteOutcome.CONFLICT
-        assertIs<ActivityError.InvalidInput>(assertIs<Result.Error<*>>(save(key, record())).error)
+        assertEquals(SprayValidationReason.Conflict, assertIs<ActivityError.InvalidInput>(assertIs<Result.Error<*>>(save(key, record())).error).sprayReason)
         coEvery { repository.delete(10, 30, 3, "a".repeat(32)) } returns SprayWriteOutcome.SAVED
         assertIs<Result.Success<Unit>>(delete(key, 3, "a".repeat(32)))
         coVerify(exactly = 1) { repository.delete(10, 30, 3, "a".repeat(32)) }

@@ -55,7 +55,7 @@ class SprayExportViewModelTest {
     @Test fun providerFailureAllowsRetry() = runTest {
         coEvery { saver.save(document) } returns DocumentSaveResult.Failed("Provider unavailable")
         val v = vm(); advanceUntilIdle(); v.export(DocumentExportFormat.JSON, saver); advanceUntilIdle()
-        assertEquals("Provider unavailable", v.state.value.error)
+        assertEquals(SprayIssue.DocumentSaveFailed, v.state.value.error)
         coEvery { saver.save(document) } returns DocumentSaveResult.Saved
         v.export(DocumentExportFormat.JSON, saver); advanceUntilIdle(); assertNotNull(v.state.value.notice)
     }
@@ -77,7 +77,16 @@ class SprayExportViewModelTest {
         coEvery { get(key) } returns Result.Error(ActivityError.NotFound)
         v.load(); advanceUntilIdle()
         assertFalse(v.state.value.noSavedApplication)
-        assertNotNull(v.state.value.error)
+        assertEquals(SprayIssue.Failure(ActivityError.NotFound), v.state.value.error)
+    }
+
+    @Test fun preparationFailureKeepsTypedErrorAndDoesNotOpenSaver() = runTest {
+        val failure = ActivityError.InvalidInput("Safe fallback", sprayReason = SprayValidationReason.ExportTooLarge)
+        coEvery { prepare(key, DocumentExportFormat.CSV) } returns Result.Error(failure)
+        val v = vm(); advanceUntilIdle(); v.export(DocumentExportFormat.CSV, saver); advanceUntilIdle()
+        assertSame(failure, assertIs<SprayIssue.Failure>(v.state.value.error).error)
+        assertFalse(v.state.value.busy); assertNull(v.state.value.notice)
+        verify { saver wasNot Called }
     }
 
 }

@@ -18,7 +18,7 @@ sealed interface SprayExportNotice {
     data object Interrupted : SprayExportNotice
 }
 
-data class SprayExportState(val snapshot: SpraySnapshot? = null, val loading: Boolean = false, val busy: Boolean = false, val notice: SprayExportNotice? = null, val noSavedApplication: Boolean = false, val error: String? = null)
+data class SprayExportState(val snapshot: SpraySnapshot? = null, val loading: Boolean = false, val busy: Boolean = false, val notice: SprayExportNotice? = null, val noSavedApplication: Boolean = false, val error: SprayIssue? = null)
 
 class SprayExportViewModel(private val key: SprayKey, private val get: GetSprayRecordUseCase, private val prepare: PrepareSprayExportUseCase) : ViewModel() {
     private val _state = MutableStateFlow(SprayExportState())
@@ -31,12 +31,12 @@ class SprayExportViewModel(private val key: SprayKey, private val get: GetSprayR
         viewModelScope.launch {
             try {
                 when (val result = get(key)) {
-                    is Result.Error -> _state.update { it.copy(error = result.error.userMessage) }
+                    is Result.Error -> _state.update { it.copy(error = SprayIssue.Failure(result.error)) }
                     is Result.Success -> if (result.data.record == null) _state.update { it.copy(noSavedApplication = true) }
                         else _state.update { it.copy(snapshot = result.data) }
                 }
             } catch (e: CancellationException) { throw e }
-            catch (_: Exception) { _state.update { it.copy(error = UnexpectedError().userMessage) } }
+            catch (_: Exception) { _state.update { it.copy(error = SprayIssue.Failure(UnexpectedError())) } }
             finally { _state.update { it.copy(loading = false) } }
         }
     }
@@ -46,16 +46,16 @@ class SprayExportViewModel(private val key: SprayKey, private val get: GetSprayR
         job = viewModelScope.launch {
             try {
                 when (val result = prepare(key, format)) {
-                    is Result.Error -> _state.update { it.copy(error = result.error.userMessage) }
-                    is Result.Success -> when (val saved = saver.save(result.data)) {
+                    is Result.Error -> _state.update { it.copy(error = SprayIssue.Failure(result.error)) }
+                    is Result.Success -> when (saver.save(result.data)) {
                         DocumentSaveResult.Saved -> _state.update { it.copy(notice = SprayExportNotice.Saved(result.data.recordCount)) }
                         DocumentSaveResult.Cancelled -> _state.update { it.copy(notice = SprayExportNotice.Cancelled) }
-                        is DocumentSaveResult.Failed -> _state.update { it.copy(error = saved.message) }
+                        is DocumentSaveResult.Failed -> _state.update { it.copy(error = SprayIssue.DocumentSaveFailed) }
                     }
                 }
             } catch (e: CancellationException) {
                 _state.update { it.copy(notice = SprayExportNotice.Interrupted) }; throw e
-            } catch (_: Exception) { _state.update { it.copy(error = UnexpectedError().userMessage) } }
+            } catch (_: Exception) { _state.update { it.copy(error = SprayIssue.Failure(UnexpectedError())) } }
             finally { _state.update { it.copy(busy = false) } }
         }
     }

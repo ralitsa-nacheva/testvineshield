@@ -19,7 +19,7 @@ data class SprayState(
     val snapshot: SpraySnapshot? = null, val draft: SprayDraft = SprayDraft(),
     val editing: Boolean = false, val loading: Boolean = false, val saving: Boolean = false, val deleting: Boolean = false,
     val saved: Boolean = false, val removed: Boolean = false, val confirmDelete: Boolean = false,
-    val errors: Map<String, String> = emptyMap(), val error: String? = null
+    val errors: Map<String, SprayDraftIssue> = emptyMap(), val error: SprayIssue? = null
 ) {
     val busy get() = loading || saving || deleting
     val canEdit get() = snapshot != null && editing && !busy && !saved && !removed
@@ -42,7 +42,7 @@ class SprayViewModel(
         viewModelScope.launch {
             try {
                 when (val result = get(request.key)) {
-                    is Result.Error -> _state.update { it.copy(error = result.error.userMessage) }
+                    is Result.Error -> _state.update { it.copy(error = SprayIssue.Failure(result.error)) }
                     is Result.Success -> {
                         val loaded = result.data
                         val restored = if (restore && !discardDraft) request.restoredDraft else null
@@ -50,11 +50,11 @@ class SprayViewModel(
                         val draft = restored ?: loaded.record?.let(SprayDraft::from) ?: SprayDraft(zone = loaded.vineyardTimeZone)
                         val conflict = restored != null && (restored.baseRevision != (loaded.record?.revision ?: 0) || restored.baseGeneration != loaded.record?.generation)
                         _state.update { it.copy(snapshot = loaded, draft = draft, editing = restored != null || loaded.record == null,
-                            errors = emptyMap(), error = if (conflict) "Saved data changed since this draft. Copy any needed text, then reload the saved record before saving." else null) }
+                            errors = emptyMap(), error = if (conflict) SprayIssue.DraftConflict else null) }
                     }
                 }
             } catch (e: CancellationException) { throw e }
-            catch (_: Exception) { _state.update { it.copy(error = UnexpectedError().userMessage) } }
+            catch (_: Exception) { _state.update { it.copy(error = SprayIssue.Failure(UnexpectedError())) } }
             finally { _state.update { it.copy(loading = false) } }
         }
     }
@@ -81,16 +81,16 @@ class SprayViewModel(
         if (!_state.value.canEdit) return
         val parsed = _state.value.draft.parsed(request.key.activityId)
         val record = parsed.record
-        if (record == null) { _state.update { it.copy(errors = parsed.errors, error = "Review the highlighted fields.") }; return }
+        if (record == null) { _state.update { it.copy(errors = parsed.errors, error = SprayIssue.ReviewFields) }; return }
         _state.update { it.copy(saving = true, error = null, errors = emptyMap()) }
         viewModelScope.launch {
             try {
                 when (val result = saveRecord(request.key, record)) {
-                    is Result.Error -> _state.update { it.copy(error = result.error.userMessage) }
+                    is Result.Error -> _state.update { it.copy(error = SprayIssue.Failure(result.error)) }
                     is Result.Success -> _state.update { it.copy(saved = true) }
                 }
             } catch (e: CancellationException) { throw e }
-            catch (_: Exception) { _state.update { it.copy(error = UnexpectedError().userMessage) } }
+            catch (_: Exception) { _state.update { it.copy(error = SprayIssue.Failure(UnexpectedError())) } }
             finally { _state.update { it.copy(saving = false) } }
         }
     }
@@ -104,11 +104,11 @@ class SprayViewModel(
         viewModelScope.launch {
             try {
                 when (val result = deleteRecord(request.key, record.revision, generation)) {
-                    is Result.Error -> _state.update { it.copy(error = result.error.userMessage, confirmDelete = false) }
+                    is Result.Error -> _state.update { it.copy(error = SprayIssue.Failure(result.error), confirmDelete = false) }
                     is Result.Success -> _state.update { it.copy(removed = true, confirmDelete = false) }
                 }
             } catch (e: CancellationException) { throw e }
-            catch (_: Exception) { _state.update { it.copy(error = UnexpectedError().userMessage, confirmDelete = false) } }
+            catch (_: Exception) { _state.update { it.copy(error = SprayIssue.Failure(UnexpectedError()), confirmDelete = false) } }
             finally { _state.update { it.copy(deleting = false) } }
         }
     }

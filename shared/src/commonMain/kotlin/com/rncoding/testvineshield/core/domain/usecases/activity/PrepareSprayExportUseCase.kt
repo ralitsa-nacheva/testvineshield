@@ -21,8 +21,8 @@ class PrepareSprayExportUseCase(
         val owner = users.currentUserOrNull() ?: return Result.Error(AuthError.NoActiveSession)
         return try {
             val snapshot = when (val result = get(key)) { is Result.Error -> return Result.Error(result.error); is Result.Success -> result.data }
-            val record = snapshot.record ?: return Result.Error(ActivityError.InvalidInput("Save a spray application before exporting it."))
-            if (record.activityId != key.activityId || record.products.isEmpty()) return Result.Error(ActivityError.InvalidInput("Reload the saved spray application before exporting."))
+            val record = snapshot.record ?: return Result.Error(ActivityError.InvalidInput("Save a spray application before exporting it.", sprayReason = SprayValidationReason.ExportSaveFirst))
+            if (record.activityId != key.activityId || record.products.isEmpty()) return Result.Error(ActivityError.InvalidInput("Reload the saved spray application before exporting.", sprayReason = SprayValidationReason.ExportReload))
             val parent = when (val result = vineyard(key.vineyardId)) { is Result.Error -> return Result.Error(result.error); is Result.Success -> result.data }
             val childId = snapshot.activity.blockId
             val childName = if (childId == null) null else when (val result = block(key.vineyardId, childId)) {
@@ -35,7 +35,7 @@ class PrepareSprayExportUseCase(
             if (users.currentUserOrNull()?.userId != owner.userId) return Result.Error(AuthError.NoActiveSession)
             Result.Success(document)
         } catch (e: CancellationException) { throw e }
-        catch (_: SprayExportLimitException) { Result.Error(ActivityError.InvalidInput("The spray export is too large. Try JSON or review unusually long notes/names.")) }
+        catch (_: SprayExportLimitException) { Result.Error(ActivityError.InvalidInput("The spray export is too large. Try JSON or review unusually long notes/names.", sprayReason = SprayValidationReason.ExportTooLarge)) }
         catch (e: Exception) { Result.Error(UnexpectedError(e)) }
     }
 }

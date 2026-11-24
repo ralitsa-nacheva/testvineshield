@@ -44,7 +44,7 @@ fun SprayExportScreenRoot(ownerId: Long, key: SprayKey, onBack: () -> Unit, onBu
                 if (format == DocumentExportFormat.CSV) item { Text(stringResource(Res.string.spray_export_csv_help)) }
                 item { Button(onClick = userAction { vm.export(format, saver); onBusyChanged(vm.state.value.busy) }, enabled = !state.loading && !state.busy, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.export_choose_save)) } }
             }
-            state.error?.let { error -> item { Text(error, color = MaterialTheme.colorScheme.error); if (state.snapshot == null) TextButton(onClick = userAction(vm::load), enabled = !state.busy) { Text(stringResource(Res.string.retry)) } } }
+            state.error?.let { error -> item { Text(localizedSprayIssue(error), color = MaterialTheme.colorScheme.error); if (state.snapshot == null) TextButton(onClick = userAction(vm::load), enabled = !state.busy) { Text(stringResource(Res.string.retry)) } } }
             if (state.noSavedApplication) item {
                 Text(stringResource(Res.string.spray_export_missing), color = MaterialTheme.colorScheme.error)
                 TextButton(onClick = userAction(vm::load), enabled = !state.busy) { Text(stringResource(Res.string.retry)) }
