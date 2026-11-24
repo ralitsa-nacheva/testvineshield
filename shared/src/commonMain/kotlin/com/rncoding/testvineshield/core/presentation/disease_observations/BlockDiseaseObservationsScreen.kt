@@ -76,7 +76,7 @@ fun BlockDiseaseObservationsScreen(
                     if (selected != DiseaseOccurrenceStatus.ACTIVE && selected != observation.status) {
                         Text(stringResource(Res.string.observation_active_help))
                     }
-                    state.dialogError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                    state.dialogError?.let { Text(localizedObservationIssue(it), color = MaterialTheme.colorScheme.error) }
                 }
             },
             confirmButton = {
@@ -108,7 +108,7 @@ fun BlockDiseaseObservationsScreen(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(stringResource(Res.string.observation_remove_symptom_date, referenceSymptom.observedOn.toString()))
-                    state.dialogError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                    state.dialogError?.let { Text(localizedObservationIssue(it), color = MaterialTheme.colorScheme.error) }
                 }
             },
             confirmButton = {
@@ -141,7 +141,7 @@ fun BlockDiseaseObservationsScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("${link.appliedOn} · ${link.activityType}")
                     Text(stringResource(Res.string.observation_keep_activity))
-                    state.dialogError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                    state.dialogError?.let { Text(localizedObservationIssue(it), color = MaterialTheme.colorScheme.error) }
                 }
             },
             confirmButton = {
@@ -164,7 +164,7 @@ fun BlockDiseaseObservationsScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("${builtInDiseaseName(observation.diseaseCode, observation.diseaseName)} · ${observation.observedOn}")
                     Text(stringResource(Res.string.observation_delete_warning))
-                    state.dialogError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                    state.dialogError?.let { Text(localizedObservationIssue(it), color = MaterialTheme.colorScheme.error) }
                 }
             },
             confirmButton = {
@@ -200,7 +200,7 @@ fun BlockDiseaseObservationsScreen(
             when {
                 state.loading -> item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
                 error != null -> item {
-                    Text(error)
+                    Text(localizedObservationIssue(error))
                     TextButton(onClick = userAction(model::reload)) { Text(stringResource(Res.string.retry)) }
                 }
                 else -> {
@@ -343,7 +343,7 @@ private fun ObservationForm(
             },
             enabled = !state.saving && disease != null && date != null && severity != null && notes.trim().length <= 4000
         ) { Text(if (state.saving) stringResource(Res.string.saving_action) else stringResource(Res.string.observation_save_active)) }
-        state.saveError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+        state.saveError?.let { Text(localizedObservationIssue(it), color = MaterialTheme.colorScheme.error) }
     }
 }
 
@@ -351,7 +351,7 @@ private fun ObservationForm(
 private fun EditObservationDialog(
     observation: BlockDiseaseObservation,
     saving: Boolean,
-    error: String?,
+    error: ObservationIssue?,
     onClose: () -> Unit,
     onSave: (LocalDate, Int, String) -> Unit
 ) {
@@ -382,7 +382,7 @@ private fun EditObservationDialog(
                     dateText, severityText, notes, !saving,
                     { dateText = it }, { severityText = it }, { notes = it }
                 )
-                error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                error?.let { Text(localizedObservationIssue(it), color = MaterialTheme.colorScheme.error) }
             }
         },
         confirmButton = {
@@ -409,7 +409,7 @@ private fun ReferenceSymptomDialog(
     observation: BlockDiseaseObservation,
     existing: ObservedReferenceSymptom?,
     saving: Boolean,
-    error: String?,
+    error: ObservationIssue?,
     onClose: () -> Unit,
     onSave: (ReferenceSymptom, LocalDate, String) -> Unit
 ) {
@@ -447,14 +447,16 @@ private fun ReferenceSymptomDialog(
                     value = dateText, onValueChange = { activity(); dateText = it },
                     label = { Text(stringResource(Res.string.symptom_date_label)) }, enabled = !saving,
                     singleLine = true, isError = dateText.isNotBlank() && date == null,
+                    supportingText = { if (dateText.isNotBlank() && date == null) Text(stringResource(Res.string.observation_error_date_format)) },
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
                     value = notes, onValueChange = { activity(); notes = it },
                     label = { Text(stringResource(Res.string.notes_optional)) }, enabled = !saving, maxLines = 5,
-                    isError = notes.trim().length > 4000, modifier = Modifier.fillMaxWidth()
+                    isError = notes.trim().length > 4000,
+        supportingText = { if (notes.trim().length > 4000) Text(stringResource(Res.string.disease_error_notes)) }, modifier = Modifier.fillMaxWidth()
                 )
-                error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                error?.let { Text(localizedObservationIssue(it), color = MaterialTheme.colorScheme.error) }
             }
         },
         confirmButton = {
@@ -473,7 +475,7 @@ private fun ReferenceSymptomDialog(
 private fun LinkActivityDialog(
     activities: List<CompletedBlockActivity>,
     saving: Boolean,
-    error: String?,
+    error: ObservationIssue?,
     onClose: () -> Unit,
     onSave: (CompletedBlockActivity) -> Unit
 ) {
@@ -505,7 +507,7 @@ private fun LinkActivityDialog(
                         Text(it, maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                     }
                 }
-                error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                error?.let { Text(localizedObservationIssue(it), color = MaterialTheme.colorScheme.error) }
             }
         },
         confirmButton = {
@@ -536,6 +538,7 @@ private fun ObservationFields(
         label = { Text(stringResource(Res.string.observation_date_label)) },
         enabled = enabled, singleLine = true,
         isError = dateText.isNotBlank() && parseObservationDate(dateText) == null,
+        supportingText = { if (dateText.isNotBlank() && parseObservationDate(dateText) == null) Text(stringResource(Res.string.observation_error_date_format)) },
         modifier = Modifier.fillMaxWidth()
     )
     OutlinedTextField(
@@ -543,6 +546,7 @@ private fun ObservationFields(
         label = { Text(stringResource(Res.string.observation_severity_label)) },
         enabled = enabled, singleLine = true,
         isError = severityText.isNotBlank() && parseObservationSeverity(severityText) == null,
+        supportingText = { if (severityText.isNotBlank() && parseObservationSeverity(severityText) == null) Text(stringResource(Res.string.disease_error_severity)) },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         modifier = Modifier.fillMaxWidth()
     )
@@ -550,6 +554,7 @@ private fun ObservationFields(
         value = notes, onValueChange = { activity(); onNotesChanged(it) },
         label = { Text(stringResource(Res.string.notes_optional)) }, enabled = enabled, maxLines = 5,
         isError = notes.trim().length > 4000,
+        supportingText = { if (notes.trim().length > 4000) Text(stringResource(Res.string.disease_error_notes)) },
         modifier = Modifier.fillMaxWidth()
     )
 }

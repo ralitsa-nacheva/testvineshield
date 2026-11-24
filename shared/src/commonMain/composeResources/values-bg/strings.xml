@@ -757,4 +757,36 @@
     <string name="harvest_issue_invalidscope">Невалиден обхват за реколтата.</string>
     <string name="harvest_issue_documentsavefailed">Експортът не може да бъде запазен. Проверете местоположението и свободното място, след това опитайте отново.</string>
     <string name="harvest_error_not_found">Търсеният запис за реколта не е намерен.</string>
+
+    <string name="disease_error_name">Името на болестта е задължително.</string>
+    <string name="disease_error_code">Кодът на болестта не може да е празен, ако е зададен.</string>
+    <string name="disease_error_reservedcode">Този код на болест е запазен за вградения каталог.</string>
+    <string name="disease_error_newidentity">Новата болест не трябва да има съществуващ идентификатор.</string>
+    <string name="disease_error_scope">Изберете налични блок и болест.</string>
+    <string name="disease_error_scopeunavailable">Блокът или вградената болест вече не е наличен.</string>
+    <string name="disease_error_observationafterresolution">Датата на наблюдението не може да е след датата на приключването му.</string>
+    <string name="disease_error_observationchanged">Наблюдението е променено или вече не е налично. Затворете го и го отворете отново преди повторен опит.</string>
+    <string name="disease_error_deletechanged">Наблюдението е променено или вече не е налично. Затворете го и го отворете отново.</string>
+    <string name="disease_error_symptomunavailable">Този симптом не е наличен за наблюдението.</string>
+    <string name="disease_error_symptomafterresolution">Датата на симптома не може да е след датата на приключване.</string>
+    <string name="disease_error_notes">Използвайте най-много 4000 знака за бележките.</string>
+    <string name="disease_error_symptomchanged">Наблюдението или симптомът е променен. Затворете го и го отворете отново.</string>
+    <string name="disease_error_symptommissing">Няма съответстващ записан симптом за това наблюдение.</string>
+    <string name="disease_error_identity">Необходим е валиден идентификатор на болестта.</string>
+    <string name="disease_error_linkzone">Задайте валидна часова зона на лозето преди свързване на дейност.</string>
+    <string name="disease_error_activityfuture">Датата на завършване на дейността е в бъдещето за това лозе.</string>
+    <string name="disease_error_activitychanged">Наблюдението или дейността е променено, или дейността вече е свързана. Отворете диалога отново.</string>
+    <string name="disease_error_linkmissing">Тази връзка с дейност вече не е налична.</string>
+    <string name="disease_error_status">Изберете различен статус.</string>
+    <string name="disease_error_resolutionzone">Задайте валидна часова зона на лозето преди приключване на наблюдението.</string>
+    <string name="disease_error_resolutionbeforeobservation">Датата на приключване не може да предхожда датата на наблюдението.</string>
+    <string name="disease_error_severity">Въведете процент на засягане от 0 до 100.</string>
+    <string name="disease_error_observationzone">Задайте валидна часова зона на лозето преди запазване на наблюдение.</string>
+    <string name="disease_error_observationfuture">Датата на наблюдението не може да е в бъдещето за това лозе.</string>
+    <string name="disease_error_notfound">Търсеният запис за болест не е намерен.</string>
+    <string name="disease_error_predefineddisease">Вградените болести не могат да бъдат променяни или изтривани.</string>
+    <string name="disease_error_diseaseinuse">Тази болест не може да бъде изтрита, защото се използва в съществуващи записи.</string>
+    <string name="observation_error_load">Наблюденията за болести не могат да бъдат заредени.</string>
+    <string name="observation_error_session">Тази сесия вече не е налична.</string>
+    <string name="observation_error_date_format">Въведете валидна дата във формат ГГГГ-ММ-ДД.</string>
 </resources>

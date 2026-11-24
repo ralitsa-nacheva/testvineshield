@@ -5,6 +5,7 @@ import com.rncoding.testvineshield.core.domain.datamodels.BlockDiseaseObservatio
 import com.rncoding.testvineshield.core.domain.datamodels.enums.DiseaseOccurrenceStatus
 import com.rncoding.testvineshield.core.domain.error.AppError
 import com.rncoding.testvineshield.core.domain.error.AuthError
+import com.rncoding.testvineshield.core.domain.error.DiseaseValidationReason
 import com.rncoding.testvineshield.core.domain.error.DiseaseError
 import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.error.UnexpectedError
@@ -32,7 +33,7 @@ class ChangeDiseaseOccurrenceStatusUseCase(
         status: DiseaseOccurrenceStatus
     ): Result<Unit, AppError> {
         if (users.currentUserOrNull()?.userId != ownerId) return Result.Error(AuthError.NoActiveSession)
-        if (status == observation.status) return Result.Error(DiseaseError.InvalidInput("Choose a different status."))
+        if (status == observation.status) return Result.Error(DiseaseError.InvalidInput("Choose a different status.", reason = DiseaseValidationReason.Status))
 
         return try {
             val now = clock.nowMillis()
@@ -44,11 +45,11 @@ class ChangeDiseaseOccurrenceStatusUseCase(
                 val zone = try {
                     TimeZone.of(vineyard.timeZone)
                 } catch (_: IllegalArgumentException) {
-                    return Result.Error(DiseaseError.InvalidInput("Set a valid vineyard time zone before resolving this observation."))
+                    return Result.Error(DiseaseError.InvalidInput("Set a valid vineyard time zone before resolving this observation.", reason = DiseaseValidationReason.ResolutionZone))
                 }
                 val today = Instant.fromEpochMilliseconds(now).toLocalDateTime(zone).date
                 if (today < observation.observedOn) {
-                    return Result.Error(DiseaseError.InvalidInput("The resolution date cannot precede the observation date."))
+                    return Result.Error(DiseaseError.InvalidInput("The resolution date cannot precede the observation date.", reason = DiseaseValidationReason.ResolutionBeforeObservation))
                 }
                 today
             } else null
@@ -60,7 +61,7 @@ class ChangeDiseaseOccurrenceStatusUseCase(
             )
             if (users.currentUserOrNull()?.userId != ownerId) Result.Error(AuthError.NoActiveSession)
             else if (changed) Result.Success(Unit)
-            else Result.Error(DiseaseError.InvalidInput("This observation changed or is no longer available. Close and reopen it before retrying."))
+            else Result.Error(DiseaseError.InvalidInput("This observation changed or is no longer available. Close and reopen it before retrying.", reason = DiseaseValidationReason.ObservationChanged))
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {

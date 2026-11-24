@@ -6,6 +6,7 @@ import com.rncoding.testvineshield.core.domain.datamodels.ObservedReferenceSympt
 import com.rncoding.testvineshield.core.domain.datamodels.ReferenceSymptom
 import com.rncoding.testvineshield.core.domain.error.AppError
 import com.rncoding.testvineshield.core.domain.error.AuthError
+import com.rncoding.testvineshield.core.domain.error.DiseaseValidationReason
 import com.rncoding.testvineshield.core.domain.error.DiseaseError
 import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.error.UnexpectedError
@@ -30,14 +31,14 @@ class RecordReferenceSymptomUseCase(
         if (users.currentUserOrNull()?.userId != ownerId) return Result.Error(AuthError.NoActiveSession)
         if (symptom.diseaseCode != observation.diseaseCode ||
             (existing != null && (existing.kind != symptom || existing !in observation.referenceSymptoms))
-        ) return Result.Error(DiseaseError.InvalidInput("This symptom is unavailable for the observation."))
+        ) return Result.Error(DiseaseError.InvalidInput("This symptom is unavailable for the observation.", reason = DiseaseValidationReason.SymptomUnavailable))
         val resolutionDate = observation.curedAt
         if (resolutionDate != null && observedOn > resolutionDate) {
-            return Result.Error(DiseaseError.InvalidInput("The symptom date cannot be after the resolution date."))
+            return Result.Error(DiseaseError.InvalidInput("The symptom date cannot be after the resolution date.", reason = DiseaseValidationReason.SymptomAfterResolution))
         }
         val normalizedNotes = notes.trim()
         if (normalizedNotes.length > 4000) {
-            return Result.Error(DiseaseError.InvalidInput("Use at most 4000 characters for notes."))
+            return Result.Error(DiseaseError.InvalidInput("Use at most 4000 characters for notes.", reason = DiseaseValidationReason.Notes))
         }
 
         return try {
@@ -57,7 +58,7 @@ class RecordReferenceSymptomUseCase(
             }
             if (users.currentUserOrNull()?.userId != ownerId) Result.Error(AuthError.NoActiveSession)
             else if (recorded) Result.Success(Unit)
-            else Result.Error(DiseaseError.InvalidInput("The observation or symptom changed. Close and reopen it."))
+            else Result.Error(DiseaseError.InvalidInput("The observation or symptom changed. Close and reopen it.", reason = DiseaseValidationReason.SymptomChanged))
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {
@@ -71,7 +72,7 @@ class RecordReferenceSymptomUseCase(
     ): Result<Unit, AppError> {
         if (users.currentUserOrNull()?.userId != ownerId) return Result.Error(AuthError.NoActiveSession)
         if (existing !in observation.referenceSymptoms) {
-            return Result.Error(DiseaseError.InvalidInput("This observation has no matching recorded symptom."))
+            return Result.Error(DiseaseError.InvalidInput("This observation has no matching recorded symptom.", reason = DiseaseValidationReason.SymptomMissing))
         }
         return try {
             currentCoroutineContext().ensureActive()
@@ -81,7 +82,7 @@ class RecordReferenceSymptomUseCase(
             )
             if (users.currentUserOrNull()?.userId != ownerId) Result.Error(AuthError.NoActiveSession)
             else if (removed) Result.Success(Unit)
-            else Result.Error(DiseaseError.InvalidInput("The observation or symptom changed. Close and reopen it."))
+            else Result.Error(DiseaseError.InvalidInput("The observation or symptom changed. Close and reopen it.", reason = DiseaseValidationReason.SymptomChanged))
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {

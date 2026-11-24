@@ -2,6 +2,7 @@
 package com.rncoding.testvineshield.core.domain.validation
 
 import com.rncoding.testvineshield.core.domain.datamodels.DiseaseDomainModel
+import com.rncoding.testvineshield.core.domain.error.DiseaseValidationReason
 import com.rncoding.testvineshield.core.domain.error.DiseaseError
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseCatalogueCodes
 
@@ -18,25 +19,19 @@ class DiseaseValidator {
     ): DiseaseError.InvalidInput? {
 
         if (disease.name.isBlank()) {
-            return DiseaseError.InvalidInput(
-                "Disease name is required."
-            )
+            return DiseaseError.InvalidInput("Disease name is required.", reason = DiseaseValidationReason.Name)
         }
 
         if (disease.code != null &&
             disease.code.isBlank()
         ) {
-            return DiseaseError.InvalidInput(
-                "Disease code cannot be blank when provided."
-            )
+            return DiseaseError.InvalidInput("Disease code cannot be blank when provided.", reason = DiseaseValidationReason.Code)
         }
 
         // Both custom-disease use cases trim codes before persistence.
         // Reserve these identifiers even before the built-in rows are seeded.
         if (disease.code?.trim() in reservedCodes) {
-            return DiseaseError.InvalidInput(
-                "This disease code is reserved for the predefined catalogue."
-            )
+            return DiseaseError.InvalidInput("This disease code is reserved for the predefined catalogue.", reason = DiseaseValidationReason.ReservedCode)
         }
 
         return null

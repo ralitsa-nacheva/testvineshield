@@ -2,6 +2,7 @@
 package com.rncoding.testvineshield.core.domain.validation
 
 import com.rncoding.testvineshield.core.domain.datamodels.DiseaseDomainModel
+import com.rncoding.testvineshield.core.domain.error.DiseaseValidationReason
 import com.rncoding.testvineshield.core.domain.error.DiseaseError
 import org.junit.Test
 import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseCatalogueCodes
@@ -155,5 +156,10 @@ class DiseaseValidatorTest {
                 )
             )
         )
+    }
+    @Test
+    fun validationReasonsRemainIndependentOfPresentationLanguage() {
+        assertEquals(DiseaseValidationReason.Name, assertIs<DiseaseError.InvalidInput>(validator.validate(validDisease().copy(name = ""))).reason)
+        assertEquals(DiseaseValidationReason.Code, assertIs<DiseaseError.InvalidInput>(validator.validate(validDisease().copy(code = ""))).reason)
     }
 }

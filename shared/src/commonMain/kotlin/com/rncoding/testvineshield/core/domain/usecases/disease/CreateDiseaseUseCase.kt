@@ -5,6 +5,7 @@ import com.rncoding.testvineshield.core.domain.auth.AuthenticatedUserProvider
 import com.rncoding.testvineshield.core.domain.datamodels.DiseaseDomainModel
 import com.rncoding.testvineshield.core.domain.error.AppError
 import com.rncoding.testvineshield.core.domain.error.AuthError
+import com.rncoding.testvineshield.core.domain.error.DiseaseValidationReason
 import com.rncoding.testvineshield.core.domain.error.DiseaseError
 import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.error.UnexpectedError
@@ -28,9 +29,7 @@ class CreateDiseaseUseCase(
 
         if (disease.diseaseId != 0L) {
             return Result.Error(
-                DiseaseError.InvalidInput(
-                    "A new disease must not have an existing ID."
-                )
+                DiseaseError.InvalidInput("A new disease must not have an existing ID.", reason = DiseaseValidationReason.NewIdentity)
             )
         }
 

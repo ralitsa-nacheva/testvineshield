@@ -16,6 +16,7 @@ internal fun localizedAppErrorMessage(error: AppError): String = when (error) {
     is StorageError -> localizedStorageError(error)
     is NetworkError -> localizedNetworkError(error)
     BlockError.NotFound -> stringResource(Res.string.block_error_not_found)
+    is DiseaseError -> localizedDiseaseError(error)
     is HarvestError -> localizedHarvestError(error)
     is ActivityError -> if (error is ActivityError.InvalidInput && error.sprayReason != null) localizedSprayValidationError(error) else localizedActivityError(error)
     else -> error.userMessage

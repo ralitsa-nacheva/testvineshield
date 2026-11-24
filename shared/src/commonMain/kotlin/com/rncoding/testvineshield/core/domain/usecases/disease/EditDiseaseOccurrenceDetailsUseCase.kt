@@ -4,6 +4,7 @@ import com.rncoding.testvineshield.core.domain.auth.AuthenticatedUserProvider
 import com.rncoding.testvineshield.core.domain.datamodels.BlockDiseaseObservation
 import com.rncoding.testvineshield.core.domain.error.AppError
 import com.rncoding.testvineshield.core.domain.error.AuthError
+import com.rncoding.testvineshield.core.domain.error.DiseaseValidationReason
 import com.rncoding.testvineshield.core.domain.error.DiseaseError
 import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.error.UnexpectedError
@@ -34,7 +35,7 @@ class EditDiseaseOccurrenceDetailsUseCase(
         val normalizedNotes = notes.trim().ifBlank { null }
         val curedAt = observation.curedAt
         if (curedAt != null && observedOn > curedAt) {
-            return Result.Error(DiseaseError.InvalidInput("The observation date cannot be after its resolution date."))
+            return Result.Error(DiseaseError.InvalidInput("The observation date cannot be after its resolution date.", reason = DiseaseValidationReason.ObservationAfterResolution))
         }
 
         return try {
@@ -49,7 +50,7 @@ class EditDiseaseOccurrenceDetailsUseCase(
             )
             if (users.currentUserOrNull()?.userId != ownerId) Result.Error(AuthError.NoActiveSession)
             else if (changed) Result.Success(Unit)
-            else Result.Error(DiseaseError.InvalidInput("This observation changed or is no longer available. Close and reopen it before retrying."))
+            else Result.Error(DiseaseError.InvalidInput("This observation changed or is no longer available. Close and reopen it before retrying.", reason = DiseaseValidationReason.ObservationChanged))
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {

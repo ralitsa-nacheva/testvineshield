@@ -5,6 +5,7 @@ import com.rncoding.testvineshield.core.domain.datamodels.DiseaseOccurrenceDomai
 import com.rncoding.testvineshield.core.domain.datamodels.enums.DiseaseOccurrenceStatus
 import com.rncoding.testvineshield.core.domain.error.AppError
 import com.rncoding.testvineshield.core.domain.error.AuthError
+import com.rncoding.testvineshield.core.domain.error.DiseaseValidationReason
 import com.rncoding.testvineshield.core.domain.error.DiseaseError
 import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.error.UnexpectedError
@@ -33,7 +34,7 @@ class CreateDiseaseOccurrenceUseCase(
     ): Result<Long, AppError> {
         if (users.currentUserOrNull()?.userId != ownerId) return Result.Error(AuthError.NoActiveSession)
         if (vineyardId <= 0 || blockId <= 0 || diseaseId <= 0) {
-            return Result.Error(DiseaseError.InvalidInput("Choose an available block and disease."))
+            return Result.Error(DiseaseError.InvalidInput("Choose an available block and disease.", reason = DiseaseValidationReason.Scope))
         }
         val normalizedNotes = notes.trim().ifBlank { null }
         return try {
@@ -57,7 +58,7 @@ class CreateDiseaseOccurrenceUseCase(
                     updatedAt = now,
                     notes = normalizedNotes
                 )
-            ) ?: return Result.Error(DiseaseError.InvalidInput("The block or built-in disease is no longer available."))
+            ) ?: return Result.Error(DiseaseError.InvalidInput("The block or built-in disease is no longer available.", reason = DiseaseValidationReason.ScopeUnavailable))
             if (users.currentUserOrNull()?.userId != ownerId) Result.Error(AuthError.NoActiveSession)
             else Result.Success(id)
         } catch (error: CancellationException) {

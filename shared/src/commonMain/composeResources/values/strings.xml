@@ -757,4 +757,36 @@
     <string name="harvest_issue_invalidscope">Invalid harvest scope.</string>
     <string name="harvest_issue_documentsavefailed">Unable to save the export. Check the destination and available space, then try again.</string>
     <string name="harvest_error_not_found">The requested harvest could not be found.</string>
+
+    <string name="disease_error_name">Disease name is required.</string>
+    <string name="disease_error_code">Disease code cannot be blank when provided.</string>
+    <string name="disease_error_reservedcode">This disease code is reserved for the predefined catalogue.</string>
+    <string name="disease_error_newidentity">A new disease must not have an existing ID.</string>
+    <string name="disease_error_scope">Choose an available block and disease.</string>
+    <string name="disease_error_scopeunavailable">The block or built-in disease is no longer available.</string>
+    <string name="disease_error_observationafterresolution">The observation date cannot be after its resolution date.</string>
+    <string name="disease_error_observationchanged">This observation changed or is no longer available. Close and reopen it before retrying.</string>
+    <string name="disease_error_deletechanged">The observation changed or is no longer available. Close and reopen it.</string>
+    <string name="disease_error_symptomunavailable">This symptom is unavailable for the observation.</string>
+    <string name="disease_error_symptomafterresolution">The symptom date cannot be after the resolution date.</string>
+    <string name="disease_error_notes">Use at most 4000 characters for notes.</string>
+    <string name="disease_error_symptomchanged">The observation or symptom changed. Close and reopen it.</string>
+    <string name="disease_error_symptommissing">This observation has no matching recorded symptom.</string>
+    <string name="disease_error_identity">A valid disease ID is required.</string>
+    <string name="disease_error_linkzone">Set a valid vineyard time zone before linking an activity.</string>
+    <string name="disease_error_activityfuture">The activity completion date is in the future for this vineyard.</string>
+    <string name="disease_error_activitychanged">The observation or activity changed, or this activity is already linked. Reopen the dialog.</string>
+    <string name="disease_error_linkmissing">This activity link is no longer available.</string>
+    <string name="disease_error_status">Choose a different status.</string>
+    <string name="disease_error_resolutionzone">Set a valid vineyard time zone before resolving this observation.</string>
+    <string name="disease_error_resolutionbeforeobservation">The resolution date cannot precede the observation date.</string>
+    <string name="disease_error_severity">Enter an affected percentage from 0 to 100.</string>
+    <string name="disease_error_observationzone">Set a valid vineyard time zone before saving an observation.</string>
+    <string name="disease_error_observationfuture">The observation date cannot be in the future for this vineyard.</string>
+    <string name="disease_error_notfound">The requested disease could not be found.</string>
+    <string name="disease_error_predefineddisease">Predefined diseases cannot be modified or deleted.</string>
+    <string name="disease_error_diseaseinuse">This disease cannot be deleted because it is used by existing records.</string>
+    <string name="observation_error_load">Disease observations could not be loaded.</string>
+    <string name="observation_error_session">This session is no longer available.</string>
+    <string name="observation_error_date_format">Enter a valid date as YYYY-MM-DD.</string>
 </resources>

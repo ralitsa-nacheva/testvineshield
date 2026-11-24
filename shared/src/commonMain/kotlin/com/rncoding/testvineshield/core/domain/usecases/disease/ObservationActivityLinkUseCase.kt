@@ -5,6 +5,7 @@ import com.rncoding.testvineshield.core.domain.datamodels.BlockDiseaseObservatio
 import com.rncoding.testvineshield.core.domain.datamodels.CompletedBlockActivity
 import com.rncoding.testvineshield.core.domain.error.AppError
 import com.rncoding.testvineshield.core.domain.error.AuthError
+import com.rncoding.testvineshield.core.domain.error.DiseaseValidationReason
 import com.rncoding.testvineshield.core.domain.error.DiseaseError
 import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.error.UnexpectedError
@@ -37,11 +38,11 @@ class ObservationActivityLinkUseCase(
             val zone = try {
                 TimeZone.of(vineyard.timeZone)
             } catch (_: IllegalArgumentException) {
-                return Result.Error(DiseaseError.InvalidInput("Set a valid vineyard time zone before linking an activity."))
+                return Result.Error(DiseaseError.InvalidInput("Set a valid vineyard time zone before linking an activity.", reason = DiseaseValidationReason.LinkZone))
             }
             val today = Instant.fromEpochMilliseconds(clock.nowMillis()).toLocalDateTime(zone).date
             if (activity.completedOn > today) {
-                return Result.Error(DiseaseError.InvalidInput("The activity completion date is in the future for this vineyard."))
+                return Result.Error(DiseaseError.InvalidInput("The activity completion date is in the future for this vineyard.", reason = DiseaseValidationReason.ActivityFuture))
             }
             currentCoroutineContext().ensureActive()
             if (users.currentUserOrNull()?.userId != ownerId) return Result.Error(AuthError.NoActiveSession)
@@ -51,7 +52,7 @@ class ObservationActivityLinkUseCase(
             )
             if (users.currentUserOrNull()?.userId != ownerId) Result.Error(AuthError.NoActiveSession)
             else if (linked) Result.Success(Unit)
-            else Result.Error(DiseaseError.InvalidInput("The observation or activity changed, or this activity is already linked. Reopen the dialog."))
+            else Result.Error(DiseaseError.InvalidInput("The observation or activity changed, or this activity is already linked. Reopen the dialog.", reason = DiseaseValidationReason.ActivityChanged))
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {
@@ -68,7 +69,7 @@ class ObservationActivityLinkUseCase(
             val removed = diseases.unlinkOwnedOccurrenceActivity(ownerId, vineyardId, blockId, occurrenceId, activityId)
             if (users.currentUserOrNull()?.userId != ownerId) Result.Error(AuthError.NoActiveSession)
             else if (removed) Result.Success(Unit)
-            else Result.Error(DiseaseError.InvalidInput("This activity link is no longer available."))
+            else Result.Error(DiseaseError.InvalidInput("This activity link is no longer available.", reason = DiseaseValidationReason.LinkMissing))
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {

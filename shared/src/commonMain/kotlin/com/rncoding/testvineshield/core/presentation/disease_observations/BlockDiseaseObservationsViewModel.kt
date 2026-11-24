@@ -9,6 +9,7 @@ import com.rncoding.testvineshield.core.domain.datamodels.BlockDiseaseObservatio
 import com.rncoding.testvineshield.core.domain.datamodels.DiseaseDomainModel
 import com.rncoding.testvineshield.core.domain.datamodels.enums.DiseaseOccurrenceStatus
 import com.rncoding.testvineshield.core.domain.usecases.disease.ChangeDiseaseOccurrenceStatusUseCase
+import com.rncoding.testvineshield.core.domain.error.UnexpectedError
 import com.rncoding.testvineshield.core.domain.error.AppError
 import com.rncoding.testvineshield.core.domain.usecases.disease.EditDiseaseOccurrenceDetailsUseCase
 import com.rncoding.testvineshield.core.domain.error.Result
@@ -41,16 +42,16 @@ data class ObservationDialog(
 
 data class DiseaseObservationsState(
     val loading: Boolean = true,
-    val loadError: String? = null,
+    val loadError: ObservationIssue? = null,
     val observations: List<BlockDiseaseObservation> = emptyList(),
     val diseases: List<DiseaseDomainModel> = emptyList(),
     val completedActivities: List<CompletedBlockActivity> = emptyList(),
     val activityLinks: Map<Long, List<LinkedObservationActivity>> = emptyMap(),
     val saving: Boolean = false,
-    val saveError: String? = null,
+    val saveError: ObservationIssue? = null,
     val lastSavedId: Long? = null,
     val dialog: ObservationDialog? = null,
-    val dialogError: String? = null
+    val dialogError: ObservationIssue? = null
 )
 
 private data class ObservationNotebookData(
@@ -96,11 +97,11 @@ class BlockDiseaseObservationsViewModel(
             }.buffer(0).catch { error ->
                 if (error is CancellationException) throw error
                 saveJob?.cancel()
-                _state.value = DiseaseObservationsState(loading = false, loadError = "Disease observations could not be loaded.")
+                _state.value = DiseaseObservationsState(loading = false, loadError = ObservationIssue.LoadFailed)
             }.collect { data ->
                 if (data == null) {
                     saveJob?.cancel()
-                    _state.value = DiseaseObservationsState(loading = false, loadError = "This session is no longer available.")
+                    _state.value = DiseaseObservationsState(loading = false, loadError = ObservationIssue.SessionUnavailable)
                 } else {
                     _state.update {
                         it.copy(
@@ -197,8 +198,12 @@ class BlockDiseaseObservationsViewModel(
                 currentCoroutineContext().ensureActive()
                 when (result) {
                     is Result.Success -> _state.update { it.copy(dialog = null) }
-                    is Result.Error -> _state.update { it.copy(dialogError = result.error.userMessage) }
+                    is Result.Error -> _state.update { it.copy(dialogError = ObservationIssue.Failure(result.error)) }
                 }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                _state.update { it.copy(dialogError = ObservationIssue.Failure(UnexpectedError(error))) }
             } finally {
                 _state.update { it.copy(saving = false) }
             }
@@ -217,8 +222,12 @@ class BlockDiseaseObservationsViewModel(
                 currentCoroutineContext().ensureActive()
                 when (result) {
                     is Result.Success -> _state.update { it.copy(lastSavedId = result.data) }
-                    is Result.Error -> _state.update { it.copy(saveError = result.error.userMessage) }
+                    is Result.Error -> _state.update { it.copy(saveError = ObservationIssue.Failure(result.error)) }
                 }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                _state.update { it.copy(saveError = ObservationIssue.Failure(UnexpectedError(error))) }
             } finally {
                 _state.update { it.copy(saving = false) }
             }
