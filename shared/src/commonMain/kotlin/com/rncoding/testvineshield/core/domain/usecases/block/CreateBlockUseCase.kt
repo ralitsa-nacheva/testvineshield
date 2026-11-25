@@ -5,6 +5,7 @@ import com.rncoding.testvineshield.core.domain.auth.AuthenticatedUserProvider
 import com.rncoding.testvineshield.core.domain.datamodels.BlockDomainModel
 import com.rncoding.testvineshield.core.domain.error.AppError
 import com.rncoding.testvineshield.core.domain.error.AuthError
+import com.rncoding.testvineshield.core.domain.error.BlockValidationReason
 import com.rncoding.testvineshield.core.domain.error.BlockError
 import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.error.UnexpectedError
@@ -35,9 +36,7 @@ class CreateBlockUseCase(
 
         if (block.blockId != 0L) {
             return Result.Error(
-                BlockError.InvalidInput(
-                    "A new block must not have an existing ID."
-                )
+                BlockError.InvalidInput("A new block must not have an existing ID.", reason = BlockValidationReason.NewIdentity)
             )
         }
 

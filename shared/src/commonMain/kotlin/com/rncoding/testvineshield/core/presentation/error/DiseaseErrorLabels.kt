@@ -36,5 +36,5 @@ internal fun localizedDiseaseError(error: DiseaseError): String = when (error) {
         DiseaseValidationReason.Severity -> Res.string.disease_error_severity
         DiseaseValidationReason.ObservationZone -> Res.string.disease_error_observationzone
         DiseaseValidationReason.ObservationFuture -> Res.string.disease_error_observationfuture
-    }) } ?: error.userMessage
+    }) } ?: stringResource(Res.string.error_review_input)
 }

@@ -22,5 +22,5 @@ internal fun localizedHarvestError(error: HarvestError): String = when (error) {
         HarvestValidationReason.ExportEmpty -> Res.string.harvest_error_exportempty
         HarvestValidationReason.ExportReload -> Res.string.harvest_error_exportreload
         HarvestValidationReason.ExportTooLarge -> Res.string.harvest_error_exporttoolarge
-    }) } ?: error.userMessage
+    }) } ?: stringResource(Res.string.error_review_input)
 }

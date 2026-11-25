@@ -40,7 +40,7 @@ internal fun localizedAuthErrorMessage(error: AppError): String = when (error) {
         ValidationError.PasswordMissingUppercase -> stringResource(Res.string.auth_validation_uppercase)
         ValidationError.PasswordMissingDigit -> stringResource(Res.string.auth_validation_digit)
     }
-    else -> error.userMessage
+    else -> stringResource(Res.string.error_action_failed)
 }
 
 @Composable

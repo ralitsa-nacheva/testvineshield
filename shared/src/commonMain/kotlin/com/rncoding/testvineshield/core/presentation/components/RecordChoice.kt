@@ -10,7 +10,7 @@ import androidx.compose.ui.unit.dp
 import com.rncoding.testvineshield.core.presentation.root.userAction
 
 @Composable
-fun <T> RecordChoice(label: String,selected: T?,values: List<T>,enabled: Boolean,text: (T)->String,changed: (T?)->Unit,allowUnknown: Boolean=true,nullLabel: String="Unknown / not specified") {
+fun <T> RecordChoice(label: String,selected: T?,values: List<T>,enabled: Boolean,text: (T)->String,changed: (T?)->Unit,allowUnknown: Boolean=true,nullLabel: String=stringResource(Res.string.choice_unspecified)) {
     var open by remember { mutableStateOf(false) }
     LaunchedEffect(enabled) { if(!enabled) open=false }
     Box {

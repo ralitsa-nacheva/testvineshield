@@ -5,6 +5,7 @@ import com.rncoding.testvineshield.core.domain.auth.AuthenticatedUserProvider
 import com.rncoding.testvineshield.core.domain.datamodels.BlockDomainModel
 import com.rncoding.testvineshield.core.domain.error.AppError
 import com.rncoding.testvineshield.core.domain.error.AuthError
+import com.rncoding.testvineshield.core.domain.error.BlockValidationReason
 import com.rncoding.testvineshield.core.domain.error.BlockError
 import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.error.UnexpectedError
@@ -38,9 +39,7 @@ class UpdateBlockUseCase(
         // 3. An update requires an existing block ID
         if (block.blockId <= 0L) {
             return Result.Error(
-                BlockError.InvalidInput(
-                    "A valid block ID is required to update a block."
-                )
+                BlockError.InvalidInput("A valid block ID is required to update a block.", reason = BlockValidationReason.Identity)
             )
         }
 

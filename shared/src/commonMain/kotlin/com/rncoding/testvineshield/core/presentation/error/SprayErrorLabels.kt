@@ -8,7 +8,7 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 internal fun localizedSprayValidationError(error: ActivityError.InvalidInput): String {
-    val reason = error.sprayReason ?: return error.userMessage
+    val reason = error.sprayReason ?: return stringResource(Res.string.error_review_input)
     val resource = when (reason) {
         SprayValidationReason.RecordIdentity -> Res.string.spray_error_recordidentity
         SprayValidationReason.Version -> Res.string.spray_error_version
@@ -39,7 +39,7 @@ internal fun localizedSprayValidationError(error: ActivityError.InvalidInput): S
         SprayValidationReason.ProductUnit, SprayValidationReason.ProductRate,
         SprayValidationReason.ProductReference -> {
             val number = error.productNumber
-            if (number == null || number <= 0) error.userMessage else stringResource(resource, number)
+            if (number == null || number <= 0) stringResource(Res.string.error_review_input) else stringResource(resource, number)
         }
         else -> stringResource(resource)
     }

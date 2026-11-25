@@ -25,5 +25,5 @@ internal fun localizedVineyardValidationError(error: VineyardValidationError): S
         VineyardValidationReason.TimeZoneInvalid -> Res.string.vineyard_validation_timezoneinvalid
         null -> null
     }
-    return if (resource == null) error.userMessage else stringResource(resource)
+    return if (resource == null) stringResource(Res.string.error_review_input) else stringResource(resource)
 }

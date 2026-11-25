@@ -4,7 +4,8 @@ package com.rncoding.testvineshield.core.domain.error
 sealed interface BlockError : AppError {
 
     data class InvalidInput(
-        override val userMessage: String
+        override val userMessage: String,
+        val reason: BlockValidationReason? = null
     ) : BlockError {
         override val debugMessage: String? = userMessage
         override val cause: Throwable? = null

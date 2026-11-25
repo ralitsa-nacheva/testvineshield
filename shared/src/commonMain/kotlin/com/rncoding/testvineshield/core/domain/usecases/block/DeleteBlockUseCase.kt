@@ -4,6 +4,7 @@ package com.rncoding.testvineshield.core.domain.usecases.block
 import com.rncoding.testvineshield.core.domain.auth.AuthenticatedUserProvider
 import com.rncoding.testvineshield.core.domain.error.AppError
 import com.rncoding.testvineshield.core.domain.error.AuthError
+import com.rncoding.testvineshield.core.domain.error.BlockValidationReason
 import com.rncoding.testvineshield.core.domain.error.BlockError
 import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.error.UnexpectedError
@@ -29,9 +30,7 @@ class DeleteBlockUseCase(
         // 2. Validate IDs
         if (vineyardId <= 0L || blockId <= 0L) {
             return Result.Error(
-                BlockError.InvalidInput(
-                    "Invalid vineyard or block ID."
-                )
+                BlockError.InvalidInput("Invalid vineyard or block ID.", reason = BlockValidationReason.Scope)
             )
         }
 

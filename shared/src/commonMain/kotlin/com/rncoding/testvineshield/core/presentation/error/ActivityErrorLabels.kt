@@ -30,6 +30,6 @@ internal fun localizedActivityError(error: ActivityError): String = when (error)
             ActivityValidationReason.InvalidScope -> Res.string.activity_validation_invalidscope
             null -> null
         }
-        if (resource == null) error.userMessage else stringResource(resource)
+        if (resource == null) stringResource(Res.string.error_review_input) else stringResource(resource)
     }
 }

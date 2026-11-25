@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.presentation.weather
 
+import com.rncoding.testvineshield.core.presentation.error.localizedAppErrorMessage
 import com.rncoding.testvineshield.core.presentation.error.localizedNetworkError
 import androidx.compose.runtime.Composable
 import com.rncoding.testvineshield.core.domain.disease_risk.MonitoringDraftSaveOutcome
@@ -7,7 +8,7 @@ import com.rncoding.testvineshield.core.domain.error.*
 import com.rncoding.testvineshield.resources.*
 import org.jetbrains.compose.resources.stringResource
 
-/** Map error identity, never English text or debug details. Unknown types keep their safe message. */
+/** Map error identity, never English text or debug details. Other types use the shared localized fallback. */
 @Composable
 internal fun localizedWeatherError(error: AppError): String {
     if (error is NetworkError) return localizedNetworkError(error)
@@ -27,7 +28,7 @@ internal fun localizedWeatherError(error: AppError): String {
         BlockError.NotFound -> Res.string.weather_error_block_missing
         else -> null
     }
-    return if (resource != null) stringResource(resource) else error.userMessage
+    return if (resource != null) stringResource(resource) else localizedAppErrorMessage(error)
 }
 
 @Composable

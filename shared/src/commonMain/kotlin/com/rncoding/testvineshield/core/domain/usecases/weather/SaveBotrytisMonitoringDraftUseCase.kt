@@ -5,6 +5,7 @@ import com.rncoding.testvineshield.core.domain.disease_risk.DiseaseRiskMonitorin
 import com.rncoding.testvineshield.core.domain.disease_risk.MonitoringDraftSaveOutcome
 import com.rncoding.testvineshield.core.domain.error.AppError
 import com.rncoding.testvineshield.core.domain.error.AuthError
+import com.rncoding.testvineshield.core.domain.error.BlockValidationReason
 import com.rncoding.testvineshield.core.domain.error.BlockError
 import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.error.UnexpectedError
@@ -18,7 +19,7 @@ class SaveBotrytisMonitoringDraftUseCase(
     suspend operator fun invoke(
         vineyardId: Long, blockId: Long, startDate: LocalDate
     ): Result<MonitoringDraftSaveOutcome, AppError> {
-        if (vineyardId <= 0 || blockId <= 0) return Result.Error(BlockError.InvalidInput("Invalid vineyard or block ID."))
+        if (vineyardId <= 0 || blockId <= 0) return Result.Error(BlockError.InvalidInput("Invalid vineyard or block ID.", reason = BlockValidationReason.Scope))
         val owner = users.currentUserOrNull()?.userId ?: return Result.Error(AuthError.NoActiveSession)
         return try {
             val outcome = monitoring.saveBotrytisDraft(owner, vineyardId, blockId, startDate)

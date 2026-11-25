@@ -487,7 +487,7 @@
     <string name="weather_history_heading">Скорошна моделирана история</string>
     <string name="weather_history_coverage_help">Покритието е запазената част от последните седем изминали дни, а не доказателство за пълен период с входни данни за модел на болест.</string>
     <string name="weather_last_history">Последно завършено обновяване на историята: %1$s</string>
-    <string name="weather_excluded_hours">Изключени са %1$d непълни или бъдещи часове от историята; проверете часовника на устройството.</string>
+    <string name="weather_excluded_hours">Брой изключени непълни или бъдещи часове от историята: %1$d. Проверете часовника на устройството.</string>
     <string name="weather_latest_hour">Последна запазена времева стъпка (преди поне един час)</string>
     <string name="weather_forecast_heading">Прогноза</string>
     <string name="weather_refresh_start">Записано начало на обновяването: %1$s</string>
@@ -511,7 +511,7 @@
     <string name="weather_history_completed">Заявката за история завърши.</string>
     <string name="weather_forecast_completed">Заявката за прогноза завърши.</string>
     <string name="weather_refresh_scope">Това обновяване актуализира само запазените метеорологични данни; не изпълнява модели на болести и не създава сигнали.</string>
-    <string name="weather_coverage_counts">%1$d запазени часа · %2$d прекъсвания между запазените времеви отметки</string>
+    <string name="weather_coverage_counts">Брой запазени часове: %1$d · Прекъсвания между времевите отметки: %2$d</string>
     <string name="weather_coverage_from">От: %1$s</string>
     <string name="weather_coverage_through">До: %1$s</string>
     <string name="weather_temperature">Температура: %1$s</string>
@@ -528,7 +528,7 @@
     <string name="monitor_zone_missing">Часовата зона на лозето не е налична.</string>
     <string name="monitor_grid_mismatch">%1$s: Този ден не съответства на почасовата метеорологична мрежа.</string>
     <string name="monitor_day_coverage">%1$s: Запазени са %2$d от %3$d очаквани часа с метеорологични данни.</string>
-    <string name="monitor_unexpected_rows">Запазените данни съдържат и %1$d дублирани записа или записа извън почасовата мрежа за този ден.</string>
+    <string name="monitor_unexpected_rows">Брой дублирани записи или записи извън почасовата мрежа за деня: %1$d.</string>
     <string name="monitor_coverage_help">Метеорологичното покритие отчита времеви отметки. Овлажняването и валидирането на модела изискват отделни проверки.</string>
     <string name="monitor_day_stages">Фази на парцелите за предходния местен ден</string>
     <string name="monitor_stages_failed">Наблюденията на фазите не можаха да бъдат прочетени.</string>
@@ -789,4 +789,18 @@
     <string name="observation_error_load">Наблюденията за болести не могат да бъдат заредени.</string>
     <string name="observation_error_session">Тази сесия вече не е налична.</string>
     <string name="observation_error_date_format">Въведете валидна дата във формат ГГГГ-ММ-ДД.</string>
+
+    <string name="block_domain_validation_vineyard">Изберете валидно лозе.</string>
+    <string name="block_domain_validation_name">Името на блока е задължително.</string>
+    <string name="block_domain_validation_variety">Сортът на лозата е задължителен.</string>
+    <string name="block_domain_validation_area">Известната площ на блока трябва да е крайно число, по-голямо от нула.</string>
+    <string name="block_domain_validation_rows">Известният брой редове трябва да е по-голям от нула.</string>
+    <string name="block_domain_validation_spacing">Известното междуредово разстояние трябва да е крайно число, по-голямо от нула.</string>
+    <string name="block_domain_validation_identity">За промяна на блок е необходим валиден идентификатор.</string>
+    <string name="block_domain_validation_scope">Невалиден идентификатор на лозе или блок.</string>
+    <string name="block_domain_validation_newidentity">Новият блок не трябва да има съществуващ идентификатор.</string>
+    <string name="block_domain_validation_vineyardidentity">Невалиден идентификатор на лозе.</string>
+    <string name="choice_unspecified">Неизвестно / не е посочено</string>
+    <string name="error_review_input">Проверете въведените стойности и опитайте отново.</string>
+    <string name="error_action_failed">Действието не може да бъде завършено. Опитайте отново.</string>
 </resources>

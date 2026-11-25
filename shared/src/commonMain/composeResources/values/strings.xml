@@ -487,7 +487,7 @@
     <string name="weather_history_heading">Recent modeled history</string>
     <string name="weather_history_coverage_help">Coverage is the stored part of the last seven elapsed days, not proof of a complete disease-model input window.</string>
     <string name="weather_last_history">Last completed history refresh: %1$s</string>
-    <string name="weather_excluded_hours">%1$d incomplete/future history hours excluded; check the device clock.</string>
+    <string name="weather_excluded_hours">Excluded incomplete or future history hours: %1$d. Check the device clock.</string>
     <string name="weather_latest_hour">Latest cached time step (at least one hour old)</string>
     <string name="weather_forecast_heading">Forecast</string>
     <string name="weather_refresh_start">Recorded refresh start: %1$s</string>
@@ -511,7 +511,7 @@
     <string name="weather_history_completed">History request completed.</string>
     <string name="weather_forecast_completed">Forecast request completed.</string>
     <string name="weather_refresh_scope">This refresh updates weather caches only; it does not run disease models or create alerts.</string>
-    <string name="weather_coverage_counts">%1$d cached hours · %2$d discontinuities between stored timestamps</string>
+    <string name="weather_coverage_counts">Cached hours: %1$d · Timestamp discontinuities: %2$d</string>
     <string name="weather_coverage_from">From: %1$s</string>
     <string name="weather_coverage_through">Through: %1$s</string>
     <string name="weather_temperature">Temperature: %1$s</string>
@@ -528,7 +528,7 @@
     <string name="monitor_zone_missing">The vineyard time zone is unavailable.</string>
     <string name="monitor_grid_mismatch">%1$s: This day does not fit the hourly weather grid.</string>
     <string name="monitor_day_coverage">%1$s: %2$d of %3$d expected weather hours cached.</string>
-    <string name="monitor_unexpected_rows">The cache also contains %1$d duplicate or off-grid rows for this day.</string>
+    <string name="monitor_unexpected_rows">Duplicate or off-grid rows for this day: %1$d.</string>
     <string name="monitor_coverage_help">Weather coverage counts timestamps. Wetness and model validation require separate checks.</string>
     <string name="monitor_day_stages">Block stages for the previous local day</string>
     <string name="monitor_stages_failed">Stage observations could not be read.</string>
@@ -789,4 +789,18 @@
     <string name="observation_error_load">Disease observations could not be loaded.</string>
     <string name="observation_error_session">This session is no longer available.</string>
     <string name="observation_error_date_format">Enter a valid date as YYYY-MM-DD.</string>
+
+    <string name="block_domain_validation_vineyard">Select a valid vineyard.</string>
+    <string name="block_domain_validation_name">Block name is required.</string>
+    <string name="block_domain_validation_variety">Vine variety is required.</string>
+    <string name="block_domain_validation_area">Known block area must be finite and greater than zero.</string>
+    <string name="block_domain_validation_rows">Known row count must be greater than zero.</string>
+    <string name="block_domain_validation_spacing">Known row spacing must be finite and greater than zero.</string>
+    <string name="block_domain_validation_identity">A valid block ID is required to update a block.</string>
+    <string name="block_domain_validation_scope">Invalid vineyard or block ID.</string>
+    <string name="block_domain_validation_newidentity">A new block must not have an existing ID.</string>
+    <string name="block_domain_validation_vineyardidentity">Invalid vineyard ID.</string>
+    <string name="choice_unspecified">Unknown / not specified</string>
+    <string name="error_review_input">Review the entered values and try again.</string>
+    <string name="error_action_failed">Unable to complete this action. Please try again.</string>
 </resources>
