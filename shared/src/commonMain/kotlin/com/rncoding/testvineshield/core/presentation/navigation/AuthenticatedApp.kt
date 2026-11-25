@@ -3,6 +3,8 @@ package com.rncoding.testvineshield.core.presentation.navigation
 import com.rncoding.testvineshield.core.presentation.disease_observations.BlockDiseaseObservationsScreen
 import com.rncoding.testvineshield.core.presentation.disease_catalogue.DiseaseCatalogueScreenRoot
 import com.rncoding.testvineshield.core.domain.auth.AuthenticatedUserProvider
+import com.rncoding.testvineshield.core.presentation.error.ErrorSnackbarVisuals
+import com.rncoding.testvineshield.core.domain.error.DatabaseError
 import androidx.compose.material3.SnackbarHostState
 import com.rncoding.testvineshield.core.domain.error.Result
 import com.rncoding.testvineshield.core.domain.repository.VineyardRepository
@@ -56,7 +58,8 @@ fun AuthenticatedApp(
     var linkUnavailable by remember { mutableStateOf(false) }
     LaunchedEffect(linkUnavailable) {
         if (linkUnavailable) {
-            linkMessages.showSnackbar("This record is unavailable for the current account.")
+            // Queue a typed, non-enumerating failure. The host resolves the active locale.
+            linkMessages.showSnackbar(ErrorSnackbarVisuals(DatabaseError.NotFound("linked record")))
             linkUnavailable = false
         }
     }

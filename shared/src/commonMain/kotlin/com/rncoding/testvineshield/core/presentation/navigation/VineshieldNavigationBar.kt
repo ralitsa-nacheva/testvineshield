@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
+import com.rncoding.testvineshield.core.presentation.error.LocalizedErrorSnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -100,7 +100,7 @@ internal fun AdaptiveVineShieldScaffold(
         val showVineyardPane = useRail && maxWidth >= (if (middlePane == null) 900.dp else 1200.dp)
         val showBlockPane = useRail && middlePane != null && maxWidth >= 900.dp
         Scaffold(
-            snackbarHost = { SnackbarHost(snackbarHostState) },
+            snackbarHost = { LocalizedErrorSnackbarHost(snackbarHostState) },
             bottomBar = {
                 if (!useRail) {
                     VineShieldNavigationBar(

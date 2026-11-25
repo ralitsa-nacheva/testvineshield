@@ -42,6 +42,7 @@ def audit(root=ROOT):
     en = read_strings(resources / "values/strings.xml")
     bg = read_strings(resources / "values-bg/strings.xml")
     check_pair(en, bg)
+    # Explicit UTF-8 is required on Windows, regardless of the active code page.
     refs = set()
     for source in (root / "shared/src").rglob("*.kt"):
         found = set(re.findall(r"Res\.string\.(\w+)", source.read_text(encoding="utf-8")))

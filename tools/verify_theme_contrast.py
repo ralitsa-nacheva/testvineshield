@@ -4,7 +4,7 @@ from pathlib import Path
 import json,re
 ROOT=Path(__file__).resolve().parents[1]
 def run():
-    text=(ROOT/'shared/src/commonMain/kotlin/com/rncoding/testvineshield/core/presentation/theme/VineShieldTheme.kt').read_text()
+    text=(ROOT/'shared/src/commonMain/kotlin/com/rncoding/testvineshield/core/presentation/theme/VineShieldTheme.kt').read_text(encoding="utf-8")
     light=text.split('private val light = lightColorScheme(',1)[1].split('private val dark',1)[0]
     dark=text.split('private val dark = darkColorScheme(',1)[1].split('@Composable',1)[0]
     def values(source):
