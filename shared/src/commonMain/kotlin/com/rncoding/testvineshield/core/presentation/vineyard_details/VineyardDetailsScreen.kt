@@ -122,27 +122,27 @@ fun VineyardDetailsScreen(
                     verticalArrangement =
                         Arrangement.spacedBy(16.dp)
                 ) {
-                    item {
+                    item(key = VineyardDetailsItemKeys.INFORMATION) {
                         VineyardInformationSection(
                             details = details
                         )
                     }
 
-                    item {
+                    item(key = VineyardDetailsItemKeys.WEATHER) {
                         SectionTitle(stringResource(Res.string.weather_monitoring))
                         Text(stringResource(Res.string.weather_monitoring_intro))
                         TextButton(onClick = userAction(onWeather)) { Text(stringResource(Res.string.open_weather_monitoring)) }
                         Text(stringResource(Res.string.risk_not_assessed))
                     }
 
-                    item {
+                    item(key = VineyardDetailsItemKeys.BLOCKS_HEADING) {
                         TextButton(onClick=userAction(onActivities)) { Text(stringResource(Res.string.vineyard_activities)) }
                         SectionTitle(stringResource(Res.string.selector_blocks))
                         TextButton(onClick=userAction(onBlocks)) { Text(stringResource(Res.string.manage_blocks)) }
                     }
 
                     if (details.blocks.isEmpty()) {
-                        item {
+                        item(key = VineyardDetailsItemKeys.BLOCKS_EMPTY) {
                             EmptySectionText(
                                 stringResource(Res.string.no_blocks_added)
                             )
@@ -150,18 +150,19 @@ fun VineyardDetailsScreen(
                     } else {
                         items(
                             items = details.blocks,
-                            key = { it.blockId }
+                            key = { VineyardDetailsItemKeys.block(it.blockId) },
+                            contentType = { "block-summary" }
                         ) { block ->
                             BlockSummaryCard(block)
                         }
                     }
 
-                    item {
+                    item(key = VineyardDetailsItemKeys.DISEASES_HEADING) {
                         SectionTitle(stringResource(Res.string.active_diseases_title))
                     }
 
                     if (details.activeDiseases.isEmpty()) {
-                        item {
+                        item(key = VineyardDetailsItemKeys.DISEASES_EMPTY) {
                             EmptySectionText(
                                 stringResource(Res.string.no_active_occurrences)
                             )
@@ -169,18 +170,19 @@ fun VineyardDetailsScreen(
                     } else {
                         items(
                             items = details.activeDiseases,
-                            key = { it.occurrenceId }
+                            key = { VineyardDetailsItemKeys.occurrence(it.occurrenceId) },
+                            contentType = { "occurrence-summary" }
                         ) { disease ->
                             DiseaseSummaryCard(disease)
                         }
                     }
 
-                    item {
+                    item(key = VineyardDetailsItemKeys.ALERTS_HEADING) {
                         SectionTitle(stringResource(Res.string.active_alerts_title))
                     }
 
                     if (details.activeAlerts.isEmpty()) {
-                        item {
+                        item(key = VineyardDetailsItemKeys.ALERTS_EMPTY) {
                             EmptySectionText(
                                 stringResource(Res.string.no_active_alerts)
                             )
@@ -188,13 +190,14 @@ fun VineyardDetailsScreen(
                     } else {
                         items(
                             items = details.activeAlerts,
-                            key = { it.alertId }
+                            key = { VineyardDetailsItemKeys.alert(it.alertId) },
+                            contentType = { "alert-summary" }
                         ) { alert ->
                             AlertSummaryCard(alert, !state.isDeleting) { onOpenAlert(alert.alertId) }
                         }
                     }
 
-                    item {
+                    item(key = VineyardDetailsItemKeys.DELETE) {
                         OutlinedButton(
                             onClick = userAction(onDeleteRequest),
                             enabled = !state.isDeleting,
