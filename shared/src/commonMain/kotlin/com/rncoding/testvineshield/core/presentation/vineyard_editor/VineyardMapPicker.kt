@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.presentation.vineyard_editor
 
+import com.rncoding.testvineshield.core.presentation.components.InfoHelp
 import com.rncoding.testvineshield.core.domain.error.AppError
 import com.rncoding.testvineshield.core.presentation.error.localizedAppErrorMessage
 import com.rncoding.testvineshield.resources.*
@@ -52,8 +53,8 @@ fun VineyardMapPicker(initial: VineyardMapPoint?,onDismiss: ()->Unit,onUse: (Vin
         Surface(Modifier.fillMaxSize().userActivity(activity)) {
             Column(Modifier.fillMaxSize().padding(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(Res.string.map_choose_location),style=MaterialTheme.typography.titleLarge)
-                Text(stringResource(Res.string.map_privacy))
-                Text(stringResource(Res.string.map_position_help))
+                InfoHelp(title = stringResource(Res.string.info_map), text = stringResource(Res.string.map_privacy))
+                InfoHelp(title = stringResource(Res.string.map_choose_location), text = stringResource(Res.string.map_position_help))
                 Box(Modifier.weight(1f).fillMaxWidth().heightIn(min=180.dp)) {
                     MaplibreMap(state=state,modifier=Modifier.fillMaxSize().userActivity(activity))
                     val color=MaterialTheme.colorScheme.error
@@ -65,7 +66,7 @@ fun VineyardMapPicker(initial: VineyardMapPoint?,onDismiss: ()->Unit,onUse: (Vin
                 }
                 Column(Modifier.heightIn(max=230.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(6.dp)) {
                     point?.let { Text(stringResource(Res.string.map_coordinates, formatPlainDecimal(it.latitude), formatPlainDecimal(it.longitude))) }
-                    Text(stringResource(Res.string.map_address_help))
+                    InfoHelp(title = stringResource(Res.string.info_location), text = stringResource(Res.string.map_address_help))
                     TextButton(onClick=userAction {
                         val selected=point
                         if(selected!=null && !busy) {
@@ -82,7 +83,7 @@ fun VineyardMapPicker(initial: VineyardMapPoint?,onDismiss: ()->Unit,onUse: (Vin
                             }
                         }
                     },enabled=point!=null && !busy) { Text(if(busy) stringResource(Res.string.map_zone_loading) else stringResource(Res.string.map_suggest_zone)) }
-                    Text(stringResource(Res.string.map_zone_privacy))
+                    InfoHelp(title = stringResource(Res.string.info_zone), text = stringResource(Res.string.map_zone_privacy))
                     lookupError?.let { Text(localizedAppErrorMessage(it)) }
                     zone?.let { suggested ->
                         Text(stringResource(Res.string.map_zone_suggestion, suggested))

@@ -55,8 +55,8 @@ internal fun BlockSelectionPane(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        item { Text(stringResource(Res.string.selector_blocks), style = MaterialTheme.typography.titleLarge) }
-        item {
+        item(key = "fixed:BlockSelectionPane:1", contentType = "fixed:BlockSelectionPane:1") { Text(stringResource(Res.string.selector_blocks), style = MaterialTheme.typography.titleLarge) }
+        item(key = "fixed:BlockSelectionPane:2", contentType = "fixed:BlockSelectionPane:2") {
             OutlinedTextField(
                 value = searchText,
                 onValueChange = { activity(); searchText = it },
@@ -67,14 +67,14 @@ internal fun BlockSelectionPane(
             )
         }
         when {
-            state.loading -> item { Text(stringResource(Res.string.loading_blocks)) }
-            state.error != null -> item {
+            state.loading -> item(key = "fixed:BlockSelectionPane:3", contentType = "fixed:BlockSelectionPane:3") { Text(stringResource(Res.string.loading_blocks)) }
+            state.error != null -> item(key = "fixed:BlockSelectionPane:4", contentType = "fixed:BlockSelectionPane:4") {
                 state.error?.let { Text(localizedAppErrorMessage(it)) }
                 TextButton(onClick = userAction(viewModel::reload), enabled = enabled) { Text(stringResource(Res.string.retry)) }
             }
-            state.blocks.isEmpty() -> item { Text(stringResource(Res.string.empty_blocks)) }
-            visibleRecords.isEmpty() -> item { Text(stringResource(Res.string.no_matches)) }
-            else -> items(visibleRecords, key = { it.blockId }) { block ->
+            state.blocks.isEmpty() -> item(key = "fixed:BlockSelectionPane:5", contentType = "fixed:BlockSelectionPane:5") { Text(stringResource(Res.string.empty_blocks)) }
+            visibleRecords.isEmpty() -> item(key = "fixed:BlockSelectionPane:6", contentType = "fixed:BlockSelectionPane:6") { Text(stringResource(Res.string.no_matches)) }
+            else -> items(visibleRecords, key = { "selector-block:${it.blockId}" }, contentType = { "selector-block" }) { block ->
                 val isSelected = block.blockId == selectedBlockId
                 OutlinedButton(
                     modifier = Modifier.fillMaxWidth().semantics { selected = isSelected },

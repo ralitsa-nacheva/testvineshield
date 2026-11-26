@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.presentation.security
 
+import com.rncoding.testvineshield.core.presentation.components.InfoHelp
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -30,7 +31,7 @@ fun SecuritySettingsScreen(
         Column(Modifier.padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (state.isLoading) LinearProgressIndicator(Modifier.fillMaxWidth())
-            Text(stringResource(Res.string.security_lock_help))
+            InfoHelp(title = stringResource(Res.string.security_lock_toggle), text = stringResource(Res.string.security_lock_help))
             SecuritySwitch(stringResource(Res.string.security_lock_toggle), state.settings.inactivityLockEnabled, state.canEdit, onLockChanged)
             val active = state.canEdit && state.settings.inactivityLockEnabled
             Text(stringResource(Res.string.security_timeout_summary, (state.settings.inactivityTimeoutMillis / 60_000L).toInt()))
@@ -48,9 +49,9 @@ fun SecuritySettingsScreen(
             if (!state.biometricAvailable) Text(stringResource(Res.string.security_biometric_unavailable))
             SecuritySwitch(stringResource(Res.string.security_device_unlock), state.settings.deviceCredentialEnabled,
                 active && (state.deviceCredentialAvailable || state.settings.deviceCredentialEnabled), onDeviceCredentialChanged)
-            Text(stringResource(Res.string.security_device_help))
+            InfoHelp(title = stringResource(Res.string.security_device_unlock), text = stringResource(Res.string.security_device_help))
             if (!state.deviceCredentialAvailable) Text(stringResource(Res.string.security_device_unavailable))
-            Text(stringResource(Res.string.security_disable_help))
+            InfoHelp(title = stringResource(Res.string.security_lock_toggle), text = stringResource(Res.string.security_disable_help))
             state.operationIssue?.let {
                 Text(localizedSecuritySettingsIssue(it), color = MaterialTheme.colorScheme.error)
                 TextButton(onClick = userAction(onClearError)) { Text(stringResource(Res.string.dismiss_action)) }

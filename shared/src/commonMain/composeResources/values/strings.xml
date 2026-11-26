@@ -823,4 +823,31 @@
     <string name="alerts_status_acknowledged">Status: reviewed</string>
     <string name="alerts_status_invalidated">Status: invalidated</string>
     <string name="alerts_status_resolved">Status: resolved (stored record)</string>
+
+    <string name="info_about">Information about %1$s</string>
+    <string name="info_close">Close</string>
+    <string name="info_general">Information</string>
+    <string name="info_units">Units</string>
+    <string name="info_location">Location</string>
+    <string name="info_risk">Risk not assessed</string>
+    <string name="info_cached_weather">Cached weather</string>
+    <string name="info_form">Form guidance</string>
+    <string name="info_measurements">Measurements and unknown values</string>
+    <string name="info_dates">Dates</string>
+    <string name="info_legacy">Prior records</string>
+    <string name="info_zone">Time zone</string>
+    <string name="info_export_contents">Export contents</string>
+    <string name="info_export_storage">Export storage</string>
+    <string name="info_map">Online map</string>
+    <string name="info_status">Status</string>
+    <string name="info_model_evidence">Model evidence unavailable</string>
+    <string name="info_weather_source">Weather data source</string>
+    <string name="info_spray_count">Saved application · product lines: %1$d</string>
+    <string name="info_harvest_count">Records in scope: %1$d</string>
+
+    <string name="info_reference">Disease reference</string>
+    <string name="info_cache_empty">Cache: no data</string>
+    <string name="info_cache_recent">Cache: recent</string>
+    <string name="info_cache_stale">Cache: stale</string>
+    <string name="info_cache_clock">Cache: clock mismatch</string>
 </resources>

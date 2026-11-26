@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.presentation.vineyard_details
 
+import com.rncoding.testvineshield.core.presentation.components.InfoHelp
 import com.rncoding.testvineshield.core.presentation.vineyards.VineyardLoadIssue
 import com.rncoding.testvineshield.core.presentation.vineyards.localizedVineyardLoadIssue
 
@@ -122,27 +123,27 @@ fun VineyardDetailsScreen(
                     verticalArrangement =
                         Arrangement.spacedBy(16.dp)
                 ) {
-                    item(key = VineyardDetailsItemKeys.INFORMATION) {
+                    item(key = VineyardDetailsItemKeys.INFORMATION, contentType = VineyardDetailsItemKeys.INFORMATION) {
                         VineyardInformationSection(
                             details = details
                         )
                     }
 
-                    item(key = VineyardDetailsItemKeys.WEATHER) {
+                    item(key = VineyardDetailsItemKeys.WEATHER, contentType = VineyardDetailsItemKeys.WEATHER) {
                         SectionTitle(stringResource(Res.string.weather_monitoring))
-                        Text(stringResource(Res.string.weather_monitoring_intro))
+                        InfoHelp(title = stringResource(Res.string.weather_monitoring), text = stringResource(Res.string.weather_monitoring_intro))
                         TextButton(onClick = userAction(onWeather)) { Text(stringResource(Res.string.open_weather_monitoring)) }
-                        Text(stringResource(Res.string.risk_not_assessed))
+                        InfoHelp(title = stringResource(Res.string.info_risk), text = stringResource(Res.string.risk_not_assessed))
                     }
 
-                    item(key = VineyardDetailsItemKeys.BLOCKS_HEADING) {
+                    item(key = VineyardDetailsItemKeys.BLOCKS_HEADING, contentType = VineyardDetailsItemKeys.BLOCKS_HEADING) {
                         TextButton(onClick=userAction(onActivities)) { Text(stringResource(Res.string.vineyard_activities)) }
                         SectionTitle(stringResource(Res.string.selector_blocks))
                         TextButton(onClick=userAction(onBlocks)) { Text(stringResource(Res.string.manage_blocks)) }
                     }
 
                     if (details.blocks.isEmpty()) {
-                        item(key = VineyardDetailsItemKeys.BLOCKS_EMPTY) {
+                        item(key = VineyardDetailsItemKeys.BLOCKS_EMPTY, contentType = VineyardDetailsItemKeys.BLOCKS_EMPTY) {
                             EmptySectionText(
                                 stringResource(Res.string.no_blocks_added)
                             )
@@ -157,12 +158,12 @@ fun VineyardDetailsScreen(
                         }
                     }
 
-                    item(key = VineyardDetailsItemKeys.DISEASES_HEADING) {
+                    item(key = VineyardDetailsItemKeys.DISEASES_HEADING, contentType = VineyardDetailsItemKeys.DISEASES_HEADING) {
                         SectionTitle(stringResource(Res.string.active_diseases_title))
                     }
 
                     if (details.activeDiseases.isEmpty()) {
-                        item(key = VineyardDetailsItemKeys.DISEASES_EMPTY) {
+                        item(key = VineyardDetailsItemKeys.DISEASES_EMPTY, contentType = VineyardDetailsItemKeys.DISEASES_EMPTY) {
                             EmptySectionText(
                                 stringResource(Res.string.no_active_occurrences)
                             )
@@ -177,12 +178,12 @@ fun VineyardDetailsScreen(
                         }
                     }
 
-                    item(key = VineyardDetailsItemKeys.ALERTS_HEADING) {
+                    item(key = VineyardDetailsItemKeys.ALERTS_HEADING, contentType = VineyardDetailsItemKeys.ALERTS_HEADING) {
                         SectionTitle(stringResource(Res.string.active_alerts_title))
                     }
 
                     if (details.activeAlerts.isEmpty()) {
-                        item(key = VineyardDetailsItemKeys.ALERTS_EMPTY) {
+                        item(key = VineyardDetailsItemKeys.ALERTS_EMPTY, contentType = VineyardDetailsItemKeys.ALERTS_EMPTY) {
                             EmptySectionText(
                                 stringResource(Res.string.no_active_alerts)
                             )
@@ -197,7 +198,7 @@ fun VineyardDetailsScreen(
                         }
                     }
 
-                    item(key = VineyardDetailsItemKeys.DELETE) {
+                    item(key = VineyardDetailsItemKeys.DELETE, contentType = VineyardDetailsItemKeys.DELETE) {
                         OutlinedButton(
                             onClick = userAction(onDeleteRequest),
                             enabled = !state.isDeleting,

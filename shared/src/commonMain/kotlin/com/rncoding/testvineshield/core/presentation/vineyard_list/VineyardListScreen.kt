@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.presentation.vineyard_list
 
+import com.rncoding.testvineshield.core.presentation.components.InfoHelp
 import com.rncoding.testvineshield.core.presentation.vineyards.VineyardLoadIssue
 import com.rncoding.testvineshield.core.presentation.vineyards.localizedVineyardLoadIssue
 
@@ -236,7 +237,7 @@ fun VineyardListScreen(
                     verticalArrangement =
                         Arrangement.spacedBy(12.dp)
                 ) {
-                    item(key = "vineyard-search") {
+                    item(key = "vineyard-search", contentType = "vineyard-search") {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             OutlinedTextField(
                                 value = searchText,
@@ -257,7 +258,7 @@ fun VineyardListScreen(
                         }
                     }
                     if (state.isReordering) {
-                        item(key = "saving-vineyard-order") {
+                        item(key = "saving-vineyard-order", contentType = "saving-vineyard-order") {
                             LinearProgressIndicator(Modifier.fillMaxWidth())
                         }
                     }
@@ -406,7 +407,7 @@ private fun VineyardListItem(
             )
 
             if (vineyard.latestTemperature != null) {
-                Text(stringResource(Res.string.cached_weather_note))
+                InfoHelp(title = stringResource(Res.string.info_cached_weather), text = stringResource(Res.string.cached_weather_note))
             }
 
             vineyard.lastActivityStatus?.let { status ->

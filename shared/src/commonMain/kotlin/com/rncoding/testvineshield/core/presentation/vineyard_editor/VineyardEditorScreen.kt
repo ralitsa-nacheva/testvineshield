@@ -1,5 +1,8 @@
 package com.rncoding.testvineshield.core.presentation.vineyard_editor
 
+import androidx.compose.foundation.layout.Row
+import com.rncoding.testvineshield.core.presentation.components.InfoButton
+import com.rncoding.testvineshield.core.presentation.components.InfoHelp
 import com.rncoding.testvineshield.core.domain.datamodels.units.AreaUnit
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.selectable
@@ -182,7 +185,7 @@ private fun VineyardEditorForm(
         verticalArrangement =
             Arrangement.spacedBy(12.dp)
     ) {
-        item {
+        item(key = "fixed:VineyardEditorScreen:1", contentType = "fixed:VineyardEditorScreen:1") {
             VineyardTextField(
                 enabled = state.canEdit,
                 value = state.name,
@@ -192,7 +195,7 @@ private fun VineyardEditorForm(
             )
         }
 
-        item {
+        item(key = "fixed:VineyardEditorScreen:2", contentType = "fixed:VineyardEditorScreen:2") {
             VineyardTextField(
                 enabled = state.canEdit,
                 value = state.size,
@@ -204,7 +207,7 @@ private fun VineyardEditorForm(
             )
         }
 
-        item {
+        item(key = "fixed:VineyardEditorScreen:3", contentType = "fixed:VineyardEditorScreen:3") {
             Column(modifier = Modifier.selectableGroup()) {
                 Text(stringResource(Res.string.area_unit))
                 (listOf<AreaUnit?>(null) + AreaUnit.entries).forEach { unit ->
@@ -223,11 +226,11 @@ private fun VineyardEditorForm(
                         Text(unit?.symbol ?: stringResource(Res.string.unit_unspecified))
                     }
                 }
-                Text(stringResource(Res.string.unit_change_note))
+                InfoHelp(title = stringResource(Res.string.info_units), text = stringResource(Res.string.unit_change_note))
             }
         }
 
-        item {
+        item(key = "fixed:VineyardEditorScreen:4", contentType = "fixed:VineyardEditorScreen:4") {
             VineyardTextField(
                 enabled = state.canEdit,
                 value = state.country,
@@ -237,7 +240,7 @@ private fun VineyardEditorForm(
             )
         }
 
-        item {
+        item(key = "fixed:VineyardEditorScreen:5", contentType = "fixed:VineyardEditorScreen:5") {
             VineyardTextField(
                 enabled = state.canEdit,
                 value = state.city,
@@ -247,12 +250,12 @@ private fun VineyardEditorForm(
             )
         }
 
-        item {
+        item(key = "fixed:VineyardEditorScreen:6", contentType = "fixed:VineyardEditorScreen:6") {
             TextButton(onClick=userAction(onMap),enabled=state.canEdit) { Text(stringResource(Res.string.choose_online_map)) }
-            Text(stringResource(Res.string.location_change_note))
+            InfoHelp(title = stringResource(Res.string.info_location), text = stringResource(Res.string.location_change_note))
         }
 
-        item {
+        item(key = "fixed:VineyardEditorScreen:7", contentType = "fixed:VineyardEditorScreen:7") {
             VineyardTextField(
                 enabled = state.canEdit,
                 value = state.latitude,
@@ -265,7 +268,7 @@ private fun VineyardEditorForm(
             )
         }
 
-        item {
+        item(key = "fixed:VineyardEditorScreen:8", contentType = "fixed:VineyardEditorScreen:8") {
             VineyardTextField(
                 enabled = state.canEdit,
                 value = state.longitude,
@@ -278,7 +281,7 @@ private fun VineyardEditorForm(
             )
         }
 
-        item {
+        item(key = "fixed:VineyardEditorScreen:9", contentType = "fixed:VineyardEditorScreen:9") {
             VineyardTimeZonePicker(
                 selectedId = state.timeZone,
                 errorMessage = state.timeZoneError?.let { localizedVineyardValidationError(it) },
@@ -287,7 +290,7 @@ private fun VineyardEditorForm(
             )
         }
 
-        item {
+        item(key = "fixed:VineyardEditorScreen:10", contentType = "fixed:VineyardEditorScreen:10") {
             VineyardTextField(
                 enabled = state.canEdit,
                 value = state.elevation,
@@ -307,7 +310,7 @@ private fun VineyardEditorForm(
             )
         }
 
-        item {
+        item(key = "fixed:VineyardEditorScreen:11", contentType = "fixed:VineyardEditorScreen:11") {
             Button(
                 onClick = userAction(onSave),
                 enabled =
@@ -346,6 +349,15 @@ private fun VineyardTextField(
     trailingIcon: @Composable (() -> Unit)? = null
 ) {
     val activity = LocalUserActivity.current
+    val trailingContent: (@Composable () -> Unit)? =
+        if (trailingIcon != null || !supportingText.isNullOrBlank()) {
+            {
+                Row {
+                    trailingIcon?.invoke()
+                    supportingText?.let { InfoButton(label, it) }
+                }
+            }
+        } else null
     OutlinedTextField(
         value = value,
         onValueChange = { activity(); onValueChange(it) },
@@ -356,20 +368,14 @@ private fun VineyardTextField(
             Modifier.fillMaxWidth(),
         singleLine = true,
         enabled = enabled,
-        trailingIcon = trailingIcon,
+        trailingIcon = trailingContent,
         isError = error != null,
         keyboardOptions =
             KeyboardOptions(
                 keyboardType = keyboardType
             ),
         supportingText = {
-            when {
-                error != null ->
-                    Text(localizedVineyardValidationError(error))
-
-                supportingText != null ->
-                    Text(supportingText)
-            }
+            if (error != null) Text(localizedVineyardValidationError(error))
         }
     )
 }

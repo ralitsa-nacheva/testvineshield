@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.presentation.disease_observations
 
+import com.rncoding.testvineshield.core.presentation.components.InfoHelp
 import androidx.compose.foundation.layout.*
 import com.rncoding.testvineshield.resources.*
 import org.jetbrains.compose.resources.stringResource
@@ -71,10 +72,10 @@ fun BlockDiseaseObservationsScreen(
                         allowUnknown = false
                     )
                     if (selected == DiseaseOccurrenceStatus.RESOLVED && selected != observation.status) {
-                        Text(stringResource(Res.string.observation_resolution_help))
+                        InfoHelp(title = stringResource(Res.string.info_status), text = stringResource(Res.string.observation_resolution_help))
                     }
                     if (selected != DiseaseOccurrenceStatus.ACTIVE && selected != observation.status) {
-                        Text(stringResource(Res.string.observation_active_help))
+                        InfoHelp(title = stringResource(Res.string.info_status), text = stringResource(Res.string.observation_active_help))
                     }
                     state.dialogError?.let { Text(localizedObservationIssue(it), color = MaterialTheme.colorScheme.error) }
                 }
@@ -198,18 +199,18 @@ fun BlockDiseaseObservationsScreen(
         ) {
             val error = state.loadError
             when {
-                state.loading -> item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
-                error != null -> item {
+                state.loading -> item(key = "fixed:BlockDiseaseObservationsScreen:1", contentType = "fixed:BlockDiseaseObservationsScreen:1") { LinearProgressIndicator(Modifier.fillMaxWidth()) }
+                error != null -> item(key = "fixed:BlockDiseaseObservationsScreen:2", contentType = "fixed:BlockDiseaseObservationsScreen:2") {
                     Text(localizedObservationIssue(error))
                     TextButton(onClick = userAction(model::reload)) { Text(stringResource(Res.string.retry)) }
                 }
                 else -> {
-                    if (state.diseases.isEmpty()) item { Text(stringResource(Res.string.observation_no_diseases)) }
-                    else item(key = "observation-form") { ObservationForm(state, model::save) }
+                    if (state.diseases.isEmpty()) item(key = "fixed:BlockDiseaseObservationsScreen:3", contentType = "fixed:BlockDiseaseObservationsScreen:3") { Text(stringResource(Res.string.observation_no_diseases)) }
+                    else item(key = "observation-form", contentType = "observation-form") { ObservationForm(state, model::save) }
                     if (state.observations.isEmpty()) {
-                        item { Text(stringResource(Res.string.observation_empty)) }
+                        item(key = "fixed:BlockDiseaseObservationsScreen:4", contentType = "fixed:BlockDiseaseObservationsScreen:4") { Text(stringResource(Res.string.observation_empty)) }
                     } else {
-                        item(key = "observation-filters") {
+                        item(key = "observation-filters", contentType = "observation-filters") {
                             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Text(stringResource(Res.string.observation_filters), style = MaterialTheme.typography.titleMedium)
                                 RecordChoice(
@@ -240,7 +241,7 @@ fun BlockDiseaseObservationsScreen(
                             }
                         }
                     }
-                    items(visibleObservations, key = { it.id }) { observation ->
+                    items(visibleObservations, key = { "observation:${it.id}" }, contentType = { "observation-card" }) { observation ->
                         OutlinedCard(Modifier.fillMaxWidth()) {
                             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Text(builtInDiseaseName(observation.diseaseCode, observation.diseaseName), style = MaterialTheme.typography.titleMedium)
@@ -442,7 +443,7 @@ private fun ReferenceSymptomDialog(
                         allowUnknown = false, nullLabel = stringResource(Res.string.choose_symptom)
                     )
                 }
-                Text(stringResource(Res.string.symptom_date_help))
+                InfoHelp(title = stringResource(Res.string.info_dates), text = stringResource(Res.string.symptom_date_help))
                 OutlinedTextField(
                     value = dateText, onValueChange = { activity(); dateText = it },
                     label = { Text(stringResource(Res.string.symptom_date_label)) }, enabled = !saving,

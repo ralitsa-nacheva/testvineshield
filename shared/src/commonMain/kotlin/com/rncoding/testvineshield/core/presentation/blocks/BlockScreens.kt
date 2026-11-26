@@ -1,5 +1,7 @@
 package com.rncoding.testvineshield.core.presentation.blocks
 
+import com.rncoding.testvineshield.core.presentation.components.InfoButton
+import com.rncoding.testvineshield.core.presentation.components.InfoHelp
 import com.rncoding.testvineshield.core.presentation.error.localizedAppErrorMessage
 import androidx.compose.foundation.layout.*
 import com.rncoding.testvineshield.resources.*
@@ -43,12 +45,12 @@ fun BlockListScreenRoot(vineyardId: Long, ownerId: Long, onBack: ()->Unit, onCre
         if (!state.loading && state.error==null) ExtendedFloatingActionButton(onClick = userAction(onCreate)) { Text(stringResource(Res.string.add_block)) }
     }) { padding ->
         LazyColumn(Modifier.padding(padding).fillMaxHeight().widthIn(max = 720.dp).fillMaxWidth(), contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 100.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            if (state.loading) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
-            state.error?.let { error -> item { ErrorNotice(localizedAppErrorMessage(error), vm::reload) } }
-            if (!state.loading && state.error==null && state.blocks.isEmpty()) item {
+            if (state.loading) item(key = "fixed:BlockScreens:1", contentType = "fixed:BlockScreens:1") { LinearProgressIndicator(Modifier.fillMaxWidth()) }
+            state.error?.let { error -> item(key = "fixed:BlockScreens:2", contentType = "fixed:BlockScreens:2") { ErrorNotice(localizedAppErrorMessage(error), vm::reload) } }
+            if (!state.loading && state.error==null && state.blocks.isEmpty()) item(key = "fixed:BlockScreens:3", contentType = "fixed:BlockScreens:3") {
                 Text(stringResource(Res.string.blocks_empty))
             }
-            items(state.blocks, key = {it.blockId}) { block ->
+            items(state.blocks, key = { "block:${it.blockId}" }, contentType = { "block-card" }) { block ->
                 OutlinedCard(Modifier.fillMaxWidth()) { Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(block.name, style = MaterialTheme.typography.titleMedium)
                         Text(stringResource(Res.string.variety_value, block.vineVariety))
@@ -73,37 +75,37 @@ fun BlockDetailsScreenRoot(vineyardId: Long, blockId: Long, ownerId: Long, onBac
     }
     Scaffold(topBar = { RecordTopBar(stringResource(Res.string.block_details), { if (!vm.state.value.deleting) onBack() }, !state.deleting) }) { padding ->
         LazyColumn(Modifier.padding(padding).fillMaxHeight().widthIn(max = 720.dp).fillMaxWidth(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            if (state.loading || state.deleting) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
-            state.error?.let { error -> item { ErrorNotice(localizedAppErrorMessage(error), vm::load) } }
+            if (state.loading || state.deleting) item(key = "fixed:BlockScreens:4", contentType = "fixed:BlockScreens:4") { LinearProgressIndicator(Modifier.fillMaxWidth()) }
+            state.error?.let { error -> item(key = "fixed:BlockScreens:5", contentType = "fixed:BlockScreens:5") { ErrorNotice(localizedAppErrorMessage(error), vm::load) } }
             state.block?.let { block ->
-                item { Text(block.name, style = MaterialTheme.typography.headlineSmall) }
-                item { TextButton(onClick=userAction(onActivities),enabled=!state.deleting) { Text(stringResource(Res.string.block_activities)) } }
-                item { TextButton(onClick=userAction(onHarvests),enabled=!state.deleting) { Text(stringResource(Res.string.harvest_records)) } }
-                item { TextButton(onClick = userAction(onDiseaseObservations), enabled = !state.deleting) { Text(stringResource(Res.string.disease_observations)) } }
-                item { Text(stringResource(Res.string.variety_value, block.vineVariety)) }
-                item { Text(stringResource(Res.string.area_value, localizedBlockArea(block.area, block.areaUnit))) }
-                item { Text(stringResource(Res.string.block_rows, block.rowCount?.toString() ?: stringResource(Res.string.unknown_value))) }
-                item { Text(stringResource(Res.string.block_spacing, block.rowSpacing?.let { "${formatPlainDecimal(it)} ${block.rowSpacingUnit?.symbol ?: stringResource(Res.string.unknown_unit)}" } ?: stringResource(Res.string.unknown_value))) }
-                item { Text(stringResource(Res.string.block_planted, block.plantedAt?.toString() ?: stringResource(Res.string.unknown_value))) }
-                item {
+                item(key = "fixed:BlockScreens:6", contentType = "fixed:BlockScreens:6") { Text(block.name, style = MaterialTheme.typography.headlineSmall) }
+                item(key = "fixed:BlockScreens:7", contentType = "fixed:BlockScreens:7") { TextButton(onClick=userAction(onActivities),enabled=!state.deleting) { Text(stringResource(Res.string.block_activities)) } }
+                item(key = "fixed:BlockScreens:8", contentType = "fixed:BlockScreens:8") { TextButton(onClick=userAction(onHarvests),enabled=!state.deleting) { Text(stringResource(Res.string.harvest_records)) } }
+                item(key = "fixed:BlockScreens:9", contentType = "fixed:BlockScreens:9") { TextButton(onClick = userAction(onDiseaseObservations), enabled = !state.deleting) { Text(stringResource(Res.string.disease_observations)) } }
+                item(key = "fixed:BlockScreens:10", contentType = "fixed:BlockScreens:10") { Text(stringResource(Res.string.variety_value, block.vineVariety)) }
+                item(key = "fixed:BlockScreens:11", contentType = "fixed:BlockScreens:11") { Text(stringResource(Res.string.area_value, localizedBlockArea(block.area, block.areaUnit))) }
+                item(key = "fixed:BlockScreens:12", contentType = "fixed:BlockScreens:12") { Text(stringResource(Res.string.block_rows, block.rowCount?.toString() ?: stringResource(Res.string.unknown_value))) }
+                item(key = "fixed:BlockScreens:13", contentType = "fixed:BlockScreens:13") { Text(stringResource(Res.string.block_spacing, block.rowSpacing?.let { "${formatPlainDecimal(it)} ${block.rowSpacingUnit?.symbol ?: stringResource(Res.string.unknown_unit)}" } ?: stringResource(Res.string.unknown_value))) }
+                item(key = "fixed:BlockScreens:14", contentType = "fixed:BlockScreens:14") { Text(stringResource(Res.string.block_planted, block.plantedAt?.toString() ?: stringResource(Res.string.unknown_value))) }
+                item(key = "fixed:BlockScreens:15", contentType = "fixed:BlockScreens:15") {
                     Text(stringResource(Res.string.block_manual_stage, localizedStage(block.phenologicalStage)))
                     if (block.phenologicalStage != null) {
                         Text(stringResource(Res.string.block_observed_on, block.stageObservedOn?.toString() ?: stringResource(Res.string.date_unknown)))
                     }
                 }
-                item { Text(stringResource(Res.string.recent_stage_observations), style = MaterialTheme.typography.titleMedium) }
+                item(key = "fixed:BlockScreens:16", contentType = "fixed:BlockScreens:16") { Text(stringResource(Res.string.recent_stage_observations), style = MaterialTheme.typography.titleMedium) }
                 val historyError = state.stageHistoryError
                 when {
-                    historyError != null -> item { ErrorNotice(localizedAppErrorMessage(historyError), vm::load) }
-                    state.stageObservations.isEmpty() -> item { Text(stringResource(Res.string.no_stage_observations)) }
-                    else -> items(state.stageObservations, key = { it.observedOn.toString() }) {
+                    historyError != null -> item(key = "fixed:BlockScreens:17", contentType = "fixed:BlockScreens:17") { ErrorNotice(localizedAppErrorMessage(historyError), vm::load) }
+                    state.stageObservations.isEmpty() -> item(key = "fixed:BlockScreens:18", contentType = "fixed:BlockScreens:18") { Text(stringResource(Res.string.no_stage_observations)) }
+                    else -> items(state.stageObservations, key = { "stage:${it.observedOn}" }, contentType = { "stage-history" }) {
                         Text("${it.observedOn}: ${localizedStage(it.stage)}")
                     }
                 }
-                item { Text(stringResource(Res.string.block_rootstock, block.rootStock.ifBlank { stringResource(Res.string.unknown_value) })) }
-                item { Text(stringResource(Res.string.block_colour, block.color.ifBlank { stringResource(Res.string.unknown_value) })) }
-                item { Button(onClick = userAction(onEdit), enabled = !state.deleting, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.edit_block)) } }
-                item { OutlinedButton(onClick = userAction(vm::requestDelete), enabled = !state.deleting, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.delete_block)) } }
+                item(key = "fixed:BlockScreens:19", contentType = "fixed:BlockScreens:19") { Text(stringResource(Res.string.block_rootstock, block.rootStock.ifBlank { stringResource(Res.string.unknown_value) })) }
+                item(key = "fixed:BlockScreens:20", contentType = "fixed:BlockScreens:20") { Text(stringResource(Res.string.block_colour, block.color.ifBlank { stringResource(Res.string.unknown_value) })) }
+                item(key = "fixed:BlockScreens:21", contentType = "fixed:BlockScreens:21") { Button(onClick = userAction(onEdit), enabled = !state.deleting, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.edit_block)) } }
+                item(key = "fixed:BlockScreens:22", contentType = "fixed:BlockScreens:22") { OutlinedButton(onClick = userAction(vm::requestDelete), enabled = !state.deleting, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.delete_block)) } }
             }
         }
     }
@@ -156,10 +158,10 @@ fun BlockEditorScreen(state: BlockEditorState, editing: Boolean, onBack: ()->Uni
     val stageLabels = PhenologicalStage.entries.associateWith { localizedStage(it) }
     Scaffold(topBar = { RecordTopBar(if (editing) stringResource(Res.string.edit_block) else stringResource(Res.string.new_block), onBack, !state.saving) }) { padding ->
         LazyColumn(Modifier.padding(padding).imePadding().fillMaxHeight().widthIn(max = 720.dp).fillMaxWidth(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            if (state.loading || state.saving) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
-            state.error?.let { error -> item { ErrorNotice(localizedBlockEditorIssue(error), if (!state.ready) onRetry else null) } }
-            item { Text(stringResource(Res.string.block_save_help)) }
-            items(BlockField.entries.filter { it != BlockField.StageObservedOn }, key = { it.name }) { field ->
+            if (state.loading || state.saving) item(key = "fixed:BlockScreens:23", contentType = "fixed:BlockScreens:23") { LinearProgressIndicator(Modifier.fillMaxWidth()) }
+            state.error?.let { error -> item(key = "fixed:BlockScreens:24", contentType = "fixed:BlockScreens:24") { ErrorNotice(localizedBlockEditorIssue(error), if (!state.ready) onRetry else null) } }
+            item(key = "fixed:BlockScreens:25", contentType = "fixed:BlockScreens:25") { InfoHelp(title = stringResource(Res.string.info_form), text = stringResource(Res.string.block_save_help)) }
+            items(BlockField.entries.filter { it != BlockField.StageObservedOn }, key = { "block-field:${it.name}" }, contentType = { "block-field:${it.name}" }) { field ->
                 val (label, help, keyboard) = when (field) {
                     BlockField.StageObservedOn -> error("Observation date is rendered with the stage picker.")
                     BlockField.Name -> Triple(stringResource(Res.string.block_name), stringResource(Res.string.required_field), KeyboardType.Text)
@@ -172,11 +174,11 @@ fun BlockEditorScreen(state: BlockEditorState, editing: Boolean, onBack: ()->Uni
                     BlockField.Planted -> Triple(stringResource(Res.string.planting_date), stringResource(Res.string.optional_iso_date), KeyboardType.Ascii)
                 }
                 OutlinedTextField(value = state.draft.text(field), onValueChange = { activity()
-                    onText(field, it) }, enabled = state.canEdit, modifier = Modifier.fillMaxWidth(), label = {Text(label)}, singleLine = true, isError = field in state.errors, supportingText = {Text(state.errors[field]?.let { localizedBlockDraftIssue(it) } ?: help)}, keyboardOptions = KeyboardOptions(keyboardType = keyboard))
+                    onText(field, it) }, enabled = state.canEdit, modifier = Modifier.fillMaxWidth(), label = {Text(label)}, singleLine = true, isError = field in state.errors, supportingText = { state.errors[field]?.let { Text(localizedBlockDraftIssue(it)) } }, trailingIcon = { InfoButton(label, help) }, keyboardOptions = KeyboardOptions(keyboardType = keyboard))
                 if (field==BlockField.Area) RecordChoice(stringResource(Res.string.area_unit), state.draft.areaUnit, AreaUnit.entries, state.canEdit, {it.symbol}, onAreaUnit, nullLabel = stringResource(Res.string.unit_unspecified))
                 if (field==BlockField.Spacing) RecordChoice(stringResource(Res.string.spacing_unit), state.draft.spacingUnit, LengthUnit.entries, state.canEdit, {it.symbol}, onSpacingUnit, nullLabel = stringResource(Res.string.unit_unspecified))
             }
-            item {
+            item(key = "fixed:BlockScreens:26", contentType = "fixed:BlockScreens:26") {
                 RecordChoice(stringResource(Res.string.observed_growth_stage), state.draft.stage, PhenologicalStage.entries, state.canEdit, { stageLabels.getValue(it) }, onStage, nullLabel = stringResource(Res.string.unknown_value))
                 if (state.draft.stage != null) {
                     OutlinedTextField(
@@ -186,8 +188,9 @@ fun BlockEditorScreen(state: BlockEditorState, editing: Boolean, onBack: ()->Uni
                             onText(BlockField.StageObservedOn, it)
                         },
                         label = { Text(stringResource(Res.string.stage_observation_date)) },
+                        trailingIcon = { InfoButton(stringResource(Res.string.stage_observation_date), stringResource(Res.string.stage_date_help)) },
                         supportingText = {
-                            Text(state.errors[BlockField.StageObservedOn]?.let { localizedBlockDraftIssue(it) } ?: stringResource(Res.string.stage_date_help))
+                            state.errors[BlockField.StageObservedOn]?.let { Text(localizedBlockDraftIssue(it)) }
                         },
                         isError = BlockField.StageObservedOn in state.errors,
                         enabled = state.canEdit,
@@ -197,8 +200,8 @@ fun BlockEditorScreen(state: BlockEditorState, editing: Boolean, onBack: ()->Uni
                     )
                 }
             }
-            item { Text(stringResource(Res.string.block_unknown_help)) }
-            item { Button(onClick = userAction(onSave), enabled = state.canEdit, modifier = Modifier.fillMaxWidth()) { Text(if (state.saving) stringResource(Res.string.saving_action) else stringResource(Res.string.save_block)) } }
+            item(key = "fixed:BlockScreens:27", contentType = "fixed:BlockScreens:27") { InfoHelp(title = stringResource(Res.string.info_measurements), text = stringResource(Res.string.block_unknown_help)) }
+            item(key = "fixed:BlockScreens:28", contentType = "fixed:BlockScreens:28") { Button(onClick = userAction(onSave), enabled = state.canEdit, modifier = Modifier.fillMaxWidth()) { Text(if (state.saving) stringResource(Res.string.saving_action) else stringResource(Res.string.save_block)) } }
         }
     }
 }

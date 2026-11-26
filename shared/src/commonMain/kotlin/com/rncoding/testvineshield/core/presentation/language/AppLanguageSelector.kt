@@ -1,7 +1,7 @@
 package com.rncoding.testvineshield.core.presentation.language
 
+import com.rncoding.testvineshield.core.presentation.components.InfoHelp
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import com.rncoding.testvineshield.core.presentation.components.RecordChoice
 import com.rncoding.testvineshield.resources.*
@@ -18,6 +18,6 @@ fun AppLanguageSelector(enabled: Boolean = true) {
     Column {
         RecordChoice(stringResource(Res.string.language_title), settings.selected, AppLanguage.entries,
             enabled, { labels.getValue(it) }, { it?.let(settings.select) }, allowUnknown = false)
-        Text(stringResource(Res.string.language_partial_help))
+        InfoHelp(title = stringResource(Res.string.language_title), text = stringResource(Res.string.language_partial_help))
     }
 }

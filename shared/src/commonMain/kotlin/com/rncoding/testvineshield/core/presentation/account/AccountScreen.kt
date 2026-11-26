@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.presentation.account
 
+import com.rncoding.testvineshield.core.presentation.components.InfoHelp
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -102,7 +103,7 @@ fun AccountScreen(
                 )
             }
 
-            Text(stringResource(Res.string.account_logout_help))
+            InfoHelp(title = stringResource(Res.string.account_logout), text = stringResource(Res.string.account_logout_help))
 
             AppLanguageSelector(enabled = !isBusy)
 

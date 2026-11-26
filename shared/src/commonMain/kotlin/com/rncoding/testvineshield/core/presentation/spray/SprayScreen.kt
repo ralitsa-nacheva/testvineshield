@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.presentation.spray
 
+import com.rncoding.testvineshield.core.presentation.components.InfoHelp
 import androidx.compose.foundation.layout.*
 import com.rncoding.testvineshield.resources.*
 import org.jetbrains.compose.resources.stringResource
@@ -50,10 +51,10 @@ fun SprayScreenRoot(ownerId: Long, key: SprayKey, onBack: () -> Unit, onFinished
             } }
             state.snapshot?.let { snapshot ->
                 item(key = "spray-heading", contentType = "spray-heading") { Text(snapshot.activity.activityType, style = MaterialTheme.typography.headlineSmall); Text(stringResource(Res.string.spray_season, snapshot.activity.season)) }
-                item(key = "spray-purpose", contentType = "spray-purpose") { Text(stringResource(Res.string.spray_purpose)) }
+                item(key = "spray-purpose", contentType = "spray-purpose") { InfoHelp(title = stringResource(Res.string.spray_title), text = stringResource(Res.string.spray_purpose)) }
                 val old = snapshot.activity
                 if (old.treatmentProduct != null || old.treatmentProductQuantity != null || old.waterQuantity != null || old.treatmentProductRate != null) item(key = "spray-legacy", contentType = "spray-legacy") {
-                    Text(stringResource(Res.string.spray_legacy_help))
+                    InfoHelp(title = stringResource(Res.string.info_legacy), text = stringResource(Res.string.spray_legacy_help))
                 }
                 if (!state.editing) {
                     val record = snapshot.record
@@ -75,7 +76,7 @@ fun SprayScreenRoot(ownerId: Long, key: SprayKey, onBack: () -> Unit, onFinished
                         item(key = "spray-delete", contentType = "spray-delete") { OutlinedButton(onClick = userAction(vm::requestDelete), enabled = !state.busy, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.spray_delete)) } }
                     }
                 } else {
-                    item(key = "spray-edit-help", contentType = "spray-edit-help") { Text(stringResource(Res.string.spray_save_help)) }
+                    item(key = "spray-edit-help", contentType = "spray-edit-help") { InfoHelp(title = stringResource(Res.string.info_form), text = stringResource(Res.string.spray_save_help)) }
                     // Keep each field identity and reuse type stable when banners change list positions.
                     // Notes is multiline; its remembered scroller must never be reused by a single-line field.
                     SprayField.entries.forEach { field -> item(key = "spray-field-${field.name}", contentType = "spray-field-${field.name}") {
@@ -93,12 +94,12 @@ fun SprayScreenRoot(ownerId: Long, key: SprayKey, onBack: () -> Unit, onFinished
                             state.errors["waterUnit"]?.let { Text(localizedSprayDraftIssue(it), color = MaterialTheme.colorScheme.error) }
                         }
                     } }
-                    item(key = "spray-zone", contentType = "spray-zone") { TimeZonePicker(state.draft.zone, null, state.canEdit, vm::zone); Text(stringResource(Res.string.spray_zone_help)) }
+                    item(key = "spray-zone", contentType = "spray-zone") { TimeZonePicker(state.draft.zone, null, state.canEdit, vm::zone); InfoHelp(title = stringResource(Res.string.info_zone), text = stringResource(Res.string.spray_zone_help)) }
                     state.draft.lines.forEachIndexed { index, line -> item(key = "spray-edit-product-${line.id}-$index", contentType = "spray-edit-product") {
                         SprayLineInputs(line, index, state, vm)
                     } }
                     item(key = "spray-add-product", contentType = "spray-add-product") { OutlinedButton(onClick = userAction(vm::addLine), enabled = state.canEdit && state.draft.lines.size < 20) { Text(stringResource(Res.string.spray_add_product)) } }
-                    item(key = "spray-unit-help", contentType = "spray-unit-help") { Text(stringResource(Res.string.spray_unit_help)) }
+                    item(key = "spray-unit-help", contentType = "spray-unit-help") { InfoHelp(title = stringResource(Res.string.info_units), text = stringResource(Res.string.spray_unit_help)) }
                     item(key = "spray-save", contentType = "spray-save") { Button(onClick = userAction { vm.save(); onBusyChanged(vm.state.value.saving) }, enabled = state.canEdit, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.spray_save)) } }
                 }
             }

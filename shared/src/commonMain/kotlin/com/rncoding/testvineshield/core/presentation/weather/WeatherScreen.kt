@@ -1,10 +1,13 @@
 package com.rncoding.testvineshield.core.presentation.weather
 
+import com.rncoding.testvineshield.core.presentation.components.InfoLabel
+import com.rncoding.testvineshield.core.presentation.components.InfoHelp
 import com.rncoding.testvineshield.resources.*
 import org.jetbrains.compose.resources.stringResource
 import com.rncoding.testvineshield.core.presentation.vineyard_details.localizedStage
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -45,8 +48,8 @@ fun WeatherScreen(
 ) {
     Scaffold(topBar = { RecordTopBar(stringResource(Res.string.weather_heading), onBack) }) { padding ->
         LazyColumn(Modifier.padding(padding).fillMaxSize().widthIn(max = 840.dp), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            if (state.loading || state.refreshing) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
-            state.error?.let { error -> item {
+            if (state.loading || state.refreshing) item(key = "fixed:WeatherScreen:1", contentType = "fixed:WeatherScreen:1") { LinearProgressIndicator(Modifier.fillMaxWidth()) }
+            state.error?.let { error -> item(key = "fixed:WeatherScreen:2", contentType = "fixed:WeatherScreen:2") {
                 Text(localizedWeatherError(error), color = MaterialTheme.colorScheme.error)
                 TextButton(onClick = userAction(onRetry)) { Text(stringResource(Res.string.weather_retry)) }
             } }
@@ -56,17 +59,16 @@ fun WeatherScreen(
                 val coverage = previousDayCacheCoverage(snapshot, state.now)
                 val stageEvidence = snapshot.stageEvidence?.takeIf { it.date == coverage?.date }?.result
                 val historyRefresh=snapshot.cacheStatus.firstOrNull { it.kind=="history" }
-                item {
+                item(key = "fixed:WeatherScreen:3", contentType = "fixed:WeatherScreen:3") {
                     Text(snapshot.vineyard.name, style = MaterialTheme.typography.headlineSmall)
                     Text(stringResource(Res.string.weather_source))
                     Text(stringResource(Res.string.weather_zone, zone))
-                    Text(stringResource(Res.string.weather_location_cache))
-                    Text(stringResource(Res.string.weather_offline_help))
+                    InfoHelp(title = stringResource(Res.string.info_weather_source), text = stringResource(Res.string.weather_location_cache) + "\n\n" + stringResource(Res.string.weather_offline_help))
                     Button(onClick = userAction(onRefresh), enabled = !state.refreshing, modifier = Modifier.fillMaxWidth()) { Text(if (state.refreshing) stringResource(Res.string.weather_refreshing) else stringResource(Res.string.weather_refresh)) }
-                    Text(stringResource(Res.string.weather_refresh_failure_help))
+                    InfoHelp(title = stringResource(Res.string.weather_refresh), text = stringResource(Res.string.weather_refresh_failure_help))
                 }
-                item {
-                    Text(stringResource(Res.string.weather_saved_refresh),style=MaterialTheme.typography.titleMedium)
+                item(key = "fixed:WeatherScreen:4", contentType = "fixed:WeatherScreen:4") {
+                    InfoLabel(title = stringResource(Res.string.weather_saved_refresh), text = stringResource(Res.string.weather_unfinished_help), style = MaterialTheme.typography.titleMedium)
                     if(snapshot.cacheStatus.isEmpty()) Text(stringResource(Res.string.weather_no_refresh))
                     snapshot.cacheStatus.forEach { status ->
                         val label=when(status.state) { "succeeded" -> stringResource(Res.string.weather_status_success); "failed" -> stringResource(Res.string.weather_status_failed); "started" -> stringResource(Res.string.weather_status_started); else -> stringResource(Res.string.weather_status_unknown) }
@@ -74,35 +76,35 @@ fun WeatherScreen(
                         Text(stringResource(Res.string.weather_saved_attempt, localizedWeatherTime(status.attemptedAt,zone), localizedWeatherTime(status.succeededAt,zone)))
                         status.errorCode?.let { Text(localizedSavedRefreshMessage(it)) }
                     }
-                    Text(stringResource(Res.string.weather_unfinished_help))
+
                 }
-                state.refreshReport?.let { report -> item {
+                state.refreshReport?.let { report -> item(key = "fixed:WeatherScreen:5", contentType = "fixed:WeatherScreen:5") {
                     Text(stringResource(Res.string.weather_attempt_completed, localizedWeatherTime(report.completedAt, zone)))
                     Text(report.historyError?.let { stringResource(Res.string.weather_history_failed, localizedWeatherError(it)) } ?: stringResource(Res.string.weather_history_completed))
                     Text(report.forecastError?.let { stringResource(Res.string.weather_forecast_failed, localizedWeatherError(it)) } ?: stringResource(Res.string.weather_forecast_completed))
-                    Text(stringResource(Res.string.weather_refresh_scope))
+                    InfoHelp(title = stringResource(Res.string.weather_refresh), text = stringResource(Res.string.weather_refresh_scope))
                 } }
-                state.refreshError?.let { error -> item { Text(localizedWeatherError(error), color = MaterialTheme.colorScheme.error) } }
-                item {
-                    Text(stringResource(Res.string.weather_history_heading), style = MaterialTheme.typography.titleLarge)
-                    Text(cacheLabel(display.historyAge))
+                state.refreshError?.let { error -> item(key = "fixed:WeatherScreen:6", contentType = "fixed:WeatherScreen:6") { Text(localizedWeatherError(error), color = MaterialTheme.colorScheme.error) } }
+                item(key = "fixed:WeatherScreen:7", contentType = "fixed:WeatherScreen:7") {
+                    InfoLabel(title = stringResource(Res.string.weather_history_heading), text = stringResource(Res.string.weather_history_coverage_help), style = MaterialTheme.typography.titleLarge)
+                    InfoLabel(cacheAgeTitle(display.historyAge), cacheLabel(display.historyAge))
                     CoverageText(display.historyCoverage, zone)
-                    Text(stringResource(Res.string.weather_history_coverage_help))
+
                     Text(stringResource(Res.string.weather_last_history, localizedWeatherTime(historyRefresh?.succeededAt,zone)))
                     if (display.excludedHistoryHours > 0) Text(stringResource(Res.string.weather_excluded_hours, display.excludedHistoryHours))
                 }
-                display.history.lastOrNull()?.let { hour -> item { WeatherHourCard(hour, zone, stringResource(Res.string.weather_latest_hour)) } }
-                item {
-                    Text(stringResource(Res.string.weather_forecast_heading), style = MaterialTheme.typography.titleLarge)
-                    Text(cacheLabel(display.forecastAge))
+                display.history.lastOrNull()?.let { hour -> item(key = "fixed:WeatherScreen:8", contentType = "fixed:WeatherScreen:8") { WeatherHourCard(hour, zone, stringResource(Res.string.weather_latest_hour)) } }
+                item(key = "fixed:WeatherScreen:9", contentType = "fixed:WeatherScreen:9") {
+                    InfoLabel(title = stringResource(Res.string.weather_forecast_heading), text = stringResource(Res.string.weather_forecast_help), style = MaterialTheme.typography.titleLarge)
+                    InfoLabel(cacheAgeTitle(display.forecastAge), cacheLabel(display.forecastAge))
                     Text(stringResource(Res.string.weather_refresh_start, localizedWeatherTime(display.forecastFetchedAt, zone)))
                     CoverageText(display.forecastCoverage, zone)
                     if (display.mixedForecastFetchTimes) Text(stringResource(Res.string.weather_mixed_fetch))
-                    Text(stringResource(Res.string.weather_forecast_help))
+
                 }
-                items(display.forecast.take(24)) { cached -> WeatherHourCard(cached.weather, zone, stringResource(Res.string.weather_forecast_hour)) }
-                item {
-                    Text(stringResource(Res.string.monitor_weather_day), style = MaterialTheme.typography.titleMedium)
+                itemsIndexed(display.forecast.take(24), key = { index, cached -> "forecast:${cached.weather.timestamp}:${cached.fetchedAt}:$index" }, contentType = { _, _ -> "forecast-hour" }) { _, cached -> WeatherHourCard(cached.weather, zone, stringResource(Res.string.weather_forecast_hour)) }
+                item(key = "fixed:WeatherScreen:10", contentType = "fixed:WeatherScreen:10") {
+                    InfoLabel(title = stringResource(Res.string.monitor_weather_day), text = stringResource(Res.string.monitor_coverage_help), style = MaterialTheme.typography.titleMedium)
                     when {
                         coverage == null -> Text(stringResource(Res.string.monitor_zone_missing))
                         coverage.expectedHours == null -> Text(stringResource(Res.string.monitor_grid_mismatch, coverage.date.toString()))
@@ -113,9 +115,9 @@ fun WeatherScreen(
                             }
                         }
                     }
-                    Text(stringResource(Res.string.monitor_coverage_help))
+
                 }
-                item {
+                item(key = "fixed:WeatherScreen:11", contentType = "fixed:WeatherScreen:11") {
                     Text(stringResource(Res.string.monitor_day_stages), style = MaterialTheme.typography.titleMedium)
                     when {
                         coverage == null -> Text(stringResource(Res.string.monitor_zone_missing))
@@ -134,21 +136,20 @@ fun WeatherScreen(
                         Text("${block.name}: ${if (stage != null) localizedStage(stage) else stringResource(Res.string.monitor_no_day_observation)}")
                     }
                 }
-                item {
-                    Text(stringResource(Res.string.monitor_settings_heading), style = MaterialTheme.typography.titleLarge)
-                    Text(stringResource(Res.string.monitor_enabled_help))
-                    Text(stringResource(Res.string.monitor_risk_help))
+                item(key = "fixed:WeatherScreen:12", contentType = "fixed:WeatherScreen:12") {
+                    InfoLabel(title = stringResource(Res.string.monitor_settings_heading), text = stringResource(Res.string.monitor_enabled_help), style = MaterialTheme.typography.titleLarge)
+                    InfoHelp(title = stringResource(Res.string.info_risk), text = stringResource(Res.string.monitor_risk_help))
                     if (snapshot.monitoringError != null) {
                         Text(stringResource(Res.string.monitor_settings_failed, localizedWeatherError(snapshot.monitoringError)), color = MaterialTheme.colorScheme.error)
                         TextButton(onClick = userAction(onRetry)) { Text(stringResource(Res.string.monitor_retry_settings)) }
                     } else if (snapshot.configurations.isEmpty()) Text(stringResource(Res.string.monitor_no_settings))
                 }
                 if (snapshot.blocks.isNotEmpty() && snapshot.monitoringError == null) {
-                    item(key = "botrytis-monitoring-draft") {
+                    item(key = "botrytis-monitoring-draft", contentType = "botrytis-monitoring-draft") {
                         BotrytisDraftEditor(snapshot, state.savingMonitoringDraft, state.monitoringDraftNotice, onSaveDraft)
                     }
                 }
-                items(snapshot.configurations) { config ->
+                items(snapshot.configurations, key = { "monitoring:${it.vineyardId}:${it.blockId}:${it.diseaseId}:${it.modelType.name}" }, contentType = { "monitoring-card" }) { config ->
                     Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(modelLabel(config.modelType), style = MaterialTheme.typography.titleMedium)
                         Text(stringResource(Res.string.monitor_block_value, snapshot.blocks.firstOrNull { it.blockId == config.blockId }?.name ?: stringResource(Res.string.weather_value_unavailable)))
@@ -182,8 +183,8 @@ private fun BotrytisDraftEditor(
     val userActivity = LocalUserActivity.current
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(Res.string.monitor_draft_heading), style = MaterialTheme.typography.titleMedium)
-        Text(stringResource(Res.string.monitor_draft_help))
+        InfoLabel(title = stringResource(Res.string.monitor_draft_heading), text = stringResource(Res.string.monitor_draft_help), style = MaterialTheme.typography.titleMedium)
+
         RecordChoice(
             label = stringResource(Res.string.monitor_block_label),
             selected = selected,
@@ -249,3 +250,11 @@ private fun modelLabel(type: DiseaseRiskModelType) = when (type) {
     DiseaseRiskModelType.DOWNY_MILDEW_SECONDARY -> stringResource(Res.string.monitor_model_downy_secondary)
     DiseaseRiskModelType.BOTRYTIS -> stringResource(Res.string.monitor_model_botrytis)
 }
+
+@Composable
+private fun cacheAgeTitle(age: CacheAge): String = stringResource(when (age) {
+    CacheAge.EMPTY -> Res.string.info_cache_empty
+    CacheAge.RECENT -> Res.string.info_cache_recent
+    CacheAge.STALE -> Res.string.info_cache_stale
+    CacheAge.INVALID_CLOCK -> Res.string.info_cache_clock
+})

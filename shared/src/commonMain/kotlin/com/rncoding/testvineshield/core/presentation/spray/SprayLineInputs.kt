@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.presentation.spray
 
+import com.rncoding.testvineshield.core.presentation.components.InfoLabel
 import androidx.compose.foundation.layout.*
 import com.rncoding.testvineshield.resources.*
 import org.jetbrains.compose.resources.stringResource
@@ -25,8 +26,8 @@ internal fun SprayLineInputs(line: SprayLineDraft, index: Int, state: SprayState
             RecordChoice(stringResource(Res.string.spray_quantity_unit), line.unit, SprayQuantityUnit.entries, state.canEdit, { it.label }, { vm.lineUnit(index, it) }, nullLabel = stringResource(Res.string.unit_unspecified))
             state.errors["line-$index-unit"]?.let { Text(localizedSprayDraftIssue(it), color = MaterialTheme.colorScheme.error) }
             SprayLineFieldInput(index, state, vm, SprayLineField.Reference, line.reference, stringResource(Res.string.spray_reference))
-            Text(stringResource(Res.string.spray_rate_title), style = MaterialTheme.typography.titleSmall)
-            Text(stringResource(Res.string.spray_rate_help))
+            InfoLabel(title = stringResource(Res.string.spray_rate_title), text = stringResource(Res.string.spray_rate_help), style = MaterialTheme.typography.titleSmall)
+
             SprayLineFieldInput(index, state, vm, SprayLineField.RateQuantity, line.rateQuantity, stringResource(Res.string.spray_rate_quantity), true)
             RecordChoice(stringResource(Res.string.spray_rate_unit), line.rateUnit, SprayQuantityUnit.entries, state.canEdit, { it.label }, { vm.lineRateUnit(index, it) }, nullLabel = stringResource(Res.string.unit_unspecified))
             state.errors["line-$index-rateunit"]?.let { Text(localizedSprayDraftIssue(it), color = MaterialTheme.colorScheme.error) }

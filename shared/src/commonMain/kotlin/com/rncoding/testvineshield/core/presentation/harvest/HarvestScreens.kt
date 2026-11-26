@@ -1,5 +1,7 @@
 package com.rncoding.testvineshield.core.presentation.harvest
 
+import com.rncoding.testvineshield.core.presentation.components.InfoButton
+import com.rncoding.testvineshield.core.presentation.components.InfoHelp
 import androidx.compose.foundation.layout.*
 import com.rncoding.testvineshield.resources.*
 import org.jetbrains.compose.resources.stringResource
@@ -42,7 +44,7 @@ fun HarvestListScreenRoot(ownerId: Long, scope: HarvestScope, onBack: () -> Unit
                 item(key = "harvest-HarvestScreens-5", contentType = "harvest-HarvestScreens-5") { RecordChoice(stringResource(Res.string.season_filter_label), season, snapshot.records.map { it.season }.distinct().sortedDescending(), true, { it }, { season = it }, nullLabel = stringResource(Res.string.all_seasons)) }
                 val visible = snapshot.records.filter { season == null || it.season == season }
                 if (visible.isEmpty()) item(key = "harvest-HarvestScreens-6", contentType = "harvest-HarvestScreens-6") { Text(if (snapshot.records.isEmpty()) stringResource(Res.string.harvest_empty) else stringResource(Res.string.harvest_season_empty)) }
-                items(visible, key = { it.harvestId }) { record ->
+                items(visible, key = { "harvest:${it.harvestId}" }, contentType = { "harvest-card" }) { record ->
                     OutlinedCard(Modifier.fillMaxWidth()) {
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text(record.harvestDate.toString(), style = MaterialTheme.typography.titleMedium)
@@ -53,7 +55,7 @@ fun HarvestListScreenRoot(ownerId: Long, scope: HarvestScope, onBack: () -> Unit
                         }
                     }
                 }
-                item(key = "harvest-HarvestScreens-7", contentType = "harvest-HarvestScreens-7") { Text(stringResource(Res.string.harvest_units_help)) }
+                item(key = "harvest-HarvestScreens-7", contentType = "harvest-HarvestScreens-7") { InfoHelp(title = stringResource(Res.string.info_units), text = stringResource(Res.string.harvest_units_help)) }
             }
         }
     }
@@ -114,7 +116,7 @@ fun HarvestEditorScreenRoot(ownerId: Long, key: HarvestKey, onBack: () -> Unit, 
             if (state.loading || state.saving) item(key = "harvest-HarvestScreens-16", contentType = "harvest-HarvestScreens-16") { LinearProgressIndicator(Modifier.fillMaxWidth()) }
             state.error?.let { item(key = "harvest-HarvestScreens-17", contentType = "harvest-HarvestScreens-17") { HarvestErrorNotice(it, if (state.ready) null else vm::load) } }
             item(key = "harvest-HarvestScreens-18", contentType = "harvest-HarvestScreens-18") { Text(state.blockName, style = MaterialTheme.typography.titleMedium) }
-            item(key = "harvest-HarvestScreens-19", contentType = "harvest-HarvestScreens-19") { Text(stringResource(Res.string.harvest_save_help)) }
+            item(key = "harvest-HarvestScreens-19", contentType = "harvest-HarvestScreens-19") { InfoHelp(title = stringResource(Res.string.info_form), text = stringResource(Res.string.harvest_save_help)) }
             items(HarvestField.entries, key = { "harvest-field-${it.name}" }, contentType = { "harvest-field-${it.name}" }) { field ->
                 val (label, help, keyboard) = when (field) {
                     HarvestField.Season -> Triple(stringResource(Res.string.harvest_season_required), stringResource(Res.string.harvest_season_help), KeyboardType.Text)
@@ -122,7 +124,7 @@ fun HarvestEditorScreenRoot(ownerId: Long, key: HarvestKey, onBack: () -> Unit, 
                     HarvestField.Quantity -> Triple(stringResource(Res.string.harvest_quantity_required), stringResource(Res.string.harvest_quantity_help), KeyboardType.Decimal)
                     HarvestField.Brix -> Triple(stringResource(Res.string.harvest_brix_label), stringResource(Res.string.harvest_brix_help), KeyboardType.Decimal)
                 }
-                OutlinedTextField(value = state.draft.text(field), onValueChange = { activity(); vm.text(field, it) }, enabled = state.canEdit, modifier = Modifier.fillMaxWidth(), label = { Text(label) }, singleLine = true, isError = field in state.errors, supportingText = { Text(state.errors[field]?.let { localizedHarvestDraftIssue(it) } ?: help) }, keyboardOptions = KeyboardOptions(keyboardType = keyboard))
+                OutlinedTextField(value = state.draft.text(field), onValueChange = { activity(); vm.text(field, it) }, enabled = state.canEdit, modifier = Modifier.fillMaxWidth(), label = { Text(label) }, singleLine = true, isError = field in state.errors, supportingText = { state.errors[field]?.let { Text(localizedHarvestDraftIssue(it)) } }, trailingIcon = { InfoButton(label, help) }, keyboardOptions = KeyboardOptions(keyboardType = keyboard))
                 if (field == HarvestField.Quantity) {
                     // Keep arbitrary legacy unit labels visible and selectable without interpreting them.
                     val units = (HarvestDraft.commonUnits + listOfNotNull(state.legacyUnit, state.draft.units)).distinct()
@@ -131,7 +133,7 @@ fun HarvestEditorScreenRoot(ownerId: Long, key: HarvestKey, onBack: () -> Unit, 
                     state.unitError?.let { Text(localizedHarvestDraftIssue(it), color = MaterialTheme.colorScheme.error) }
                 }
             }
-            item(key = "harvest-HarvestScreens-20", contentType = "harvest-HarvestScreens-20") { Text(stringResource(Res.string.harvest_unit_change_help)) }
+            item(key = "harvest-HarvestScreens-20", contentType = "harvest-HarvestScreens-20") { InfoHelp(title = stringResource(Res.string.info_units), text = stringResource(Res.string.harvest_unit_change_help)) }
             item(key = "harvest-HarvestScreens-21", contentType = "harvest-HarvestScreens-21") { Button(onClick = userAction { vm.save(); onBusyChanged(vm.state.value.saving) }, enabled = state.canEdit, modifier = Modifier.fillMaxWidth()) { Text(if (state.saving) stringResource(Res.string.saving_action) else stringResource(Res.string.harvest_save)) } }
         }
     }

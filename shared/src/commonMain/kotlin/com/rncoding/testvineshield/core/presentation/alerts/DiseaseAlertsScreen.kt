@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.presentation.alerts
 
+import com.rncoding.testvineshield.core.presentation.components.InfoHelp
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -41,42 +42,42 @@ fun DiseaseAlertsScreenRoot(
     Scaffold(topBar = { RecordTopBar(stringResource(Res.string.alerts_title), onBack, !busy) }) { padding ->
         LazyColumn(Modifier.padding(padding).fillMaxHeight().widthIn(max = 840.dp).fillMaxWidth(),
             contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            item(key = "scope") { Text(stringResource(Res.string.alerts_scope)) }
-            if (state.loading) item(key = "loading") { LinearProgressIndicator(Modifier.fillMaxWidth()) }
-            state.error?.let { error -> item(key = "error") {
+            item(key = "scope", contentType = "scope") { InfoHelp(title = stringResource(Res.string.alerts_title), text = stringResource(Res.string.alerts_scope)) }
+            if (state.loading) item(key = "loading", contentType = "loading") { LinearProgressIndicator(Modifier.fillMaxWidth()) }
+            state.error?.let { error -> item(key = "error", contentType = "error") {
                 Text(localizedAppErrorMessage(error), color = MaterialTheme.colorScheme.error)
                 TextButton(onClick = userAction(model::reload), enabled = !busy) { Text(stringResource(Res.string.retry)) }
             } }
             if (!state.loading && alertId == null) {
-                item(key = "filter") {
+                item(key = "filter", contentType = "filter") {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         FilterChip(activeOnly, userAction { activeOnly = true }, label = { Text(stringResource(Res.string.alerts_active)) }, enabled = !busy)
                         FilterChip(!activeOnly, userAction { activeOnly = false }, label = { Text(stringResource(Res.string.alerts_history)) }, enabled = !busy)
                     }
                 }
                 val rows = state.rows.filter { (!activeOnly || it.status == AlertStatus.ACTIVE) && (vineyardId == null || it.vineyardId == vineyardId) }
-                if (rows.isEmpty() && state.error == null) item(key = "empty") { Text(stringResource(Res.string.alerts_empty)) }
-                items(rows, key = { it.alertId }, contentType = { "saved-alert" }) { row ->
+                if (rows.isEmpty() && state.error == null) item(key = "empty", contentType = "empty") { Text(stringResource(Res.string.alerts_empty)) }
+                items(rows, key = { "inbox-alert:${it.alertId}" }, contentType = { "saved-alert" }) { row ->
                     DiseaseAlertCard(row) {
                         TextButton(onClick = userAction { onOpenAlert(row.vineyardId, row.alertId) }, enabled = !busy) { Text(stringResource(Res.string.alerts_open)) }
                     }
                 }
             } else if (!state.loading && alertId != null) {
                 val row = state.rows.firstOrNull { it.alertId == alertId && it.vineyardId == vineyardId }
-                if (row == null && state.error == null) item(key = "missing") { Text(stringResource(Res.string.alerts_missing)) }
+                if (row == null && state.error == null) item(key = "missing", contentType = "missing") { Text(stringResource(Res.string.alerts_missing)) }
                 row?.let { alert ->
-                    item(key = "detail") { DiseaseAlertCard(alert) {} }
-                    item(key = "provenance") { Text(stringResource(Res.string.alerts_provenance)) }
-                    if (alert.status == AlertStatus.ACTIVE) item(key = "review") {
-                        Text(stringResource(Res.string.alerts_review_help))
+                    item(key = "detail", contentType = "detail") { DiseaseAlertCard(alert) {} }
+                    item(key = "provenance", contentType = "provenance") { InfoHelp(title = stringResource(Res.string.info_model_evidence), text = stringResource(Res.string.alerts_provenance)) }
+                    if (alert.status == AlertStatus.ACTIVE) item(key = "review", contentType = "review") {
+                        InfoHelp(title = stringResource(Res.string.alerts_review), text = stringResource(Res.string.alerts_review_help))
                         Button(onClick = userAction { model.markReviewed(alert); onBusyChanged(model.state.value.savingId != null) }, enabled = !busy) {
                             Text(stringResource(Res.string.alerts_review))
                         }
                     }
-                    item(key = "vineyard") { OutlinedButton(onClick = userAction { onOpenVineyard(alert.vineyardId) }, enabled = !busy) { Text(stringResource(Res.string.alerts_vineyard)) } }
-                    alert.blockId?.let { block -> item(key = "block") { OutlinedButton(onClick = userAction { onOpenBlock(alert.vineyardId, block) }, enabled = !busy) { Text(stringResource(Res.string.alerts_block)) } } }
+                    item(key = "vineyard", contentType = "vineyard") { OutlinedButton(onClick = userAction { onOpenVineyard(alert.vineyardId) }, enabled = !busy) { Text(stringResource(Res.string.alerts_vineyard)) } }
+                    alert.blockId?.let { block -> item(key = "block", contentType = "block") { OutlinedButton(onClick = userAction { onOpenBlock(alert.vineyardId, block) }, enabled = !busy) { Text(stringResource(Res.string.alerts_block)) } } }
                     if (alert.diseaseCode in setOf(DiseaseCatalogueCodes.GRAPE_DOWNY_MILDEW, DiseaseCatalogueCodes.GRAPE_POWDERY_MILDEW, DiseaseCatalogueCodes.GRAPE_BOTRYTIS)) {
-                        item(key = "catalogue") { OutlinedButton(onClick = userAction { onOpenCatalogue(alert.diseaseId) }, enabled = !busy) { Text(stringResource(Res.string.alerts_catalogue)) } }
+                        item(key = "catalogue", contentType = "catalogue") { OutlinedButton(onClick = userAction { onOpenCatalogue(alert.diseaseId) }, enabled = !busy) { Text(stringResource(Res.string.alerts_catalogue)) } }
                     }
                 }
             }

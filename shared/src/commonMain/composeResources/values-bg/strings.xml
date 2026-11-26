@@ -823,4 +823,31 @@
     <string name="alerts_status_acknowledged">Статус: прегледан</string>
     <string name="alerts_status_invalidated">Статус: невалиден</string>
     <string name="alerts_status_resolved">Статус: приключен (запазен запис)</string>
+
+    <string name="info_about">Информация за %1$s</string>
+    <string name="info_close">Затвори</string>
+    <string name="info_general">Информация</string>
+    <string name="info_units">Мерни единици</string>
+    <string name="info_location">Местоположение</string>
+    <string name="info_risk">Рискът не е оценен</string>
+    <string name="info_cached_weather">Запазено време</string>
+    <string name="info_form">Помощ за формуляра</string>
+    <string name="info_measurements">Измервания и неизвестни стойности</string>
+    <string name="info_dates">Дати</string>
+    <string name="info_legacy">Предишни записи</string>
+    <string name="info_zone">Часова зона</string>
+    <string name="info_export_contents">Съдържание на експорта</string>
+    <string name="info_export_storage">Съхранение на експорта</string>
+    <string name="info_map">Онлайн карта</string>
+    <string name="info_status">Статус</string>
+    <string name="info_model_evidence">Няма данни за модела</string>
+    <string name="info_weather_source">Източник на метеорологичните данни</string>
+    <string name="info_spray_count">Запазено пръскане · продукти: %1$d</string>
+    <string name="info_harvest_count">Записи в обхвата: %1$d</string>
+
+    <string name="info_reference">Справка за болестта</string>
+    <string name="info_cache_empty">Запазени данни: няма</string>
+    <string name="info_cache_recent">Запазени данни: скорошни</string>
+    <string name="info_cache_stale">Запазени данни: остарели</string>
+    <string name="info_cache_clock">Запазени данни: несъответствие на часовника</string>
 </resources>

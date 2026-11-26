@@ -1,5 +1,7 @@
 package com.rncoding.testvineshield.core.presentation.disease_catalogue
 
+import com.rncoding.testvineshield.core.presentation.components.InfoLabel
+import com.rncoding.testvineshield.core.presentation.components.InfoHelp
 import androidx.compose.foundation.layout.*
 import com.rncoding.testvineshield.resources.*
 import org.jetbrains.compose.resources.stringResource
@@ -33,46 +35,45 @@ fun DiseaseCatalogueScreenRoot(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             when (val current = state) {
-                DiseaseCatalogueState.Loading -> item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
-                DiseaseCatalogueState.Unavailable -> item {
+                DiseaseCatalogueState.Loading -> item(key = "fixed:DiseaseCatalogueScreen:1", contentType = "fixed:DiseaseCatalogueScreen:1") { LinearProgressIndicator(Modifier.fillMaxWidth()) }
+                DiseaseCatalogueState.Unavailable -> item(key = "fixed:DiseaseCatalogueScreen:2", contentType = "fixed:DiseaseCatalogueScreen:2") {
                     Text(stringResource(Res.string.catalogue_load_error))
                     TextButton(onClick = userAction(viewModel::reload)) { Text(stringResource(Res.string.retry)) }
                 }
                 is DiseaseCatalogueState.Loaded -> if (diseaseId == null) {
-                    if (current.diseases.isEmpty()) item { Text(stringResource(Res.string.observation_no_diseases)) }
-                    items(current.diseases, key = { it.diseaseId }) { disease ->
+                    if (current.diseases.isEmpty()) item(key = "fixed:DiseaseCatalogueScreen:3", contentType = "fixed:DiseaseCatalogueScreen:3") { Text(stringResource(Res.string.observation_no_diseases)) }
+                    items(current.diseases, key = { "catalogue-disease:${it.diseaseId}" }, contentType = { "catalogue-disease" }) { disease ->
                         OutlinedCard(
                             onClick = userAction { onOpenDisease(disease.diseaseId) },
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                Text(builtInDiseaseName(disease.code, disease.name), style = MaterialTheme.typography.titleMedium)
-                                Text(catalogueParagraph(disease, CatalogueParagraph.DESCRIPTION))
+                                InfoLabel(title = builtInDiseaseName(disease.code, disease.name), text = catalogueParagraph(disease, CatalogueParagraph.DESCRIPTION), style = MaterialTheme.typography.titleMedium)
                             }
                         }
                     }
                 } else {
                     val disease = current.diseases.firstOrNull { it.diseaseId == diseaseId }
-                    if (disease == null) item { Text(stringResource(Res.string.catalogue_unavailable)) }
+                    if (disease == null) item(key = "fixed:DiseaseCatalogueScreen:4", contentType = "fixed:DiseaseCatalogueScreen:4") { Text(stringResource(Res.string.catalogue_unavailable)) }
                     else {
-                        item { Text(builtInDiseaseName(disease.code, disease.name), style = MaterialTheme.typography.headlineSmall) }
-                        item { Text(catalogueParagraph(disease, CatalogueParagraph.DESCRIPTION)) }
+                        item(key = "fixed:DiseaseCatalogueScreen:5", contentType = "fixed:DiseaseCatalogueScreen:5") { Text(builtInDiseaseName(disease.code, disease.name), style = MaterialTheme.typography.headlineSmall) }
+                        item(key = "fixed:DiseaseCatalogueScreen:6", contentType = "fixed:DiseaseCatalogueScreen:6") { InfoHelp(title = stringResource(Res.string.info_reference), text = catalogueParagraph(disease, CatalogueParagraph.DESCRIPTION)) }
                         val symptoms = builtInSymptomReference(disease.code)
                         if (symptoms.isNotEmpty()) {
-                            item {
-                                Text(stringResource(Res.string.catalogue_signs), style = MaterialTheme.typography.titleLarge)
-                                Text(stringResource(Res.string.catalogue_signs_help))
+                            item(key = "fixed:DiseaseCatalogueScreen:7", contentType = "fixed:DiseaseCatalogueScreen:7") {
+                                InfoLabel(title = stringResource(Res.string.catalogue_signs), text = stringResource(Res.string.catalogue_signs_help), style = MaterialTheme.typography.titleLarge)
+
                             }
-                            items(symptoms, key = { it.key }) { symptom ->
+                            items(symptoms, key = { "catalogue-symptom:${it.key}" }, contentType = { "catalogue-symptom" }) { symptom ->
                                 CatalogueDetail(stringResource(symptom.plantPart), stringResource(symptom.description))
                             }
-                            item {
+                            item(key = "fixed:DiseaseCatalogueScreen:8", contentType = "fixed:DiseaseCatalogueScreen:8") {
                                 Text(stringResource(Res.string.catalogue_source), style = MaterialTheme.typography.bodySmall)
                             }
                         }
-                        if (disease.vectors.isNotBlank()) item { CatalogueDetail(stringResource(Res.string.catalogue_spread), catalogueParagraph(disease, CatalogueParagraph.SPREAD)) }
-                        if (disease.factors.isNotBlank()) item { CatalogueDetail(stringResource(Res.string.catalogue_conditions), catalogueParagraph(disease, CatalogueParagraph.CONDITIONS)) }
-                        if (disease.treatmentSuggestion.isNotBlank()) item {
+                        if (disease.vectors.isNotBlank()) item(key = "fixed:DiseaseCatalogueScreen:9", contentType = "fixed:DiseaseCatalogueScreen:9") { CatalogueDetail(stringResource(Res.string.catalogue_spread), catalogueParagraph(disease, CatalogueParagraph.SPREAD)) }
+                        if (disease.factors.isNotBlank()) item(key = "fixed:DiseaseCatalogueScreen:10", contentType = "fixed:DiseaseCatalogueScreen:10") { CatalogueDetail(stringResource(Res.string.catalogue_conditions), catalogueParagraph(disease, CatalogueParagraph.CONDITIONS)) }
+                        if (disease.treatmentSuggestion.isNotBlank()) item(key = "fixed:DiseaseCatalogueScreen:11", contentType = "fixed:DiseaseCatalogueScreen:11") {
                             CatalogueDetail(stringResource(Res.string.catalogue_management), catalogueParagraph(disease, CatalogueParagraph.MANAGEMENT))
                         }
                     }
@@ -84,6 +85,5 @@ fun DiseaseCatalogueScreenRoot(
 
 @Composable
 private fun CatalogueDetail(label: String, description: String) {
-    Text(label, style = MaterialTheme.typography.titleMedium)
-    Text(description)
+    InfoLabel(title = label, text = description, style = MaterialTheme.typography.titleMedium)
 }

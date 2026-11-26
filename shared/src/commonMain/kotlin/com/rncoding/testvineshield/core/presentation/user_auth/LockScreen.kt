@@ -1,5 +1,6 @@
 package com.rncoding.testvineshield.core.presentation.user_auth
 
+import com.rncoding.testvineshield.core.presentation.components.InfoHelp
 import com.rncoding.testvineshield.core.presentation.error.localizedAppErrorMessage
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -31,7 +32,7 @@ fun LockScreen(viewModel: AuthViewModel, reason: AuthState.Locked.LockReason) {
         AppLanguageSelector(enabled = !state.isSubmitting)
         Text("VineShield", style = MaterialTheme.typography.headlineMedium)
         Text(stringResource(Res.string.auth_locked_inactivity))
-        Text(stringResource(Res.string.auth_unlock_help))
+        InfoHelp(title = stringResource(Res.string.security_title), text = stringResource(Res.string.auth_unlock_help))
         OutlinedTextField(value = state.password, onValueChange = viewModel::onPasswordChanged,
             label = { Text(stringResource(Res.string.auth_account_password)) }, singleLine = true, enabled = !state.isSubmitting,
             visualTransformation = PasswordVisualTransformation(),

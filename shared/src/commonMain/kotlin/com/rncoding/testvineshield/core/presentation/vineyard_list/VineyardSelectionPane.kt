@@ -50,8 +50,8 @@ internal fun VineyardSelectionPane(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        item { Text(stringResource(Res.string.nav_vineyards), style = MaterialTheme.typography.titleLarge) }
-        item {
+        item(key = "fixed:VineyardSelectionPane:1", contentType = "fixed:VineyardSelectionPane:1") { Text(stringResource(Res.string.nav_vineyards), style = MaterialTheme.typography.titleLarge) }
+        item(key = "fixed:VineyardSelectionPane:2", contentType = "fixed:VineyardSelectionPane:2") {
             OutlinedTextField(
                 value = searchText,
                 onValueChange = { activity(); searchText = it },
@@ -62,15 +62,10 @@ internal fun VineyardSelectionPane(
             )
         }
         when {
-            state.isLoading -> item { Text(stringResource(Res.string.loading_vineyards)) }
-            state.vineyards.isEmpty() -> item {
-                Text(
-                    state.loadIssue?.let { localizedVineyardLoadIssue(it) }
-                        ?: stringResource(Res.string.empty_vineyards)
-                )
-            }
-            visibleRecords.isEmpty() -> item { Text(stringResource(Res.string.no_matches)) }
-            else -> items(visibleRecords, key = { it.vineyardId }) { vineyard ->
+            state.isLoading -> item(key = "fixed:VineyardSelectionPane:3", contentType = "fixed:VineyardSelectionPane:3") { Text(stringResource(Res.string.loading_vineyards)) }
+            state.vineyards.isEmpty() -> item(key = "fixed:VineyardSelectionPane:4", contentType = "fixed:VineyardSelectionPane:4") { Text(state.loadIssue?.let { localizedVineyardLoadIssue(it) } ?: stringResource(Res.string.empty_vineyards)) }
+            visibleRecords.isEmpty() -> item(key = "fixed:VineyardSelectionPane:5", contentType = "fixed:VineyardSelectionPane:5") { Text(stringResource(Res.string.no_matches)) }
+            else -> items(visibleRecords, key = { "selector-vineyard:${it.vineyardId}" }, contentType = { "selector-vineyard" }) { vineyard ->
                 val isSelected = vineyard.vineyardId == selectedVineyardId
                 OutlinedButton(
                     modifier = Modifier.fillMaxWidth().semantics { selected = isSelected },
