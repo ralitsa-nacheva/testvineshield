@@ -1,6 +1,11 @@
 package com.rncoding.testvineshield.di
 
 import com.rncoding.testvineshield.core.data.remote.OpenMeteoApi
+import com.rncoding.testvineshield.core.presentation.alerts.DiseaseAlertsViewModel
+import com.rncoding.testvineshield.core.domain.usecases.alerts.ObserveOwnedDiseaseAlertsUseCase
+import com.rncoding.testvineshield.core.domain.usecases.alerts.AcknowledgeDiseaseAlertUseCase
+import com.rncoding.testvineshield.core.domain.repository.DiseaseAlertRepository
+import com.rncoding.testvineshield.core.data.repository.DiseaseAlertRepositoryImpl
 import com.rncoding.testvineshield.core.presentation.weather.WeatherViewModel
 import com.rncoding.testvineshield.core.domain.usecases.weather.RefreshOwnedWeatherUseCase
 import com.rncoding.testvineshield.core.domain.usecases.weather.ObserveOwnedWeatherUseCase
@@ -1064,5 +1069,16 @@ val commonModule =
         factory { RefreshOwnedWeatherUseCase(get(), get(), get(), get(), get()) }
         factory { com.rncoding.testvineshield.core.domain.usecases.weather.SaveBotrytisMonitoringDraftUseCase(get(), get()) }
         viewModel { (vineyardId: Long) -> WeatherViewModel(vineyardId, get(), get(), get(), get()) }
+        single<DiseaseAlertRepository> {
+            DiseaseAlertRepositoryImpl(
+                get<VineshieldDatabase>().diseaseAlertDao()
+            )
+        }
 
+        factory { ObserveOwnedDiseaseAlertsUseCase(get(), get()) }
+        factory { AcknowledgeDiseaseAlertUseCase(get(), get()) }
+
+        viewModel { (ownerId: Long) ->
+            DiseaseAlertsViewModel(ownerId, get(), get())
+        }
     }

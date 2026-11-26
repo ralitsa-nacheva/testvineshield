@@ -1,5 +1,9 @@
 package com.rncoding.testvineshield.core.data.local.database.daos
 
+import com.rncoding.testvineshield.core.data.local.database.projections.DiseaseAlertInboxRow
+import com.rncoding.testvineshield.core.domain.datamodels.enums.AlertSeverity
+import com.rncoding.testvineshield.core.domain.datamodels.enums.PhenologicalStage
+import kotlinx.datetime.LocalDate
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
@@ -105,4 +109,34 @@ interface DiseaseAlertDao {
     fun observeActiveAlertsForVineyard(
         vineyardId: Long
     ): Flow<List<DiseaseAlertSummaryProjection>>
+
+    @Query("""
+        SELECT a.alert_id AS alertId, a.vineyard_id AS vineyardId, v.name AS vineyardName,
+               b.block_id AS blockId, b.name AS blockName, a.disease_id AS diseaseId,
+               d.code AS diseaseCode, d.name AS diseaseName, a.created_at AS createdAt,
+               a.alert AS message, a.alert_status AS status, a.alert_severity AS severity,
+               a.phenological_stage AS stage
+        FROM disease_alert a
+        JOIN vineyard v ON v.vineyard_id = a.vineyard_id
+        JOIN disease d ON d.disease_id = a.disease_id
+        LEFT JOIN block b ON b.block_id = a.block_id AND b.vineyard_id = a.vineyard_id
+        WHERE v.user_id = :ownerId
+        ORDER BY a.created_at DESC, a.alert_id DESC
+    """)
+    fun observeOwnedInbox(ownerId: Long): Flow<List<DiseaseAlertInboxRow>>
+
+    // Compare viewed fields and ownership; reject changed or invalidated alerts.
+    @Query("""
+        UPDATE disease_alert SET alert_status = 'acknowledged'
+        WHERE alert_id = :alertId AND vineyard_id = :vineyardId AND alert_status = 'active'
+          AND disease_id = :diseaseId AND created_at = :createdAt AND alert = :message
+          AND alert_severity = :severity AND phenological_stage = :stage
+          AND ((block_id = :blockId) OR (block_id IS NULL AND :blockId IS NULL))
+          AND EXISTS (SELECT 1 FROM vineyard v
+                      WHERE v.vineyard_id = disease_alert.vineyard_id AND v.user_id = :ownerId)
+    """)
+    suspend fun acknowledgeOwned(
+        ownerId: Long, vineyardId: Long, alertId: Long, diseaseId: Long, blockId: Long?,
+        createdAt: LocalDate, message: String, severity: AlertSeverity, stage: PhenologicalStage
+    ): Int
 }

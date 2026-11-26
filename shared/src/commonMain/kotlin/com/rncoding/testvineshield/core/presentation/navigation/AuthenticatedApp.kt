@@ -1,5 +1,11 @@
 package com.rncoding.testvineshield.core.presentation.navigation
 
+import com.rncoding.testvineshield.core.presentation.alerts.DiseaseAlertsScreenRoot
+import com.rncoding.testvineshield.core.presentation.alerts.DiseaseAlertsViewModel
+import com.rncoding.testvineshield.core.domain.datamodels.enums.AlertStatus
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 import com.rncoding.testvineshield.core.presentation.disease_observations.BlockDiseaseObservationsScreen
 import com.rncoding.testvineshield.core.presentation.disease_catalogue.DiseaseCatalogueScreenRoot
 import com.rncoding.testvineshield.core.domain.auth.AuthenticatedUserProvider
@@ -37,7 +43,7 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 @Composable
 fun AuthenticatedApp(
     userId: Long,
-    alertBadgeCount: Int = 0,
+    alertBadgeCount: Int? = null,
     activityBadgeCount: Int = 0,
     vineyardLinks: VineyardLinkInbox? = null
 ) {
@@ -46,12 +52,15 @@ fun AuthenticatedApp(
     val navigationState =
         rememberVineShieldNavigationState()
 
-    val availableDestinations = listOf(TopLevelDestination.VINEYARDS, TopLevelDestination.ACTIVITIES, TopLevelDestination.ACCOUNT)
+    val availableDestinations = listOf(TopLevelDestination.VINEYARDS, TopLevelDestination.ACTIVITIES, TopLevelDestination.ALERTS, TopLevelDestination.ACCOUNT)
     LaunchedEffect(navigationState.selectedDestination) {
         if (navigationState.selectedDestination !in availableDestinations)
             navigationState.selectDestination(TopLevelDestination.VINEYARDS)
     }
 
+    val alertsModel = koinViewModel<DiseaseAlertsViewModel>(key = "alert-inbox-$userId", parameters = { parametersOf(userId) })
+    val alertsState by alertsModel.state.collectAsStateWithLifecycle()
+    val activeAlertCount = alertBadgeCount ?: alertsState.rows.count { it.status == AlertStatus.ACTIVE }
     val vineyards = koinInject<VineyardRepository>()
     val blocks = koinInject<BlockRepository>()
     val linkMessages = remember { SnackbarHostState() }
@@ -157,7 +166,7 @@ fun AuthenticatedApp(
 
     AdaptiveVineShieldScaffold(
         navigationState.selectedDestination,
-        alertBadgeCount,
+        activeAlertCount,
         activityBadgeCount,
         selectDestination,
         availableDestinations,
@@ -249,7 +258,8 @@ fun AuthenticatedApp(
                             },
                             onBlocks = { navigationState.navigate(BlocksRoute(route.vineyardId)) },
                             onActivities = { navigationState.navigate(ActivityListRoute(route.vineyardId)) },
-                            onWeather = { navigationState.navigate(VineyardWeatherRoute(route.vineyardId)) }
+                            onWeather = { navigationState.navigate(VineyardWeatherRoute(route.vineyardId)) },
+                            onOpenAlert = { navigationState.navigate(DiseaseAlertDetailsRoute(route.vineyardId, it)) }
                         )
                     }
 
@@ -368,18 +378,16 @@ fun AuthenticatedApp(
                     }
 
                     entry<AlertsRoute> {
-
-                        FeaturePlaceholderScreen(
-                            title = "Alerts"
-                        )
+                        DiseaseAlertsScreenRoot(alertsModel,
+                            onOpenAlert = { vineyard, alert -> navigationState.navigate(DiseaseAlertDetailsRoute(vineyard, alert)) })
                     }
-
                     entry<DiseaseAlertDetailsRoute> { route ->
-
-                        FeaturePlaceholderScreen(
-                            title =
-                                "Disease alert ${route.alertId}"
-                        )
+                        DiseaseAlertsScreenRoot(alertsModel, route.vineyardId, route.alertId,
+                            onBack = { navigationState.goBack() },
+                            onOpenVineyard = { navigationState.selectDestination(TopLevelDestination.VINEYARDS); navigationState.navigate(VineyardDetailsRoute(it)) },
+                            onOpenBlock = { vineyard, block -> navigationState.selectDestination(TopLevelDestination.VINEYARDS); navigationState.navigate(BlockDetailsRoute(vineyard, block)) },
+                            onOpenCatalogue = { navigationState.navigate(BuiltInDiseaseDetailsRoute(it)) },
+                            onBusyChanged = { if (it) busyRecordRoute = route else if (busyRecordRoute == route) busyRecordRoute = null })
                     }
 
                     entry<WeatherAlertDetailsRoute> { route ->

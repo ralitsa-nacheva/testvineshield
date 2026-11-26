@@ -47,7 +47,8 @@ fun VineyardDetailsScreen(
     onDeleteCancel: () -> Unit,
     onBlocks: () -> Unit = {},
     onActivities: () -> Unit = {},
-    onWeather: () -> Unit = {}
+    onWeather: () -> Unit = {},
+    onOpenAlert: (Long) -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -189,7 +190,7 @@ fun VineyardDetailsScreen(
                             items = details.activeAlerts,
                             key = { it.alertId }
                         ) { alert ->
-                            AlertSummaryCard(alert)
+                            AlertSummaryCard(alert, !state.isDeleting) { onOpenAlert(alert.alertId) }
                         }
                     }
 
@@ -382,7 +383,9 @@ private fun DiseaseSummaryCard(
 
 @Composable
 private fun AlertSummaryCard(
-    alert: AlertUiModel
+    alert: AlertUiModel,
+    enabled: Boolean,
+    onOpen: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth()
@@ -417,6 +420,7 @@ private fun AlertSummaryCard(
             Text(
                 stringResource(Res.string.created_value, alert.createdAt.toString())
             )
+            TextButton(onClick = userAction(onOpen), enabled = enabled) { Text(stringResource(Res.string.alerts_open)) }
         }
     }
 }

@@ -803,4 +803,24 @@
     <string name="choice_unspecified">Неизвестно / не е посочено</string>
     <string name="error_review_input">Проверете въведените стойности и опитайте отново.</string>
     <string name="error_action_failed">Действието не може да бъде завършено. Опитайте отново.</string>
+
+    <string name="alerts_title">Сигнали за болести</string>
+    <string name="alerts_scope">Запазени сигнали за болести. Сигналът не е потвърдена диагноза; празният списък не доказва нисък риск.</string>
+    <string name="alerts_active">Активни</string>
+    <string name="alerts_history">Всички запазени</string>
+    <string name="alerts_empty">Няма запазени сигнали за този изглед. Наблюдението може да е изключено или да няма достатъчно данни.</string>
+    <string name="alerts_open">Отвори сигнала</string>
+    <string name="alerts_missing">Този запазен сигнал не е наличен за текущия профил.</string>
+    <string name="alerts_provenance">Старите записи на сигнали не съдържат версия на модела или период на входните метеорологични данни. Запазената степен сама по себе си не доказва текущ риск или валидиране на модела.</string>
+    <string name="alerts_review_help">Отбелязването като прегледан показва, че сте прочели сигнала. То не приключва болест, не записва третиране и не променя наблюдението.</string>
+    <string name="alerts_review">Отбележи като прегледан</string>
+    <string name="alerts_vineyard">Отвори лозето</string>
+    <string name="alerts_block">Отвори блока</string>
+    <string name="alerts_catalogue">Отвори справката за болестта</string>
+    <string name="alerts_created">Дата на записа: %1$s</string>
+    <string name="alerts_block_unspecified">Блокът не е посочен или не е наличен</string>
+    <string name="alerts_status_active">Статус: активен</string>
+    <string name="alerts_status_acknowledged">Статус: прегледан</string>
+    <string name="alerts_status_invalidated">Статус: невалиден</string>
+    <string name="alerts_status_resolved">Статус: приключен (запазен запис)</string>
 </resources>

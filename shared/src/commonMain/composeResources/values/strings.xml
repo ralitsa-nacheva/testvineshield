@@ -803,4 +803,24 @@
     <string name="choice_unspecified">Unknown / not specified</string>
     <string name="error_review_input">Review the entered values and try again.</string>
     <string name="error_action_failed">Unable to complete this action. Please try again.</string>
+
+    <string name="alerts_title">Disease alerts</string>
+    <string name="alerts_scope">Saved disease-alert records. An alert is not a confirmed disease diagnosis; an empty inbox is not evidence of low risk.</string>
+    <string name="alerts_active">Active</string>
+    <string name="alerts_history">All saved</string>
+    <string name="alerts_empty">No saved alerts match this view. Monitoring may be disabled or have insufficient data.</string>
+    <string name="alerts_open">Open alert</string>
+    <string name="alerts_missing">This saved alert is unavailable for the current account.</string>
+    <string name="alerts_provenance">Legacy alert records do not include the model version or weather-input period. A saved severity alone does not establish current risk or model validation.</string>
+    <string name="alerts_review_help">Mark reviewed records that you read this alert. It does not resolve a disease, record a treatment or change monitoring.</string>
+    <string name="alerts_review">Mark reviewed</string>
+    <string name="alerts_vineyard">Open vineyard</string>
+    <string name="alerts_block">Open block</string>
+    <string name="alerts_catalogue">Open disease reference</string>
+    <string name="alerts_created">Recorded date: %1$s</string>
+    <string name="alerts_block_unspecified">Block not specified or unavailable</string>
+    <string name="alerts_status_active">Status: active</string>
+    <string name="alerts_status_acknowledged">Status: reviewed</string>
+    <string name="alerts_status_invalidated">Status: invalidated</string>
+    <string name="alerts_status_resolved">Status: resolved (stored record)</string>
 </resources>
